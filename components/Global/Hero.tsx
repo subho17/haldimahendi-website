@@ -32,17 +32,15 @@ export default function Hero() {
     <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-16 lg:py-24">
       {/* Hero Background Slideshow with Gradient Overlay */}
       <div className="absolute inset-0 z-0">
-        {HERO_IMAGES.map((src, i) => (
-          <Image
-            key={src}
-            src={src}
-            alt={`Matrimonial couples background ${i + 1}`}
-            fill
-            priority={i === 0}
-            className={`object-cover object-center transition-opacity duration-1000 ${i === activeIndex ? 'opacity-100' : 'opacity-0'
-              }`}
-          />
-        ))}
+        <Image
+          key={HERO_IMAGES[activeIndex]}
+          src={HERO_IMAGES[activeIndex]}
+          alt={`Matrimonial couples background ${activeIndex + 1}`}
+          fill
+          sizes="100vw"
+          priority={activeIndex === 0}
+          className="object-cover object-center"
+        />
         {/* Dark Romantic Gradient Overlay for Perfect Contrast */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/75 backdrop-blur-[1px]"></div>
       </div>
@@ -172,7 +170,7 @@ export default function Hero() {
           </div>
         </div>
         {/* Slideshow Dots */}
-        <div className="mt-76 flex items-center justify-center gap-2">
+        <div className="mt-10 sm:mt-12 flex items-center justify-center gap-2">
           {HERO_IMAGES.map((_, i) => (
             <button
               key={i}

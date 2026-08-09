@@ -1,5 +1,6 @@
 'use client';
 import React, { useRef } from 'react';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 const BLOG_POSTS = [
@@ -91,9 +92,11 @@ export default function Blog() {
                 className="min-w-[280px] md:min-w-[340px] max-w-[340px] flex-shrink-0 snap-start bg-white rounded-sm shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="h-48 overflow-hidden">
-                  <img 
+                  <Image 
                     src={post.image} 
                     alt={post.title} 
+                    width={600}
+                    height={400}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>

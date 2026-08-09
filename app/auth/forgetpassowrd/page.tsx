@@ -1,7 +1,9 @@
+import ForgetPasswordPageView from "@/components/Forgetpassword/ForgetPasswordPage";
+
 export default function ForgetPasswordPage() {
   return (
-    <div className="p-8 text-center">
-      <h1 className="text-2xl font-bold">Forgot Password</h1>
+    <div className="min-h-screen bg-[#f3f4f6] flex items-center justify-center">
+      <ForgetPasswordPageView />
     </div>
   );
 }
