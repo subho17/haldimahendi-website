@@ -54,12 +54,12 @@ export default function Downloadapp() {
                 <div className="font-semibold text-sm">Activity</div>
               </div>
                {/* Phone Image area */}
-                <div className="p-3 grid grid-cols-2 gap-2 h-full overflow-hidden bg-gray-50">
-                  <Image src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&h=300" alt="Profile" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" />
-                  <Image src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=300" alt="Profile" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" />
-                  <Image src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200&h=300" alt="Profile" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" />
-                  <Image src="https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=200&h=300" alt="Profile" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" />
-                </div>
+               <div className="p-3 grid grid-cols-2 gap-2 h-full overflow-hidden bg-gray-50">
+                  <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&h=300" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=300" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200&h=300" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <img src="https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=200&h=300" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+               </div>
              </div>
           </div>
 
@@ -79,9 +79,9 @@ export default function Downloadapp() {
                 <Image 
                   src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400&h=600" 
                   alt="Match profile" 
-                  width={400}
-                  height={600}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 400px, 600px"
+                  className="object-cover"
                 />
                 {/* Overlay text */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 text-white pb-6">

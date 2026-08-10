@@ -29,7 +29,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-16 lg:py-24">
+    <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden py-16 lg:py-24">
       {/* Hero Background Slideshow with Gradient Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
