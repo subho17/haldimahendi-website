@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar, Hero, Features, Testimonals, Faqsection, Footer, Downloadapp, Blog, Steps } from '@/components/Global';
+import { Navbar, Hero, Features, Testimonals, Faqsection, Footer, Downloadapp, Blog, Steps, Newsletter } from '@/components/Global';
 
 export default function Home() {
   return (
@@ -11,6 +11,7 @@ export default function Home() {
       <Testimonals />
       <Downloadapp />
       <Blog />
+      <Newsletter />
       <Faqsection />
       <Footer />
     </div>

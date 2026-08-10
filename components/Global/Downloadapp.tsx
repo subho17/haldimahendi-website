@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Apple, Play, QrCode } from 'lucide-react';
 
 export default function Downloadapp() {
@@ -54,10 +55,10 @@ export default function Downloadapp() {
               </div>
                {/* Phone Image area */}
                <div className="p-3 grid grid-cols-2 gap-2 h-full overflow-hidden bg-gray-50">
-                  <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&h=300" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
-                  <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=300" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
-                  <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200&h=300" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
-                  <img src="https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=200&h=300" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <Image src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <Image src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <Image src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <Image src="https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
                </div>
              </div>
           </div>
@@ -75,10 +76,12 @@ export default function Downloadapp() {
               </div>
               {/* Phone Image area */}
               <div className="relative flex-1 bg-gray-200">
-                <img 
+                <Image 
                   src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400&h=600" 
                   alt="Match profile" 
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 640px) 240px, 260px"
+                  className="object-cover"
                 />
                 {/* Overlay text */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 text-white pb-6">
@@ -87,7 +90,7 @@ export default function Downloadapp() {
                     <span className="text-[10px] text-gray-200">Last seen at 11:30 am</span>
                   </div>
                   <div className="font-bold text-xl mt-1">Ayushi Gupta, 27</div>
-                  <div className="text-xs text-gray-200 mt-1 line-clamp-2">5'4" • New Delhi • Bania - Khandelwal<br/>Software Professional</div>
+                  <div className="text-xs text-gray-200 mt-1 line-clamp-2">5&apos;4&quot; • New Delhi • Bania - Khandelwal<br/>Software Professional</div>
                   
                   <div className="flex justify-between mt-4">
                     <div className="flex flex-col items-center gap-1">

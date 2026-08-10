@@ -7,3 +7,4 @@ export { default as Blog } from './blog';
 export { default as Steps } from './steps';
 export { default as Faqsection } from './Faqsection';
 export { default as Footer } from './Footer';
+export { default as Newsletter } from './newsletter';

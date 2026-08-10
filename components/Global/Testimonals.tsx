@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import Image from 'next/image';
 import { Star, MessageSquare } from 'lucide-react';
 
 const testimonials = [
@@ -87,16 +88,6 @@ const testimonials = [
   }
 ];
 
-const renderStars = (rating: number) => {
-  return (
-    <div className="flex gap-1 mb-4 justify-center">
-      {[...Array(rating)].map((_, i) => (
-        <Star key={i} size={18} className="fill-[#ffd700] text-[#ffd700]" />
-      ))}
-    </div>
-  );
-};
-
 export default function Testimonals() {
   return (
     <section className="py-24 bg-[#eef0f4] w-full overflow-hidden">
@@ -128,7 +119,7 @@ export default function Testimonals() {
                     {item.text}
                   </p>
                   <div className="flex items-center gap-4">
-                    <img src={item.avatar} alt={item.author} className="w-10 h-10 rounded-full object-cover" />
+                    <Image src={item.avatar} alt={item.author} width={40} height={40} className="w-10 h-10 rounded-full object-cover" />
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-900">{item.author}</span>
                       <span className="text-xs text-[#7c4dff]">{item.role}</span>
@@ -143,13 +134,13 @@ export default function Testimonals() {
               return (
                 <div key={item.id} className="bg-white rounded-3xl p-8 shadow-sm break-inside-avoid relative mt-4">
                   <div className="absolute -top-6 -left-2 text-[80px] leading-none text-gray-800 font-serif rotate-180">
-                    "
+                    &quot;
                   </div>
                   <p className="text-gray-600 text-sm leading-relaxed mb-8 pt-4">
                     {item.text}
                   </p>
                   <div className="flex items-center gap-4">
-                    <img src={item.avatar} alt={item.author} className="w-12 h-12 rounded-full border-4 border-gray-100 object-cover" />
+                    <Image src={item.avatar} alt={item.author} width={48} height={48} className="w-12 h-12 rounded-full border-4 border-gray-100 object-cover" />
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-900">{item.author}</span>
                       <span className="text-[10px] text-[#7c4dff]">{item.role}</span>
@@ -164,7 +155,7 @@ export default function Testimonals() {
               return (
                 <div key={item.id} className={`bg-white rounded-3xl p-8 shadow-sm break-inside-avoid relative mt-12 ${item.centerAlign ? 'text-center' : ''} ${item.isSpeechBubble ? 'rounded-bl-none' : ''}`}>
                   <div className={`absolute -top-10 ${item.centerAlign ? 'left-1/2 -translate-x-1/2' : 'left-8'}`}>
-                    <img src={item.avatar} alt={item.author || item.signature} className="w-20 h-20 rounded-full border-8 border-[#eef0f4] object-cover bg-white" />
+                    <Image src={item.avatar} alt={item.author || item.signature} width={80} height={80} className="w-20 h-20 rounded-full border-8 border-[#eef0f4] object-cover bg-white" />
                   </div>
                   <div className="pt-8">
                     {item.rating && (
@@ -194,7 +185,7 @@ export default function Testimonals() {
 
                     {item.largeQuoteRight && (
                       <div className="absolute -bottom-10 right-4 text-[100px] leading-none text-gray-800 font-serif">
-                        "
+                        &quot;
                       </div>
                     )}
                   </div>
@@ -206,7 +197,7 @@ export default function Testimonals() {
             if (item.type === 'large-photo') {
               return (
                 <div key={item.id} className="bg-white rounded-3xl p-4 shadow-sm break-inside-avoid">
-                  <img src={item.image} alt="Testimonial" className="w-full h-64 object-cover rounded-2xl mb-6" />
+                  <Image src={item.image} alt="Testimonial" width={400} height={256} className="w-full h-64 object-cover rounded-2xl mb-6" />
                   <div className="px-2 pb-2">
                     <p className="text-gray-600 text-sm leading-relaxed mb-6 text-center">
                       {item.text}
@@ -225,9 +216,9 @@ export default function Testimonals() {
               return (
                 <div key={item.id} className="bg-white rounded-3xl p-6 shadow-sm break-inside-avoid">
                   <div className="flex gap-4 mb-4 items-start">
-                    <img src={item.image} alt={item.author} className="w-20 h-20 rounded-xl object-cover shrink-0" />
+                    <Image src={item.image} alt={item.author} width={80} height={80} className="w-20 h-20 rounded-xl object-cover shrink-0" />
                     <div>
-                      <div className="text-4xl font-serif text-gray-900 leading-none mb-2">"</div>
+                      <div className="text-4xl font-serif text-gray-900 leading-none mb-2">&quot;</div>
                       <h4 className="text-sm font-bold text-gray-900 leading-tight">
                         {item.title}
                       </h4>
@@ -258,8 +249,8 @@ export default function Testimonals() {
                   {item.avatars && (
                     <div className="absolute -bottom-16 left-4 flex gap-2">
                       {item.avatars.map((av, idx) => (
-                        <div key={idx} className={`rounded-full p-1 bg-[#eef0f4] ${idx === 1 ? 'w-16 h-16' : 'w-12 h-12 mt-2'}`}>
-                          <img src={av} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                        <div key={idx} className={`relative rounded-full p-1 bg-[#eef0f4] ${idx === 1 ? 'w-16 h-16' : 'w-12 h-12 mt-2'}`}>
+                          <Image src={av} alt="Avatar" fill className="rounded-full object-cover" />
                         </div>
                       ))}
                     </div>
@@ -273,10 +264,10 @@ export default function Testimonals() {
               return (
                 <div key={item.id} className="bg-white rounded-3xl p-8 shadow-sm break-inside-avoid relative">
                   <p className="text-gray-600 text-sm leading-relaxed mb-8">
-                    "{item.text}"
+                    &quot;{item.text}&quot;
                   </p>
                   <div className="flex flex-col items-center">
-                    <img src={item.avatar} alt={item.author} className="w-16 h-16 rounded-full object-cover mb-3 bg-[#eef0f4] p-1" />
+                    <Image src={item.avatar} alt={item.author} width={64} height={64} className="w-16 h-16 rounded-full object-cover mb-3 bg-[#eef0f4] p-1" />
                     <span className="text-sm font-semibold text-gray-900">{item.author}</span>
                     <span className="text-xs text-[#7c4dff]">{item.role}</span>
                   </div>
