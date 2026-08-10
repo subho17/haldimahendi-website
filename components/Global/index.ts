@@ -1,4 +1,4 @@
-export { default as Navbar } from './Navbar';
+export { default as Navbar } from '../layout/NavbarGuest';
 export { default as Hero } from './Hero';
 export { default as Features } from './Features';
 export { default as Testimonals } from './Testimonals';
