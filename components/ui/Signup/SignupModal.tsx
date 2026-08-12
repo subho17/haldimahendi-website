@@ -45,6 +45,7 @@ export default function SignupModal({
 
         <SignupPage
           isModal={true}
+          onSuccess={onClose}
           onOpenLogin={() => {
             onClose();
             if (onOpenLogin) onOpenLogin();

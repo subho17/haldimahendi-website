@@ -12,6 +12,37 @@ const SMS_MEDIA_ROUTE_ID = (process.env.SMS_ROUTE_ID || '100867').trim();
 const SMS_MEDIA_SENDER_ID = (process.env.SMS_SENDER_ID || 'GOODAY').trim();
 const SMS_MEDIA_TEMPLATE_ID = (process.env.SMS_TEMPLATE_ID || '1707172038325802378').trim();
 const SMS_MEDIA_PE_ID = (process.env.SMS_PE_ID || '1401856260000019479').trim();
+const SMS_MESSAGE_TEMPLATE = (process.env.SMS_MESSAGE_TEMPLATE || 'Dear Member, Your client login account OTP is {#var#} It will expire in Five minutes. Do not share it with anyone. Thanks, -Webczar');
+
+// 2Factor.in Helper
+function send2FactorOtp(mobile: string, otp: string): Promise<{ success: boolean; data?: string }> {
+  return new Promise((resolve) => {
+    const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
+    const apiKey = (process.env.OTP_API_KEY || '').trim();
+    const url = `https://2factor.in/API/V1/${apiKey}/SMS/${cleanMobile}/${otp}`;
+
+    const req = https.get(url, (res) => {
+      let data = '';
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => {
+        console.log('[2FACTOR API RESPONSE]:', res.statusCode, data);
+        if (res.statusCode === 200 && data.includes('"Status":"Success"')) {
+          resolve({ success: true, data });
+        } else {
+          console.error('[2FACTOR API ERROR]:', data);
+          resolve({ success: false, data });
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      console.error('[2FACTOR EXCEPTION]:', err);
+      resolve({ success: false });
+    });
+
+    req.end();
+  });
+}
 
 // Fast2SMS API Helper
 function sendFast2SmsOtp(mobile: string, otp: string): Promise<{ success: boolean; data?: string }> {
@@ -47,8 +78,9 @@ function sendFast2SmsOtp(mobile: string, otp: string): Promise<{ success: boolea
 function sendSmsMediaOtp(mobile: string, otp: string): Promise<{ success: boolean; shootId?: string }> {
   return new Promise((resolve) => {
     const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
-    const messageText = `Dear Member, Your client login account OTP is ${otp} It will expire in Five minutes. Do not share it with anyone. Thanks, -Webczar`;
-    const encodedMessage = encodeURIComponent(messageText);
+    const messageText = SMS_MESSAGE_TEMPLATE.replace('{#var#}', otp);
+    // PHP urlencode format (spaces as +) per SMS Media API documentation
+    const encodedMessage = encodeURIComponent(messageText).replace(/%20/g, '+');
 
     const url = `https://login.smsmedia.org/app/smsapi/index.php?key=${SMS_MEDIA_KEY}&campaign=${SMS_MEDIA_CAMPAIGN}&routeid=${SMS_MEDIA_ROUTE_ID}&type=text&contacts=${cleanMobile}&senderid=${SMS_MEDIA_SENDER_ID}&msg=${encodedMessage}&template_id=${SMS_MEDIA_TEMPLATE_ID}&pe_id=${SMS_MEDIA_PE_ID}`;
 
@@ -97,6 +129,8 @@ export async function POST(req: Request) {
     let smsResult = { success: false };
     if (SMS_PROVIDER === 'fast2sms') {
       smsResult = await sendFast2SmsOtp(cleanMobile, otpCode);
+    } else if (SMS_PROVIDER === '2factor') {
+      smsResult = await send2FactorOtp(cleanMobile, otpCode);
     } else {
       smsResult = await sendSmsMediaOtp(cleanMobile, otpCode);
     }
@@ -105,11 +139,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: smsResult.success
-        ? `OTP code sent via SMS to +91 ${cleanMobile}!`
-        : `OTP generated for +91 ${cleanMobile}. (Use code ${otpCode} to verify)`,
-      // Include demoOtp in dev mode or if live SMS gateway failed to deliver
-      demoOtp: process.env.NODE_ENV !== 'production' || !smsResult.success ? otpCode : undefined,
+      message: `OTP code sent via SMS to +91 ${cleanMobile}!`,
+      demoOtp: undefined,
     });
   } catch (err: unknown) {
     console.error('Failed to send OTP:', err);

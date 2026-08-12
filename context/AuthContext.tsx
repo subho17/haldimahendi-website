@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useCallback, useSyncExternalStore } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 export interface UserProfile {
   profileId: string;
@@ -12,6 +12,7 @@ export interface UserProfile {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: UserProfile | null;
+  isLoading: boolean;
   login: (userData: Partial<UserProfile>) => void;
   logout: () => void;
 }
@@ -20,44 +21,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = "shaadi_auth_user";
 
-// Cached snapshots — must return stable references to avoid React infinite loops
-let cachedUser: UserProfile | null = null;
-const serverSnapshot: UserProfile | null = null;
-
-function readFromStorage(): UserProfile | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const storedUser = window.localStorage.getItem(AUTH_STORAGE_KEY);
-    return storedUser ? (JSON.parse(storedUser) as UserProfile) : null;
-  } catch {
-    return null;
-  }
-}
-
-function refreshCache() {
-  cachedUser = readFromStorage();
-  return cachedUser;
-}
-
-function readStoredUser(): UserProfile | null {
-  return cachedUser;
-}
-
-function subscribe(onStoreChange: () => void) {
-  refreshCache();
-  window.addEventListener("storage", onStoreChange);
-  return () => window.removeEventListener("storage", onStoreChange);
-}
-
-const listeners = new Set<() => void>();
-
-function notify() {
-  listeners.forEach((listener) => listener());
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const user = useSyncExternalStore(subscribe, readStoredUser, () => serverSnapshot);
-  const isAuthenticated = user !== null;
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Sync state with localStorage on initial load & page refresh
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (e) {
+      console.error("Error reading auth state from localStorage:", e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const login = useCallback((userData: Partial<UserProfile>) => {
     const newUser: UserProfile = {
@@ -67,9 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       avatarUrl: userData.avatarUrl || "/images/default-avatar.png",
     };
     try {
-      window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
-      refreshCache();
-      notify();
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+      setUser(newUser);
     } catch (e) {
       console.error("Failed to save auth state:", e);
     }
@@ -77,16 +56,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     try {
-      window.localStorage.removeItem(AUTH_STORAGE_KEY);
-      refreshCache();
-      notify();
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      setUser(null);
     } catch (e) {
       console.error("Failed to remove auth state:", e);
     }
   }, []);
 
+  const isAuthenticated = user !== null;
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
