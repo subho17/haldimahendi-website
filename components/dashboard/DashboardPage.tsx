@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Heart, Sparkles, Eye, UserCheck } from "lucide-react";
 import Link from "next/link";
+import { useMounted } from "@/hooks/useMounted";
 
 const STATS = [
   { label: "New Matches", value: "20", sub: "↑ 5 today", Icon: Heart, color: "text-[#e53238]" },
@@ -23,11 +24,7 @@ const MATCHES = [
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   React.useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {

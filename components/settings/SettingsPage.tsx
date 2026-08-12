@@ -1,25 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Navbar, Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Settings, LogOut } from "lucide-react";
+import { useMounted } from "@/hooks/useMounted";
 
 export default function SettingsPage() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted && !isLoading && !isAuthenticated) {
-      router.push("/");
-    }
-  }, [mounted, isAuthenticated, isLoading, router]);
+  const mounted = useMounted();
 
   if (!mounted || isLoading || !isAuthenticated) {
     return (

@@ -1,17 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useAuth } from "@/context/AuthContext";
 import NavbarGuest from "./NavbarGuest";
 import AuthenticatedNavbar from "@/components/authenticated/AuthenticatedNavbar";
+import { useMounted } from "@/hooks/useMounted";
 
 export default function Navbar() {
   const { isAuthenticated, isLoading } = useAuth();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   if (!mounted || isLoading) {
     return <NavbarGuest />;

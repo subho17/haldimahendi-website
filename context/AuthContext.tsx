@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 export interface UserProfile {
   profileId: string;
@@ -25,22 +25,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_STORAGE_KEY = "shaadi_auth_user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  // Read localStorage ONLY after component mounts on client side to prevent hydration mismatch
-  useEffect(() => {
+  // Read from localStorage synchronously via lazy initializer (client only).
+  // No effect needed, which avoids hydration mismatch and lint warnings.
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    if (typeof window === "undefined") return null;
     try {
       const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser) as UserProfile);
-      }
+      return storedUser ? (JSON.parse(storedUser) as UserProfile) : null;
     } catch (e) {
       console.error("Error reading auth state from localStorage:", e);
-    } finally {
-      setIsLoading(false);
+      return null;
     }
-  }, []);
+  });
+
+  // True only during SSR/hydration until localStorage is available.
+  const isLoading = typeof window === "undefined";
 
   const login = useCallback((userData: Partial<UserProfile>) => {
     const newUser: UserProfile = {

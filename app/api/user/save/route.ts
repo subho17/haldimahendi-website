@@ -4,6 +4,17 @@ import path from "path";
 
 const USERS_FILE = path.join(process.cwd(), "scratch", "users_db.json");
 
+interface UserRecord {
+  profileId?: string;
+  name?: string;
+  email?: string;
+  mobileNumber?: string;
+  avatarUrl?: string;
+  provider?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 function ensureDbFile() {
   const dir = path.dirname(USERS_FILE);
   if (!fs.existsSync(dir)) {
@@ -16,10 +27,10 @@ function ensureDbFile() {
 
 export async function POST(req: Request) {
   try {
-    const userData = await req.json();
+    const userData = await req.json() as UserRecord;
     ensureDbFile();
 
-    let users: Record<string, any>[] = [];
+    let users: UserRecord[] = [];
     try {
       const fileData = fs.readFileSync(USERS_FILE, "utf-8");
       users = JSON.parse(fileData || "[]");
@@ -29,13 +40,13 @@ export async function POST(req: Request) {
 
     // Check if user exists by profileId or email or mobileNumber
     const existingIndex = users.findIndex(
-      (u: Record<string, any>) =>
+      (u: UserRecord) =>
         (userData.profileId && u.profileId === userData.profileId) ||
         (userData.email && u.email === userData.email) ||
         (userData.mobileNumber && u.mobileNumber === userData.mobileNumber && userData.mobileNumber.length > 5)
     );
 
-    const updatedUser: Record<string, any> = {
+    const updatedUser: UserRecord = {
       profileId: userData.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
       name: userData.name || "Member",
       email: userData.email || "",

@@ -5,15 +5,12 @@ import { Navbar, Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, Edit3 } from "lucide-react";
+import { useMounted } from "@/hooks/useMounted";
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   React.useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {

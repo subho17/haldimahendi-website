@@ -5,6 +5,7 @@ import { Navbar, Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Filter } from "lucide-react";
+import { useMounted } from "@/hooks/useMounted";
 
 const MATCHES = [
   { name: "Priya S.", age: 25, height: "5'4\"", religion: "Hindu", tongue: "Hindi", loc: "Mumbai", edu: "Software Engineer", id: "SH884120" },
@@ -20,11 +21,7 @@ const MATCHES = [
 export default function MatchesPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   React.useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
