@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     const cleanMobile = mobileNumber.replace(/\D/g, '').slice(-10);
-    const result = verifyOtp(cleanMobile, otp);
+    const result = await verifyOtp(cleanMobile, otp);
 
     if (!result.valid) {
       return NextResponse.json(

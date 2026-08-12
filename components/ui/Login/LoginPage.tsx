@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+
 interface LoginPageProps {
   onOpenForgotPassword?: () => void;
   onOpenSignup?: () => void;
@@ -15,6 +18,9 @@ export default function LoginPage({
   onOpenSignup,
   isModal = false,
 }: LoginPageProps) {
+  const { login } = useAuth();
+  const router = useRouter();
+
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,8 +42,12 @@ export default function LoginPage({
 
     setTimeout(() => {
       setIsLoading(false);
-      alert("Login successful! Redirecting to dashboard...");
-    }, 1000);
+      login({
+        mobileNumber: identifier.replace(/\D/g, "") || "9876543210",
+        name: `Member (${identifier.slice(0, 8)})`,
+      });
+      router.push("/dashboard");
+    }, 600);
   };
 
   return (

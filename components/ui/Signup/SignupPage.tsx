@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { Heart, Smartphone, KeyRound, ArrowRight, ShieldCheck, AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface SignupPageProps {
   onOpenLogin?: () => void;
@@ -10,6 +12,9 @@ interface SignupPageProps {
 }
 
 export default function SignupPage({ onOpenLogin, isModal = false }: SignupPageProps) {
+  const { login } = useAuth();
+  const router = useRouter();
+
   const [mobileNumber, setMobileNumber] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
@@ -55,7 +60,7 @@ export default function SignupPage({ onOpenLogin, isModal = false }: SignupPageP
     }
   };
 
-  // Step 2: Verify OTP via /api/otp/verify
+  // Step 2: Verify OTP & Trigger Authenticated Login Context
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otp || otp.length < 4) {
@@ -81,7 +86,9 @@ export default function SignupPage({ onOpenLogin, isModal = false }: SignupPageP
         return;
       }
 
-      alert(`Mobile +91 ${mobileNumber} verified successfully! Profile registration complete 🎉`);
+      // Login User into AuthContext & redirect to /dashboard
+      login({ mobileNumber, name: `Member (+91 ${mobileNumber.slice(-4)})` });
+      router.push("/dashboard");
     } catch {
       setIsLoading(false);
       setError("Network error verifying OTP. Please try again.");
