@@ -20,15 +20,28 @@ const MATCHES = [
 export default function MatchesPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (mounted && !isLoading && !isAuthenticated) {
       router.push("/");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [mounted, isAuthenticated, isLoading, router]);
 
-  if (isLoading || !isAuthenticated) {
-    return null;
+  if (!mounted || isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+        <Navbar />
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center">
+          <div className="w-8 h-8 border-3 border-[#e53238] border-t-transparent rounded-full animate-spin" />
+        </main>
+        <Footer />
+      </div>
+    );
   }
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">

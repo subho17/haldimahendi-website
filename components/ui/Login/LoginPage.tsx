@@ -46,7 +46,7 @@ export default function LoginPage({
         mobileNumber: identifier.replace(/\D/g, "") || "9876543210",
         name: `Member (${identifier.slice(0, 8)})`,
       });
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     }, 600);
   };
 
@@ -60,32 +60,52 @@ export default function LoginPage({
         const googleUser = await res.json();
         login({
           name: googleUser.name || "Google Member",
-          avatarUrl: googleUser.picture,
-          mobileNumber: googleUser.email || "9876543210",
+          email: googleUser.email || "user@gmail.com",
+          avatarUrl: googleUser.picture || "/images/default-avatar.png",
+          provider: "google",
         });
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } catch {
-        login({ name: "Google Member", mobileNumber: "9876543210" });
-        window.location.href = "/dashboard";
+        login({
+          name: "Google Member",
+          email: "googleuser@gmail.com",
+          provider: "google",
+        });
+        router.push("/dashboard");
       }
     },
     onError: () => {
-      login({ name: "Google Member", mobileNumber: "9876543210" });
-      window.location.href = "/dashboard";
+      login({
+        name: "Google Member",
+        email: "googleuser@gmail.com",
+        provider: "google",
+      });
+      router.push("/dashboard");
     },
   });
 
   const handleSocialLogin = (provider: "google" | "facebook") => {
     if (provider === "google") {
-      try {
-        googleLogin();
-      } catch {
-        login({ name: "Google Member", mobileNumber: "9876543210" });
-        window.location.href = "/dashboard";
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+      const isRealClient =
+        clientId &&
+        !clientId.includes("YOUR_GOOGLE_CLIENT_ID") &&
+        clientId.endsWith(".apps.googleusercontent.com");
+
+      if (isRealClient) {
+        try {
+          googleLogin();
+          return;
+        } catch {
+          // fallback
+        }
       }
+
+      login({ name: "Google Member", mobileNumber: "9876543210" });
+      router.push("/dashboard");
     } else {
       login({ name: "Facebook Member", mobileNumber: "9876543210" });
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     }
   };
 

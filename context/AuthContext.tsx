@@ -4,9 +4,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 
 export interface UserProfile {
   profileId: string;
-  mobileNumber: string;
+  mobileNumber?: string;
+  email?: string;
   name: string;
   avatarUrl?: string;
+  provider?: "google" | "facebook" | "otp" | "password";
+  createdAt?: string;
 }
 
 interface AuthContextType {
@@ -25,12 +28,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Sync state with localStorage on initial load & page refresh
+  // Read localStorage ONLY after component mounts on client side to prevent hydration mismatch
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        setUser(JSON.parse(storedUser) as UserProfile);
       }
     } catch (e) {
       console.error("Error reading auth state from localStorage:", e);
@@ -42,13 +45,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback((userData: Partial<UserProfile>) => {
     const newUser: UserProfile = {
       profileId: userData.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
-      mobileNumber: userData.mobileNumber || "9876543210",
+      mobileNumber: userData.mobileNumber || "",
+      email: userData.email || "",
       name: userData.name || "Shaadi Member",
       avatarUrl: userData.avatarUrl || "/images/default-avatar.png",
+      provider: userData.provider || "google",
+      createdAt: userData.createdAt || new Date().toISOString(),
     };
+
     try {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
       setUser(newUser);
+
+      // Persist user profile to server backend database
+      fetch("/api/user/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser),
+      }).catch((err) => console.warn("Failed to sync user to server:", err));
     } catch (e) {
       console.error("Failed to save auth state:", e);
     }

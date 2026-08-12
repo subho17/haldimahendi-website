@@ -89,7 +89,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
       if (onSuccess) {
         onSuccess();
       }
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     } catch {
       setIsLoading(false);
       setError("Network error verifying OTP. Please try again.");
@@ -127,38 +127,58 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
         const googleUser = await res.json();
         login({
           name: googleUser.name || "Google Member",
-          avatarUrl: googleUser.picture,
-          mobileNumber: googleUser.email || "9876543210",
+          email: googleUser.email || "user@gmail.com",
+          avatarUrl: googleUser.picture || "/images/default-avatar.png",
+          provider: "google",
         });
         if (onSuccess) onSuccess();
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } catch {
-        login({ name: "Google Member", mobileNumber: "9876543210" });
+        login({
+          name: "Google Member",
+          email: "googleuser@gmail.com",
+          provider: "google",
+        });
         if (onSuccess) onSuccess();
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       }
     },
     onError: () => {
-      login({ name: "Google Member", mobileNumber: "9876543210" });
+      login({
+        name: "Google Member",
+        email: "googleuser@gmail.com",
+        provider: "google",
+      });
       if (onSuccess) onSuccess();
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     },
   });
 
   // Social Login Handler
   const handleSocialLogin = (provider: "google" | "facebook") => {
     if (provider === "google") {
-      try {
-        googleLogin();
-      } catch {
-        login({ name: "Google Member", mobileNumber: "9876543210" });
-        if (onSuccess) onSuccess();
-        window.location.href = "/dashboard";
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+      const isRealClient =
+        clientId &&
+        !clientId.includes("YOUR_GOOGLE_CLIENT_ID") &&
+        clientId.endsWith(".apps.googleusercontent.com");
+
+      if (isRealClient) {
+        try {
+          googleLogin();
+          return;
+        } catch {
+          // fallback
+        }
       }
+
+      login({ name: "Google Member", mobileNumber: "9876543210" });
+      if (onSuccess) onSuccess();
+      router.push("/dashboard");
     } else {
       login({ name: "Facebook Member", mobileNumber: "9876543210" });
       if (onSuccess) onSuccess();
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     }
   };
 
@@ -369,14 +389,14 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
             <button
               type="button"
               onClick={onOpenLogin}
-              className="w-full py-3 px-4 rounded-xl border border-gray-200 text-gray-800 font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all cursor-pointer"
             >
               Sign In to Your Account
             </button>
           ) : (
             <Link
               href="/auth/login"
-              className="w-full inline-block py-3 px-4 rounded-xl border border-gray-200 text-gray-800 font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all text-center"
+              className="w-full inline-block py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all text-center"
             >
               Sign In to Your Account
             </Link>
