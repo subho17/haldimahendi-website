@@ -1,14 +1,21 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from "react";
+import { useMounted } from "@/hooks/useMounted";
 
 export interface UserProfile {
   profileId: string;
   mobileNumber?: string;
+  mobile_number?: string;
   email?: string;
   name: string;
+  display_name?: string;
   avatarUrl?: string;
+  avatar_url?: string;
   provider?: "google" | "facebook" | "otp" | "password";
+  gender?: string;
+  maritalStatus?: string;
+  city?: string;
   createdAt?: string;
 }
 
@@ -25,46 +32,80 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_STORAGE_KEY = "shaadi_auth_user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const mounted = useMounted();
+
   // Read from localStorage synchronously via lazy initializer (client only).
-  // No effect needed, which avoids hydration mismatch and lint warnings.
   const [user, setUser] = useState<UserProfile | null>(() => {
     if (typeof window === "undefined") return null;
     try {
       const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-      return storedUser ? (JSON.parse(storedUser) as UserProfile) : null;
+      if (!storedUser) return null;
+      const parsed = JSON.parse(storedUser) as UserProfile;
+      // Normalize alias keys
+      const displayName = parsed.display_name || parsed.name || "Shaadi Member";
+      const avatar = parsed.avatar_url || parsed.avatarUrl || "/images/default-avatar.png";
+      const mobile = parsed.mobile_number || parsed.mobileNumber || "";
+      return {
+        ...parsed,
+        name: displayName,
+        display_name: displayName,
+        avatarUrl: avatar,
+        avatar_url: avatar,
+        mobileNumber: mobile,
+        mobile_number: mobile,
+      };
     } catch (e) {
       console.error("Error reading auth state from localStorage:", e);
       return null;
     }
   });
 
-  // True only during SSR/hydration until localStorage is available.
-  const isLoading = typeof window === "undefined";
+  const isLoading = !mounted;
 
   const login = useCallback((userData: Partial<UserProfile>) => {
+    const displayName = userData.display_name || userData.name || "Shaadi Member";
+    const avatar = userData.avatar_url || userData.avatarUrl || "/images/default-avatar.png";
+    const mobile = userData.mobile_number || userData.mobileNumber || "";
+
     const newUser: UserProfile = {
       profileId: userData.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
-      mobileNumber: userData.mobileNumber || "",
+      mobileNumber: mobile,
+      mobile_number: mobile,
       email: userData.email || "",
-      name: userData.name || "Shaadi Member",
-      avatarUrl: userData.avatarUrl || "/images/default-avatar.png",
-      provider: userData.provider || "google",
+      name: displayName,
+      display_name: displayName,
+      avatarUrl: avatar,
+      avatar_url: avatar,
+      provider: userData.provider || "otp",
+      gender: userData.gender,
+      maritalStatus: userData.maritalStatus,
+      city: userData.city,
       createdAt: userData.createdAt || new Date().toISOString(),
     };
 
+    // 1. ALWAYS update React state first so user is immediately authenticated in memory
+    setUser(newUser);
+
+    // 2. Safely save to localStorage (with quota error protection for large Base64 images)
     try {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
-      setUser(newUser);
-
-      // Persist user profile to server backend database
-      fetch("/api/user/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUser),
-      }).catch((err) => console.warn("Failed to sync user to server:", err));
     } catch (e) {
-      console.error("Failed to save auth state:", e);
+      console.warn("Failed to store full user in localStorage (avatar image may be large):", e);
+      try {
+        // Fallback: save user without large avatar image string to avoid quota error
+        const slimUser = { ...newUser, avatarUrl: "/images/default-avatar.png", avatar_url: "/images/default-avatar.png" };
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(slimUser));
+      } catch (err) {
+        console.error("Critical: Could not write to localStorage:", err);
+      }
     }
+
+    // 3. Persist user profile to server backend database & Supabase
+    fetch("/api/user/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newUser),
+    }).catch((err) => console.warn("Failed to sync user to server:", err));
   }, []);
 
   const logout = useCallback(() => {

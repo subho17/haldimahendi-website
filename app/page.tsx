@@ -1,23 +1,33 @@
 "use client";
 
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import Navbar from '@/components/layout/Navbar';
-import { Hero, Features, Testimonals, Faqsection, Footer, Downloadapp, Blog, Steps, Newsletter } from '@/components/Global';
+import React, { useEffect } from "react";
+import Navbar from "@/components/layout/Navbar";
+import { Hero, Features, Testimonals, Faqsection, Footer, Downloadapp, Blog, Steps, Newsletter } from "@/components/Global";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useMounted } from "@/hooks/useMounted";
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const mounted = useMounted();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/dashboard');
+    if (mounted && !isLoading && isAuthenticated) {
+      router.push("/dashboard");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [mounted, isAuthenticated, isLoading, router]);
 
-  if (isLoading || isAuthenticated) {
-    return null;
+  if (!mounted || isLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-3 border-[#e53238] border-t-transparent rounded-full animate-spin" />
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (

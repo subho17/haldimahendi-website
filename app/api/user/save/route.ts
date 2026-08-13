@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { saveProfile, ProfileData } from '@/lib/otpStore';
 
 const USERS_FILE = path.join(process.cwd(), "scratch", "users_db.json");
 
@@ -64,6 +65,20 @@ export async function POST(req: Request) {
     }
 
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+
+    // ✅ Also save to Supabase Postgres (profile + photo URL stored)
+    try {
+      const profileData: ProfileData = {
+        userId: userData.mobileNumber || userData.email || 'unknown',
+        displayName: userData.name || 'Member',
+        mobileNumber: userData.mobileNumber || '',
+        avatarUrl: userData.avatarUrl || '/images/default-avatar.png',
+        provider: userData.provider as 'otp' | 'google' | 'password' || 'otp',
+      };
+      await saveProfile(profileData);
+    } catch (e) {
+      console.warn('Failed to save profile to DB:', e);
+    }
 
     return NextResponse.json({
       success: true,

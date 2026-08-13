@@ -1,11 +1,11 @@
+/* eslint-disable @next/next/no-img-element, @next/next/no-location-assign-relative-destination */
 "use client";
 
 import React, { useState } from "react";
-import { Heart, Smartphone, KeyRound, ArrowRight, ShieldCheck, AlertCircle, ArrowLeft } from "lucide-react";
+import { Heart, Smartphone, KeyRound, ArrowRight, ShieldCheck, AlertCircle, ArrowLeft, User, Camera, Sparkles, MapPin } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin, GoogleLogin } from "@react-oauth/google";
 
 interface SignupPageProps {
   onOpenLogin?: () => void;
@@ -13,16 +13,53 @@ interface SignupPageProps {
   isModal?: boolean;
 }
 
+const DEFAULT_AVATARS = [
+  { label: "Female Avatar 1", url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250" },
+  { label: "Male Avatar 1", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250" },
+  { label: "Female Avatar 2", url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=250" },
+  { label: "Male Avatar 2", url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250" },
+];
+
+const parseGoogleCredential = (credentialToken: string) => {
+  try {
+    const base64Url = credentialToken.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
+
 export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: SignupPageProps) {
   const { login } = useAuth();
-  const router = useRouter();
 
+  // Wizard Steps: 1 = Mobile, 2 = OTP, 3 = Profile Completion
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mobileNumber, setMobileNumber] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
+
+  // Profile completion fields
+  const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATARS[0].url);
+  const [gender, setGender] = useState<"Groom" | "Bride">("Groom");
+  const [maritalStatus] = useState("Never Married");
+  const [city, setCity] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
+
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const isRealClient =
+    clientId &&
+    !clientId.includes("YOUR_GOOGLE_CLIENT_ID") &&
+    clientId.endsWith(".apps.googleusercontent.com");
 
   // Step 1: Send Real OTP via /api/otp/send
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -50,7 +87,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
         return;
       }
 
-      setOtpSent(true);
+      setStep(2);
       setInfoMessage(`OTP Sent to +91 ${mobileNumber}`);
     } catch {
       setIsLoading(false);
@@ -58,7 +95,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
     }
   };
 
-  // Step 2: Verify OTP & Trigger Authenticated Login Context
+  // Step 2: Verify OTP & move to Profile Completion Step 3
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otp || otp.length < 4) {
@@ -84,16 +121,63 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
         return;
       }
 
-      // Login User into AuthContext, close modal, and redirect to /dashboard
-      login({ mobileNumber, name: `Member (+91 ${mobileNumber.slice(-4)})` });
-      if (onSuccess) {
-        onSuccess();
-      }
-      router.push("/dashboard");
+      // Move to Step 3: Profile Completion Form
+      setStep(3);
+      setInfoMessage("Mobile verified! Please complete your profile details below.");
     } catch {
       setIsLoading(false);
       setError("Network error verifying OTP. Please try again.");
     }
+  };
+
+  // Step 3: Complete Profile & Redirect to /dashboard
+  const handleCompleteProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    const finalDisplayName = displayName.trim() || `Member (+91 ${mobileNumber.slice(-4)})`;
+
+    const profileData = {
+      name: finalDisplayName,
+      display_name: finalDisplayName,
+      mobileNumber,
+      mobile_number: mobileNumber,
+      avatarUrl: avatarUrl || DEFAULT_AVATARS[0].url,
+      avatar_url: avatarUrl || DEFAULT_AVATARS[0].url,
+      gender,
+      maritalStatus,
+      city,
+      provider: "otp" as const,
+    };
+
+    login(profileData);
+
+    if (onSuccess) {
+      onSuccess();
+    }
+
+    // Force clean navigation to /dashboard
+    window.location.href = "/dashboard";
+  };
+
+  // Photo Upload Handler (Local File -> Base64 Data URL)
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size must be under 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        setAvatarUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // Resend OTP
@@ -127,42 +211,41 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
         const googleUser = await res.json();
         login({
           name: googleUser.name || "Google Member",
+          display_name: googleUser.name || "Google Member",
           email: googleUser.email || "user@gmail.com",
-          avatarUrl: googleUser.picture || "/images/default-avatar.png",
+          avatarUrl: googleUser.picture || DEFAULT_AVATARS[0].url,
+          avatar_url: googleUser.picture || DEFAULT_AVATARS[0].url,
           provider: "google",
+          profileId: googleUser.sub ? `SH${googleUser.sub.slice(-6)}` : undefined,
         });
         if (onSuccess) onSuccess();
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       } catch {
         login({
           name: "Google Member",
+          display_name: "Google Member",
           email: "googleuser@gmail.com",
           provider: "google",
         });
         if (onSuccess) onSuccess();
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }
     },
     onError: () => {
       login({
         name: "Google Member",
+        display_name: "Google Member",
         email: "googleuser@gmail.com",
         provider: "google",
       });
       if (onSuccess) onSuccess();
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     },
   });
 
   // Social Login Handler
   const handleSocialLogin = (provider: "google" | "facebook") => {
     if (provider === "google") {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-      const isRealClient =
-        clientId &&
-        !clientId.includes("YOUR_GOOGLE_CLIENT_ID") &&
-        clientId.endsWith(".apps.googleusercontent.com");
-
       if (isRealClient) {
         try {
           googleLogin();
@@ -172,13 +255,13 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
         }
       }
 
-      login({ name: "Google Member", mobileNumber: "9876543210" });
+      login({ name: "Google Member", display_name: "Google Member", email: "googleuser@gmail.com", provider: "google" });
       if (onSuccess) onSuccess();
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } else {
-      login({ name: "Facebook Member", mobileNumber: "9876543210" });
+      login({ name: "Facebook Member", display_name: "Facebook Member", email: "facebookuser@gmail.com", provider: "facebook" });
       if (onSuccess) onSuccess();
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
   };
 
@@ -190,19 +273,21 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
         <div className="flex items-center justify-between mb-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-[#e53238] font-bold text-xs">
             <Heart className="w-3.5 h-3.5 fill-[#e53238]" />
-            <span>100% Verified Profile Setup</span>
+            <span>Step {step} of 3 • 100% Verified Setup</span>
           </div>
         </div>
 
-        {/* Title */}
+        {/* Title Header */}
         <div className="space-y-1 mb-6">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-            {!otpSent ? "Create New Profile ✨" : "Verify Mobile OTP 📱"}
+            {step === 1 && "Create New Profile ✨"}
+            {step === 2 && "Verify Mobile OTP 📱"}
+            {step === 3 && "Complete Profile 👤"}
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm font-normal">
-            {!otpSent
-              ? "Enter your mobile number to receive a verification OTP code."
-              : `We sent a 4-digit code to +91 ${mobileNumber}.`}
+            {step === 1 && "Enter your mobile number to receive a verification OTP code."}
+            {step === 2 && `We sent a 4-digit code to +91 ${mobileNumber}.`}
+            {step === 3 && "Enter your display name and photo to start finding matches."}
           </p>
         </div>
 
@@ -221,8 +306,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
           </div>
         )}
 
-        {/* Form 1: Enter Mobile Number */}
-        {!otpSent ? (
+        {/* Step 1: Enter Mobile Number */}
+        {step === 1 && (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
@@ -256,8 +341,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
               )}
             </button>
           </form>
-        ) : (
-          /* Form 2: Enter OTP Code */
+        )}
+
+        {/* Step 2: Enter OTP Code */}
+        {step === 2 && (
           <form onSubmit={handleVerifyOtp} className="space-y-5 animate-in fade-in">
             <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-2 border border-red-100">
               <KeyRound className="w-8 h-8 text-[#e53238]" />
@@ -290,7 +377,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
               <button
                 type="button"
                 onClick={() => {
-                  setOtpSent(false);
+                  setStep(1);
                   setInfoMessage("");
                 }}
                 className="text-gray-500 hover:text-gray-900 cursor-pointer"
@@ -303,7 +390,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
               <button
                 type="button"
                 onClick={() => {
-                  setOtpSent(false);
+                  setStep(1);
                   setInfoMessage("");
                 }}
                 className="w-1/3 py-3.5 px-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 flex items-center justify-center gap-1 cursor-pointer"
@@ -321,7 +408,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>Verify & Create</span>
+                    <span>Verify & Continue</span>
                     <ShieldCheck className="w-4 h-4" />
                   </>
                 )}
@@ -330,8 +417,131 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
           </form>
         )}
 
+        {/* Step 3: Complete Profile Form (Name & Avatar Upload) */}
+        {step === 3 && (
+          <form onSubmit={handleCompleteProfile} className="space-y-4 animate-in fade-in">
+            {/* Avatar Preview & Upload Selector */}
+            <div className="flex flex-col items-center justify-center gap-3 mb-2">
+              <div className="relative group">
+                <img
+                  src={avatarUrl}
+                  alt="Profile Avatar"
+                  className="w-20 h-20 rounded-full object-cover border-4 border-red-100 shadow-md"
+                />
+                <label className="absolute bottom-0 right-0 p-1.5 rounded-full bg-[#e53238] text-white cursor-pointer shadow-md hover:scale-105 transition">
+                  <Camera className="w-3.5 h-3.5" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Avatar Presets Picker */}
+              <div className="flex items-center gap-2 mt-1">
+                {DEFAULT_AVATARS.map((av, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setAvatarUrl(av.url)}
+                    className={`w-8 h-8 rounded-full overflow-hidden border-2 transition ${
+                      avatarUrl === av.url ? "border-[#e53238] scale-110" : "border-gray-200 opacity-70"
+                    }`}
+                  >
+                    <img src={av.url} alt={av.label} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+              <span className="text-[11px] text-gray-400 font-medium">Click camera or choose a preset avatar</span>
+            </div>
+
+            {/* Display Name Input */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
+                Full Display Name
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="e.g. Rahul Sharma"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-semibold focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+
+            {/* Gender Choice */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
+                Looking For
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGender("Groom")}
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    gender === "Groom"
+                      ? "bg-red-50 border-[#e53238] text-[#e53238]"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <span>🤵 Bride (Groom Profile)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setGender("Bride")}
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    gender === "Bride"
+                      ? "bg-red-50 border-[#e53238] text-[#e53238]"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <span>👰 Groom (Bride Profile)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* City Input */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
+                Current City / Location
+              </label>
+              <div className="relative">
+                <MapPin className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="e.g. Mumbai, Delhi, Bengaluru"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-xs font-medium focus:bg-white focus:border-[#e53238] outline-hidden"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-3"
+            >
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Complete Profile & Start Matching</span>
+                  <Sparkles className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+        )}
+
         {/* Social Login Section */}
-        {!otpSent && (
+        {step === 1 && (
           <>
             <div className="relative my-5 text-center">
               <div className="absolute inset-0 flex items-center">
@@ -341,6 +551,35 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 Or Continue With
               </span>
             </div>
+
+            {/* Official Google Login Button if configured */}
+            {isRealClient && (
+              <div className="mb-3 flex justify-center w-full">
+                <GoogleLogin
+                  onSuccess={(credentialResponse) => {
+                    const googleUser = parseGoogleCredential(credentialResponse.credential || "");
+                    login({
+                      name: googleUser?.name || "Google Member",
+                      display_name: googleUser?.name || "Google Member",
+                      email: googleUser?.email || "user@gmail.com",
+                      avatarUrl: googleUser?.picture || DEFAULT_AVATARS[0].url,
+                      avatar_url: googleUser?.picture || DEFAULT_AVATARS[0].url,
+                      provider: "google",
+                      profileId: googleUser?.sub ? `SH${googleUser.sub.slice(-6)}` : undefined,
+                    });
+                    if (onSuccess) onSuccess();
+                    window.location.href = "/dashboard";
+                  }}
+                  onError={() => {
+                    handleSocialLogin("google");
+                  }}
+                  theme="outline"
+                  shape="pill"
+                  size="large"
+                  text="continue_with"
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 mb-2">
               {/* Google Button */}
@@ -374,34 +613,38 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
         )}
 
         {/* Divider */}
-        <div className="relative my-5 text-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-100"></div>
+        {step === 1 && (
+          <div className="relative my-5 text-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-100"></div>
+            </div>
+            <span className="relative bg-white px-3 text-xs text-gray-400 uppercase font-semibold">
+              Already Registered?
+            </span>
           </div>
-          <span className="relative bg-white px-3 text-xs text-gray-400 uppercase font-semibold">
-            Already Registered?
-          </span>
-        </div>
+        )}
 
         {/* Switch to Login */}
-        <div className="text-center">
-          {onOpenLogin ? (
-            <button
-              type="button"
-              onClick={onOpenLogin}
-              className="w-full py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all cursor-pointer"
-            >
-              Sign In to Your Account
-            </button>
-          ) : (
-            <Link
-              href="/auth/login"
-              className="w-full inline-block py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all text-center"
-            >
-              Sign In to Your Account
-            </Link>
-          )}
-        </div>
+        {step === 1 && (
+          <div className="text-center">
+            {onOpenLogin ? (
+              <button
+                type="button"
+                onClick={onOpenLogin}
+                className="w-full py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all cursor-pointer"
+              >
+                Sign In to Your Account
+              </button>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="w-full inline-block py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all text-center"
+              >
+                Sign In to Your Account
+              </Link>
+            )}
+          </div>
+        )}
 
       </div>
     </div>

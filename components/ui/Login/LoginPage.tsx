@@ -5,13 +5,29 @@ import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle, Sparkles
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin, GoogleLogin } from "@react-oauth/google";
 
 interface LoginPageProps {
   onOpenForgotPassword?: () => void;
   onOpenSignup?: () => void;
   isModal?: boolean;
 }
+
+const parseGoogleCredential = (credentialToken: string) => {
+  try {
+    const base64Url = credentialToken.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
 
 export default function LoginPage({
   onOpenForgotPassword,
@@ -26,6 +42,12 @@ export default function LoginPage({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const isRealClient =
+    clientId &&
+    !clientId.includes("YOUR_GOOGLE_CLIENT_ID") &&
+    clientId.endsWith(".apps.googleusercontent.com");
 
   const handlePasswordLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +67,7 @@ export default function LoginPage({
       login({
         mobileNumber: identifier.replace(/\D/g, "") || "9876543210",
         name: `Member (${identifier.slice(0, 8)})`,
+        provider: "password",
       });
       router.push("/dashboard");
     }, 600);
@@ -63,6 +86,7 @@ export default function LoginPage({
           email: googleUser.email || "user@gmail.com",
           avatarUrl: googleUser.picture || "/images/default-avatar.png",
           provider: "google",
+          profileId: googleUser.sub ? `SH${googleUser.sub.slice(-6)}` : undefined,
         });
         router.push("/dashboard");
       } catch {
@@ -86,12 +110,6 @@ export default function LoginPage({
 
   const handleSocialLogin = (provider: "google" | "facebook") => {
     if (provider === "google") {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-      const isRealClient =
-        clientId &&
-        !clientId.includes("YOUR_GOOGLE_CLIENT_ID") &&
-        clientId.endsWith(".apps.googleusercontent.com");
-
       if (isRealClient) {
         try {
           googleLogin();
@@ -101,10 +119,10 @@ export default function LoginPage({
         }
       }
 
-      login({ name: "Google Member", mobileNumber: "9876543210" });
+      login({ name: "Google Member", email: "googleuser@gmail.com", provider: "google" });
       router.push("/dashboard");
     } else {
-      login({ name: "Facebook Member", mobileNumber: "9876543210" });
+      login({ name: "Facebook Member", email: "facebookuser@gmail.com", provider: "facebook" });
       router.push("/dashboard");
     }
   };
@@ -226,6 +244,32 @@ export default function LoginPage({
             Or Continue With
           </span>
         </div>
+
+        {/* Official Google Login Button if configured */}
+        {isRealClient && (
+          <div className="mb-3 flex justify-center w-full">
+            <GoogleLogin
+              onSuccess={(credentialResponse) => {
+                const googleUser = parseGoogleCredential(credentialResponse.credential || "");
+                login({
+                  name: googleUser?.name || "Google Member",
+                  email: googleUser?.email || "user@gmail.com",
+                  avatarUrl: googleUser?.picture || "/images/default-avatar.png",
+                  provider: "google",
+                  profileId: googleUser?.sub ? `SH${googleUser.sub.slice(-6)}` : undefined,
+                });
+                router.push("/dashboard");
+              }}
+              onError={() => {
+                handleSocialLogin("google");
+              }}
+              theme="outline"
+              shape="pill"
+              size="large"
+              text="continue_with"
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3 mb-2">
           {/* Google Button */}

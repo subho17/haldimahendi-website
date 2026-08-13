@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Navbar, Footer } from "@/components/Global";
+import Navbar from "@/components/layout/Navbar";
+import { Footer } from "@/components/Global";
 import { Search } from "lucide-react";
 
 export default function SearchPage() {

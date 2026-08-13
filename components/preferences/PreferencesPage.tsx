@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Navbar, Footer } from "@/components/Global";
+import Navbar from "@/components/layout/Navbar";
+import { Footer } from "@/components/Global";
 import { Sliders, Save } from "lucide-react";
 
 export default function PreferencesPage() {

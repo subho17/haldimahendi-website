@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Navbar, Footer } from "@/components/Global";
+import Navbar from "@/components/layout/Navbar";
+import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Filter } from "lucide-react";

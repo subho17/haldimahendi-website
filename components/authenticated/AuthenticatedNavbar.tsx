@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -13,6 +14,10 @@ export default function AuthenticatedNavbar() {
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isHelpMenuOpen, setIsHelpMenuOpen] = useState(false);
+
+  const userAvatar = user?.avatar_url || user?.avatarUrl;
+  const userName = user?.display_name || user?.name || "Shaadi Member";
+  const userMobile = user?.mobile_number || user?.mobileNumber || "";
 
   // Derive active main tab from the current pathname
   const activeMainTab = pathname.includes("/matches")
@@ -43,7 +48,7 @@ export default function AuthenticatedNavbar() {
   return (
     <header className="w-full sticky top-0 z-50 font-sans shadow-md">
       
-      {/* 1. TOP RED BRAND BAR (exact screenshot match) */}
+      {/* 1. TOP RED BRAND BAR */}
       <div className="bg-[#e53238] text-white h-14 sm:h-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto h-full flex items-center justify-between">
           
@@ -69,7 +74,7 @@ export default function AuthenticatedNavbar() {
           {/* Middle: Main Header Links */}
           <nav className="hidden md:flex items-center space-x-6 lg:space-x-10 h-full font-semibold text-sm sm:text-base">
             
-            {/* My Shaadi (Active Tab with Caret Arrow Indicator) */}
+            {/* My Shaadi */}
             <div className="relative h-full flex items-center">
               <Link
                 href="/dashboard"
@@ -81,13 +86,12 @@ export default function AuthenticatedNavbar() {
               >
                 My Shaadi
               </Link>
-              {/* White Caret Pointer Arrow pointing down to Sub-Navbar */}
               {activeMainTab === "my-shaadi" && (
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-white"></span>
               )}
             </div>
 
-            {/* Matches with Notification Pill Badge */}
+            {/* Matches */}
             <div className="relative h-full flex items-center">
               <Link
                 href="/matches"
@@ -98,7 +102,7 @@ export default function AuthenticatedNavbar() {
                 }`}
               >
                 <span>Matches</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-white text-[#e53238] font-extrabold text-[11px] leading-none shadow-sm">
+                <span className="px-1.5 py-0.5 rounded-full bg-white text-[#e53238] font-extrabold text-[11px] leading-none shadow-xs">
                   20
                 </span>
               </Link>
@@ -183,25 +187,39 @@ export default function AuthenticatedNavbar() {
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-1.5 p-1 rounded-full border-2 border-white/60 hover:border-white transition-all cursor-pointer bg-white/10"
+                className="flex items-center gap-2 p-1 px-2 rounded-full border border-white/40 hover:border-white transition-all cursor-pointer bg-white/10"
               >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-100 border border-white flex items-center justify-center text-amber-800 font-bold overflow-hidden shadow-xs">
-                  {user?.avatarUrl ? (
-                    <User className="w-5 h-5 text-gray-600" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-100 border border-white flex items-center justify-center text-red-800 font-bold overflow-hidden shadow-xs shrink-0">
+                  {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
+                    <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-5 h-5 text-gray-600" />
+                    <span className="text-xs sm:text-sm font-extrabold text-[#e53238] uppercase">
+                      {userName.charAt(0)}
+                    </span>
                   )}
                 </div>
+                <span className="hidden sm:inline font-bold text-xs text-white max-w-[100px] truncate">
+                  {userName.split(" ")[0]}
+                </span>
                 <ChevronDown className={`w-3.5 h-3.5 text-white transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
               </button>
 
               {/* User Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-50 text-gray-800 text-xs animate-in fade-in zoom-in-95">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="font-bold text-sm text-gray-900">{user?.name || "Shaadi Member"}</p>
-                    <p className="text-gray-400 text-[11px] font-semibold">ID: {user?.profileId}</p>
-                    <p className="text-gray-400 text-[11px]">+91 {user?.mobileNumber}</p>
+                <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-50 text-gray-800 text-xs animate-in fade-in zoom-in-95">
+                  <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-red-50 flex items-center justify-center font-bold text-red-600 shrink-0">
+                      {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
+                        <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-sm font-extrabold text-[#e53238] uppercase">{userName.charAt(0)}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-sm text-gray-900 truncate">{userName}</p>
+                      <p className="text-gray-400 text-[11px] font-semibold">ID: {user?.profileId}</p>
+                      {userMobile && <p className="text-gray-400 text-[11px] truncate">+91 {userMobile}</p>}
+                    </div>
                   </div>
 
                   <div className="py-1">
@@ -256,7 +274,7 @@ export default function AuthenticatedNavbar() {
         </div>
       </div>
 
-      {/* 2. SECONDARY WHITE SUB-NAVBAR (exact screenshot match) */}
+      {/* 2. SECONDARY WHITE SUB-NAVBAR */}
       <div className="bg-white border-b border-gray-200 text-xs sm:text-sm font-medium text-gray-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-6 sm:space-x-8 overflow-x-auto no-scrollbar py-2.5">
