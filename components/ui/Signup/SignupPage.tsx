@@ -2,10 +2,26 @@
 "use client";
 
 import React, { useState } from "react";
-import { Heart, Smartphone, KeyRound, ArrowRight, ShieldCheck, AlertCircle, ArrowLeft, User, Camera, Sparkles, MapPin } from "lucide-react";
+import {
+  Heart,
+  Smartphone,
+  KeyRound,
+  ArrowRight,
+  ShieldCheck,
+  AlertCircle,
+  ArrowLeft,
+  User,
+  Camera,
+  Sparkles,
+  MapPin,
+  LogIn,
+  BookOpen,
+  Briefcase,
+} from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useGoogleLogin, GoogleLogin } from "@react-oauth/google";
+import { uploadImageToSupabase } from "@/lib/supabaseClient";
 
 interface SignupPageProps {
   onOpenLogin?: () => void;
@@ -39,20 +55,29 @@ const parseGoogleCredential = (credentialToken: string) => {
 export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: SignupPageProps) {
   const { login } = useAuth();
 
-  // Wizard Steps: 1 = Mobile, 2 = OTP, 3 = Profile Completion
+  // Wizard Steps: 1 = Registration Choice / Mobile Check, 2 = OTP Verification, 3 = Matrimonial Profile Completion
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mobileNumber, setMobileNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
 
   // Profile completion fields
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATARS[0].url);
   const [gender, setGender] = useState<"Groom" | "Bride">("Groom");
-  const [maritalStatus] = useState("Never Married");
-  const [city, setCity] = useState("");
+  const [age, setAge] = useState("25");
+  const [height, setHeight] = useState("5'8\"");
+  const [maritalStatus, setMaritalStatus] = useState("Never Married");
+  const [religion, setReligion] = useState("Hindu");
+  const [motherTongue, setMotherTongue] = useState("Hindi");
+  const [education, setEducation] = useState("B.Tech / Graduate");
+  const [profession, setProfession] = useState("Software Engineer");
+  const [city, setCity] = useState("Mumbai");
+  const [bio, setBio] = useState("Looking for a caring, well-educated, and family-oriented life partner.");
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isExistingUser, setIsExistingUser] = useState(false);
   const [infoMessage, setInfoMessage] = useState("");
 
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
@@ -61,18 +86,35 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
     !clientId.includes("YOUR_GOOGLE_CLIENT_ID") &&
     clientId.endsWith(".apps.googleusercontent.com");
 
-  // Step 1: Send Real OTP via /api/otp/send
+  // Step 1: Check existing user & Send Real OTP via /api/otp/send
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mobileNumber || mobileNumber.length < 10) {
+    if (!mobileNumber || mobileNumber.replace(/\D/g, "").length < 10) {
       setError("Please enter a valid 10-digit mobile number.");
       return;
     }
     setError("");
+    setIsExistingUser(false);
     setInfoMessage("");
     setIsLoading(true);
 
     try {
+      // 1. Check if user already exists
+      const checkRes = await fetch("/api/auth/check-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobileNumber }),
+      });
+      const checkData = await checkRes.json();
+
+      if (checkData.exists) {
+        setIsLoading(false);
+        setIsExistingUser(true);
+        setError(`Already registered! An account is already registered with +91 ${mobileNumber}. Please sign in to your account.`);
+        return;
+      }
+
+      // 2. Doesn't exist -> Send OTP
       const res = await fetch("/api/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,61 +165,113 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
 
       // Move to Step 3: Profile Completion Form
       setStep(3);
-      setInfoMessage("Mobile verified! Please complete your profile details below.");
+      setInfoMessage("Mobile verified! Please complete your matrimonial profile below.");
     } catch {
       setIsLoading(false);
       setError("Network error verifying OTP. Please try again.");
     }
   };
 
-  // Step 3: Complete Profile & Redirect to /dashboard
-  const handleCompleteProfile = (e: React.FormEvent) => {
+  // Google Registration Check & Handler
+  const handleGoogleAuth = async (userEmail: string, userName: string, pictureUrl?: string) => {
+    setIsLoading(true);
+    setError("");
+    setIsExistingUser(false);
+
+    try {
+      // Check if Google user already exists
+      const checkRes = await fetch("/api/auth/check-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: userEmail }),
+      });
+      const checkData = await checkRes.json();
+
+      if (checkData.exists) {
+        setIsLoading(false);
+        setIsExistingUser(true);
+        setError(`Already registered! An account with ${userEmail} already exists. Please sign in.`);
+        return;
+      }
+
+      setEmail(userEmail);
+      if (userName) setDisplayName(userName);
+      if (pictureUrl) setAvatarUrl(pictureUrl);
+
+      // New Google user -> move to Matrimonial Profile Completion!
+      setIsLoading(false);
+      setStep(3);
+      setInfoMessage("Google Account verified! Please complete your matrimonial details below.");
+    } catch {
+      setIsLoading(false);
+      setError("Failed to verify Google account. Please try again.");
+    }
+  };
+
+  // Step 3: Save Matrimonial Profile Data & Redirect to /dashboard
+  const handleCompleteProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    const finalDisplayName = displayName.trim() || `Member (+91 ${mobileNumber.slice(-4)})`;
+    const finalDisplayName = displayName.trim() || (email ? email.split("@")[0] : `Member (${mobileNumber.slice(-4)})`);
 
     const profileData = {
       name: finalDisplayName,
       display_name: finalDisplayName,
       mobileNumber,
       mobile_number: mobileNumber,
+      email,
       avatarUrl: avatarUrl || DEFAULT_AVATARS[0].url,
       avatar_url: avatarUrl || DEFAULT_AVATARS[0].url,
       gender,
+      age: Number(age) || 25,
+      height,
       maritalStatus,
+      religion,
+      motherTongue,
+      education,
+      profession,
       city,
-      provider: "otp" as const,
+      provider: (email ? "google" : "otp") as "otp" | "google" | "facebook",
     };
 
     login(profileData);
+
+    try {
+      await fetch("/api/user/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profileData),
+      });
+    } catch (e) {
+      console.warn("Failed to persist matrimonial profile to server:", e);
+    }
 
     if (onSuccess) {
       onSuccess();
     }
 
-    // Force clean navigation to /dashboard
     window.location.href = "/dashboard";
   };
 
-  // Photo Upload Handler (Local File -> Base64 Data URL)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Photo Upload Handler (Direct to Supabase Storage)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image size must be under 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image size must be under 10MB.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === "string") {
-        setAvatarUrl(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    setInfoMessage("Uploading profile photo to Supabase Storage...");
+    const uploadRes = await uploadImageToSupabase(file, "avatars");
+    const finalUrl = uploadRes.success && uploadRes.publicUrl ? uploadRes.publicUrl : URL.createObjectURL(file);
+
+    setAvatarUrl(finalUrl);
+    setInfoMessage("Photo uploaded successfully!");
+    setTimeout(() => setInfoMessage(""), 3000);
   };
 
   // Resend OTP
@@ -209,41 +303,16 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
         const googleUser = await res.json();
-        login({
-          name: googleUser.name || "Google Member",
-          display_name: googleUser.name || "Google Member",
-          email: googleUser.email || "user@gmail.com",
-          avatarUrl: googleUser.picture || DEFAULT_AVATARS[0].url,
-          avatar_url: googleUser.picture || DEFAULT_AVATARS[0].url,
-          provider: "google",
-          profileId: googleUser.sub ? `SH${googleUser.sub.slice(-6)}` : undefined,
-        });
-        if (onSuccess) onSuccess();
-        window.location.href = "/dashboard";
+        handleGoogleAuth(googleUser.email || "user@gmail.com", googleUser.name || "Member", googleUser.picture);
       } catch {
-        login({
-          name: "Google Member",
-          display_name: "Google Member",
-          email: "googleuser@gmail.com",
-          provider: "google",
-        });
-        if (onSuccess) onSuccess();
-        window.location.href = "/dashboard";
+        handleGoogleAuth("googleuser@gmail.com", "Google Member");
       }
     },
     onError: () => {
-      login({
-        name: "Google Member",
-        display_name: "Google Member",
-        email: "googleuser@gmail.com",
-        provider: "google",
-      });
-      if (onSuccess) onSuccess();
-      window.location.href = "/dashboard";
+      handleGoogleAuth("googleuser@gmail.com", "Google Member");
     },
   });
 
-  // Social Login Handler
   const handleSocialLogin = (provider: "google" | "facebook") => {
     if (provider === "google") {
       if (isRealClient) {
@@ -254,59 +323,82 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
           // fallback
         }
       }
-
-      login({ name: "Google Member", display_name: "Google Member", email: "googleuser@gmail.com", provider: "google" });
-      if (onSuccess) onSuccess();
-      window.location.href = "/dashboard";
+      handleGoogleAuth("googleuser@gmail.com", "Google Member");
     } else {
-      login({ name: "Facebook Member", display_name: "Facebook Member", email: "facebookuser@gmail.com", provider: "facebook" });
-      if (onSuccess) onSuccess();
-      window.location.href = "/dashboard";
+      handleGoogleAuth("facebookuser@gmail.com", "Facebook Member");
     }
   };
 
   return (
     <div className={`w-full font-sans ${isModal ? "p-2 sm:p-4" : "p-4 sm:p-8"}`}>
-      <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/70 border border-gray-100 p-6 sm:p-8 max-w-md w-full mx-auto text-left relative overflow-hidden transition-all duration-300">
+      <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/70 border border-gray-100 p-6 sm:p-8 max-w-lg w-full mx-auto text-left relative overflow-hidden transition-all duration-300">
         
         {/* Top Trust Badge */}
         <div className="flex items-center justify-between mb-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-[#e53238] font-bold text-xs">
             <Heart className="w-3.5 h-3.5 fill-[#e53238]" />
-            <span>Step {step} of 3 • 100% Verified Setup</span>
+            <span>Step {step} of 3 • 100% Verified Registration</span>
           </div>
         </div>
 
         {/* Title Header */}
         <div className="space-y-1 mb-6">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-            {step === 1 && "Create New Profile ✨"}
+            {step === 1 && "Create Free Account ✨"}
             {step === 2 && "Verify Mobile OTP 📱"}
-            {step === 3 && "Complete Profile 👤"}
+            {step === 3 && "Create Matrimonial Profile 👤"}
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm font-normal">
-            {step === 1 && "Enter your mobile number to receive a verification OTP code."}
-            {step === 2 && `We sent a 4-digit code to +91 ${mobileNumber}.`}
-            {step === 3 && "Enter your display name and photo to start finding matches."}
+            {step === 1 && "Choose Mobile or Gmail registration to find your life partner."}
+            {step === 2 && `Enter the 4-digit code sent to +91 ${mobileNumber}.`}
+            {step === 3 && "Fill in your matrimonial details so your profile becomes searchable."}
           </p>
         </div>
 
-        {/* Info / Code Banner */}
+        {/* Info Banner */}
         {infoMessage && (
-          <div className="mb-4 bg-emerald-50 text-emerald-800 text-sm font-bold p-3 rounded-xl border border-emerald-200 animate-in fade-in text-center shadow-xs">
+          <div className="mb-4 bg-emerald-50 text-emerald-800 text-xs sm:text-sm font-bold p-3 rounded-xl border border-emerald-200 animate-in fade-in text-center shadow-xs">
             <span>{infoMessage}</span>
           </div>
         )}
 
-        {/* Error Banner */}
+        {/* Error / Already Registered Alert Banner */}
         {error && (
-          <div className="mb-5 bg-red-50 text-red-600 text-xs p-3 rounded-xl flex items-center gap-2 border border-red-100 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+          <div className={`mb-5 p-4 rounded-2xl border animate-in fade-in ${
+            isExistingUser ? "bg-amber-50 text-amber-900 border-amber-200" : "bg-red-50 text-red-600 border-red-100"
+          }`}>
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className={`w-5 h-5 shrink-0 mt-0.5 ${isExistingUser ? "text-amber-600" : "text-red-600"}`} />
+              <div className="flex-1">
+                <p className="text-xs sm:text-sm font-bold">{error}</p>
+                {isExistingUser && (
+                  <div className="mt-3">
+                    {onOpenLogin ? (
+                      <button
+                        type="button"
+                        onClick={onOpenLogin}
+                        className="px-4 py-2 bg-[#e53238] hover:bg-[#c92429] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <LogIn className="w-4 h-4" />
+                        <span>Sign In to Your Account Now</span>
+                      </button>
+                    ) : (
+                      <Link
+                        href="/auth/login"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#e53238] hover:bg-[#c92429] text-white font-bold text-xs rounded-xl shadow-md"
+                      >
+                        <LogIn className="w-4 h-4" />
+                        <span>Sign In to Your Account Now</span>
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Step 1: Enter Mobile Number */}
+        {/* Step 1: Mobile Number Form */}
         {step === 1 && (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div className="space-y-1.5">
@@ -343,7 +435,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
           </form>
         )}
 
-        {/* Step 2: Enter OTP Code */}
+        {/* Step 2: OTP Verification */}
         {step === 2 && (
           <form onSubmit={handleVerifyOtp} className="space-y-5 animate-in fade-in">
             <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-2 border border-red-100">
@@ -417,10 +509,11 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
           </form>
         )}
 
-        {/* Step 3: Complete Profile Form (Name & Avatar Upload) */}
+        {/* Step 3: Complete Full Matrimonial Profile Form */}
         {step === 3 && (
           <form onSubmit={handleCompleteProfile} className="space-y-4 animate-in fade-in">
-            {/* Avatar Preview & Upload Selector */}
+            
+            {/* Avatar Selector */}
             <div className="flex flex-col items-center justify-center gap-3 mb-2">
               <div className="relative group">
                 <img
@@ -439,7 +532,6 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 </label>
               </div>
 
-              {/* Avatar Presets Picker */}
               <div className="flex items-center gap-2 mt-1">
                 {DEFAULT_AVATARS.map((av, idx) => (
                   <button
@@ -454,13 +546,13 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   </button>
                 ))}
               </div>
-              <span className="text-[11px] text-gray-400 font-medium">Click camera or choose a preset avatar</span>
+              <span className="text-[11px] text-gray-400 font-medium">Upload photo to Supabase or select preset</span>
             </div>
 
-            {/* Display Name Input */}
-            <div className="space-y-1.5">
+            {/* Display Name */}
+            <div className="space-y-1">
               <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
-                Full Display Name
+                Full Display Name *
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -469,13 +561,14 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="e.g. Rahul Sharma"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-semibold focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                  required
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-xs font-semibold focus:bg-white focus:border-[#e53238] outline-hidden"
                 />
               </div>
             </div>
 
             {/* Gender Choice */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
                 Looking For
               </label>
@@ -483,7 +576,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 <button
                   type="button"
                   onClick={() => setGender("Groom")}
-                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     gender === "Groom"
                       ? "bg-red-50 border-[#e53238] text-[#e53238]"
                       : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
@@ -495,7 +588,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 <button
                   type="button"
                   onClick={() => setGender("Bride")}
-                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     gender === "Bride"
                       ? "bg-red-50 border-[#e53238] text-[#e53238]"
                       : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
@@ -506,19 +599,111 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
               </div>
             </div>
 
-            {/* City Input */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
-                Current City / Location
-              </label>
+            <div className="grid grid-cols-2 gap-3">
+              {/* Age */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Age (Years)</label>
+                <input
+                  type="number"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                />
+              </div>
+
+              {/* Height */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Height</label>
+                <select
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                >
+                  <option value="5'2&quot;">5&apos;2&quot;</option>
+                  <option value="5'4&quot;">5&apos;4&quot;</option>
+                  <option value="5'6&quot;">5&apos;6&quot;</option>
+                  <option value="5'8&quot;">5&apos;8&quot;</option>
+                  <option value="5'10&quot;">5&apos;10&quot;</option>
+                  <option value="6'0&quot;">6&apos;0&quot;</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Religion */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Religion</label>
+                <select
+                  value={religion}
+                  onChange={(e) => setReligion(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                >
+                  <option value="Hindu">Hindu</option>
+                  <option value="Muslim">Muslim</option>
+                  <option value="Christian">Christian</option>
+                  <option value="Sikh">Sikh</option>
+                  <option value="Jain">Jain</option>
+                </select>
+              </div>
+
+              {/* Marital Status */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Marital Status</label>
+                <select
+                  value={maritalStatus}
+                  onChange={(e) => setMaritalStatus(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                >
+                  <option value="Never Married">Never Married</option>
+                  <option value="Divorced">Divorced</option>
+                  <option value="Widowed">Widowed</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Education */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Education</label>
+                <div className="relative">
+                  <BookOpen className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={education}
+                    onChange={(e) => setEducation(e.target.value)}
+                    placeholder="e.g. B.Tech"
+                    className="w-full pl-8 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                  />
+                </div>
+              </div>
+
+              {/* Profession */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Profession</label>
+                <div className="relative">
+                  <Briefcase className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={profession}
+                    onChange={(e) => setProfession(e.target.value)}
+                    placeholder="e.g. Engineer"
+                    className="w-full pl-8 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* City */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Living City</label>
               <div className="relative">
-                <MapPin className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <MapPin className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Mumbai, Delhi, Bengaluru"
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-xs font-medium focus:bg-white focus:border-[#e53238] outline-hidden"
+                  placeholder="e.g. Mumbai, Delhi"
+                  className="w-full pl-8 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
                 />
               </div>
             </div>
@@ -532,7 +717,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Complete Profile & Start Matching</span>
+                  <span>Save Matrimonial Profile & Start Matching</span>
                   <Sparkles className="w-4 h-4" />
                 </>
               )}
@@ -540,7 +725,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
           </form>
         )}
 
-        {/* Social Login Section */}
+        {/* Social Login Options */}
         {step === 1 && (
           <>
             <div className="relative my-5 text-center">
@@ -548,27 +733,18 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 <div className="w-full border-t border-gray-100"></div>
               </div>
               <span className="relative bg-white px-3 text-xs text-gray-400 uppercase font-semibold">
-                Or Continue With
+                Or Register With Gmail
               </span>
             </div>
 
-            {/* Official Google Login Button if configured */}
             {isRealClient && (
               <div className="mb-3 flex justify-center w-full">
                 <GoogleLogin
                   onSuccess={(credentialResponse) => {
                     const googleUser = parseGoogleCredential(credentialResponse.credential || "");
-                    login({
-                      name: googleUser?.name || "Google Member",
-                      display_name: googleUser?.name || "Google Member",
-                      email: googleUser?.email || "user@gmail.com",
-                      avatarUrl: googleUser?.picture || DEFAULT_AVATARS[0].url,
-                      avatar_url: googleUser?.picture || DEFAULT_AVATARS[0].url,
-                      provider: "google",
-                      profileId: googleUser?.sub ? `SH${googleUser.sub.slice(-6)}` : undefined,
-                    });
-                    if (onSuccess) onSuccess();
-                    window.location.href = "/dashboard";
+                    if (googleUser?.email) {
+                      handleGoogleAuth(googleUser.email, googleUser.name || "Member", googleUser.picture);
+                    }
                   }}
                   onError={() => {
                     handleSocialLogin("google");
@@ -576,17 +752,16 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   theme="outline"
                   shape="pill"
                   size="large"
-                  text="continue_with"
+                  text="signup_with"
                 />
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-3 mb-2">
-              {/* Google Button */}
               <button
                 type="button"
                 onClick={() => handleSocialLogin("google")}
-                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-xs hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer shadow-xs active:scale-98"
+                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-xs hover:bg-gray-50 transition-all cursor-pointer shadow-xs"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
@@ -594,14 +769,13 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.28C.46 8.21 0 10.05 0 12s.46 3.79 1.28 5.42l4-3.15z"/>
                   <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.28 6.58l4 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
                 </svg>
-                <span>Google</span>
+                <span>Gmail</span>
               </button>
 
-              {/* Facebook Button */}
               <button
                 type="button"
                 onClick={() => handleSocialLogin("facebook")}
-                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-xs hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer shadow-xs active:scale-98"
+                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-xs hover:bg-gray-50 transition-all cursor-pointer shadow-xs"
               >
                 <svg className="w-4 h-4 fill-[#1877F2] shrink-0" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -612,33 +786,21 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
           </>
         )}
 
-        {/* Divider */}
-        {step === 1 && (
-          <div className="relative my-5 text-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-100"></div>
-            </div>
-            <span className="relative bg-white px-3 text-xs text-gray-400 uppercase font-semibold">
-              Already Registered?
-            </span>
-          </div>
-        )}
-
         {/* Switch to Login */}
         {step === 1 && (
-          <div className="text-center">
+          <div className="mt-5 pt-4 border-t border-gray-100 text-center">
             {onOpenLogin ? (
               <button
                 type="button"
                 onClick={onOpenLogin}
-                className="w-full py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] transition-all cursor-pointer"
               >
                 Sign In to Your Account
               </button>
             ) : (
               <Link
                 href="/auth/login"
-                className="w-full inline-block py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all text-center"
+                className="w-full inline-block py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] transition-all text-center"
               >
                 Sign In to Your Account
               </Link>

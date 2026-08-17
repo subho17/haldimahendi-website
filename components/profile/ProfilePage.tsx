@@ -7,6 +7,7 @@ import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, Edit3, Camera, Save, X, CheckCircle, User, MapPin, Heart } from "lucide-react";
+import { uploadImageToSupabase } from "@/lib/supabaseClient";
 import { useMounted } from "@/hooks/useMounted";
 
 const DEFAULT_AVATARS = [
@@ -57,31 +58,29 @@ export default function ProfilePage() {
     );
   }
 
-  // Handle Photo Upload (Local File -> Base64 Data URL)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Photo Upload (Direct to Supabase Storage)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Please select an image file under 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Please select an image file under 10MB.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === "string") {
-        setAvatarUrl(reader.result);
-        // Save avatar immediately to user state
-        login({
-          ...user,
-          avatarUrl: reader.result,
-          avatar_url: reader.result,
-        });
-        setSuccessMessage("Profile photo updated successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-      }
-    };
-    reader.readAsDataURL(file);
+    setSuccessMessage("Uploading profile photo to Supabase...");
+
+    const uploadRes = await uploadImageToSupabase(file, "avatars");
+    const finalUrl = uploadRes.success && uploadRes.publicUrl ? uploadRes.publicUrl : URL.createObjectURL(file);
+
+    setAvatarUrl(finalUrl);
+    login({
+      ...user,
+      avatarUrl: finalUrl,
+      avatar_url: finalUrl,
+    });
+    setSuccessMessage("Profile photo updated successfully!");
+    setTimeout(() => setSuccessMessage(""), 3000);
   };
 
   // Handle Form Save

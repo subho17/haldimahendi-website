@@ -1,36 +1,62 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Heart, Sparkles, Eye, UserCheck } from "lucide-react";
+import { Heart, Sparkles, Eye, UserCheck, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useMounted } from "@/hooks/useMounted";
 
-const STATS = [
-  { label: "New Matches", value: "20", sub: "↑ 5 today", Icon: Heart, color: "text-[#e53238]" },
-  { label: "Profile Views", value: "48", sub: "↑ 12 this week", Icon: Eye, color: "text-cyan-600" },
-  { label: "Interests Sent", value: "8", sub: "3 accepted", Icon: UserCheck, color: "text-emerald-600" },
-  { label: "Shortlisted", value: "14", sub: "Saved profiles", Icon: Sparkles, color: "text-amber-500" },
-];
+interface MatchProfile {
+  id: string;
+  name: string;
+  age?: number | null;
+  city?: string | null;
+  country?: string | null;
+  profession?: string | null;
+  education?: string | null;
+}
 
-const MATCHES = [
-  { name: "Priya S.", age: "25", loc: "Mumbai", edu: "Software Engineer", id: "SH884120" },
-  { name: "Ananya M.", age: "24", loc: "Delhi NCR", edu: "Chartered Accountant", id: "SH910244" },
-  { name: "Sneha R.", age: "26", loc: "Bengaluru", edu: "Product Manager", id: "SH774812" },
-];
+interface MatchResult {
+  profile: MatchProfile;
+  score: number;
+  isEligible: boolean;
+  isNew: boolean;
+}
+
+interface DashboardStats {
+  newMatches: number;
+  newCount: number;
+  interestsSent: number;
+  interestsAccepted: number;
+  shortlisted: number;
+}
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const mounted = useMounted();
 
+  const [stats, setStats] = useState<DashboardStats>({
+    newMatches: 0,
+    newCount: 0,
+    interestsSent: 0,
+    interestsAccepted: 0,
+    shortlisted: 0,
+  });
+  const [recommended, setRecommended] = useState<MatchResult[]>([]);
+  const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+  const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const userAvatar = user?.avatar_url || user?.avatarUrl;
   const displayName = user?.display_name || user?.name || "Shaadi Member";
   const userMobile = user?.mobile_number || user?.mobileNumber || "";
+  const userId = user?.mobileNumber || user?.email || user?.profileId || "";
 
   React.useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
@@ -38,17 +64,87 @@ export default function DashboardPage() {
     }
   }, [mounted, isAuthenticated, isLoading, router]);
 
+  useEffect(() => {
+    if (mounted && isAuthenticated && userId) {
+      Promise.all([
+        fetch(`/api/matches?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
+        fetch(`/api/interests?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
+      ])
+        .then(([matchData, interestData]) => {
+          if (matchData.success) {
+            const eligible = (matchData.matches || []).filter((m: MatchResult) => m.isEligible);
+            setRecommended(eligible.slice(0, 3));
+            setStats((prev) => ({
+              ...prev,
+              newMatches: eligible.length,
+              newCount: (matchData.meta?.newCount as number) || 0,
+            }));
+          }
+          if (interestData.success) {
+            const sent = interestData.sentIds || [];
+            const shortlisted = interestData.shortlistedIds || [];
+            const accepted = (interestData.received || []).filter(
+              (r: { status: string }) => r.status === "accepted"
+            ).length;
+            setSentIds(new Set(sent));
+            setShortlistedIds(new Set(shortlisted));
+            setStats((prev) => ({
+              ...prev,
+              interestsSent: sent.length,
+              interestsAccepted: accepted,
+              shortlisted: shortlisted.length,
+            }));
+          }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [mounted, isAuthenticated, isLoading, router, userId]);
+
+  const runAction = async (otherId: string, action: string) => {
+    if (!userId || busyId) return;
+    setBusyId(otherId);
+    try {
+      const res = await fetch("/api/interests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actorId: userId, otherId, action }),
+      });
+      const data = await res.json();
+      if (data.success && data.state) {
+        setSentIds(new Set(data.state.sentIds || []));
+        setShortlistedIds(new Set(data.state.shortlistedIds || []));
+        setStats((prev) => ({
+          ...prev,
+          interestsSent: (data.state.sentIds || []).length,
+          shortlisted: (data.state.shortlistedIds || []).length,
+        }));
+      }
+    } catch (e) {
+      console.error("Interaction failed:", e);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   if (!mounted || isLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
         <Navbar />
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center">
-          <div className="w-8 h-8 border-3 border-[#e53238] border-t-transparent rounded-full animate-spin" />
+          <Loader2 className="w-8 h-8 text-[#e53238] animate-spin" />
         </main>
         <Footer />
       </div>
     );
   }
+
+  const statCards = [
+    { label: "New Matches", value: String(stats.newMatches), sub: `${stats.newCount} new this week`, Icon: Heart, color: "text-[#e53238]" },
+    { label: "Profile Views", value: "48", sub: "↑ 12 this week", Icon: Eye, color: "text-cyan-600" },
+    { label: "Interests Sent", value: String(stats.interestsSent), sub: `${stats.interestsAccepted} accepted`, Icon: UserCheck, color: "text-emerald-600" },
+    { label: "Shortlisted", value: String(stats.shortlisted), sub: "Saved profiles", Icon: Sparkles, color: "text-amber-500" },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -59,7 +155,7 @@ export default function DashboardPage() {
         {/* Welcome Header */}
         <div className="bg-gradient-to-r from-red-600 via-[#e53238] to-orange-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            
+
             <div className="flex items-center gap-5">
               {/* Profile Avatar Badge */}
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white/40 bg-white/20 backdrop-blur-md overflow-hidden flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shrink-0">
@@ -89,7 +185,7 @@ export default function DashboardPage() {
                 href="/matches"
                 className="px-5 py-2.5 rounded-xl bg-white text-[#e53238] font-bold text-xs sm:text-sm shadow-md hover:bg-red-50 transition-colors"
               >
-                View 20 New Matches
+                {stats.newMatches > 0 ? `View ${stats.newMatches} New Matches` : "Find Matches"}
               </Link>
               <Link
                 href="/profile"
@@ -104,7 +200,7 @@ export default function DashboardPage() {
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {STATS.map(({ label, value, sub, Icon, color }) => (
+          {statCards.map(({ label, value, sub, Icon, color }) => (
             <div key={label} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs text-left">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</span>
@@ -123,40 +219,81 @@ export default function DashboardPage() {
               <h2 className="text-xl font-bold text-gray-900">Recommended Matches For You</h2>
               <p className="text-xs text-gray-500">Based on your cultural, age, and location preferences.</p>
             </div>
-            <Link href="/matches" className="text-xs font-bold text-[#e53238] hover:underline">
-              View All (20) →
-            </Link>
+            {stats.newMatches > 0 && (
+              <Link href="/matches" className="text-xs font-bold text-[#e53238] hover:underline">
+                View All ({stats.newMatches}) →
+              </Link>
+            )}
           </div>
 
-          {/* Sample Match Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MATCHES.map((match, idx) => (
-              <div
-                key={idx}
-                className="p-5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-lg transition-all duration-300 flex flex-col justify-between group"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-full bg-red-100 text-[#e53238] flex items-center justify-center font-bold text-lg border-2 border-white shadow-xs">
-                    {match.name[0]}
+          {loading && recommended.length === 0 ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-6 h-6 text-[#e53238] animate-spin" />
+            </div>
+          ) : recommended.length === 0 ? (
+            <div className="text-center py-10">
+              <Heart className="w-10 h-10 text-[#e53238] mx-auto mb-3" />
+              <p className="text-sm text-gray-500">
+                Head to your <Link href="/preferences" className="font-bold text-[#e53238] hover:underline">preferences</Link> to start finding matches.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recommended.map((m) => (
+                <div
+                  key={m.profile.id}
+                  className="p-5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-lg transition-all duration-300 flex flex-col justify-between group"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-full bg-red-100 text-[#e53238] flex items-center justify-center font-bold text-lg border-2 border-white shadow-xs">
+                      {m.profile.name[0]}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors">
+                        {m.profile.name}
+                        <span className="ml-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 align-middle">
+                          {m.score}%
+                        </span>
+                      </h3>
+                      <p className="text-xs text-gray-500">{m.profile.age ?? "—"} yrs • {m.profile.city || "—"}</p>
+                      <p className="text-xs text-gray-600 font-medium">{m.profile.profession || m.profile.education || ""}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors">{match.name}</h3>
-                    <p className="text-xs text-gray-500">{match.age} yrs • {match.loc}</p>
-                    <p className="text-xs text-gray-600 font-medium">{match.edu}</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                  <button className="flex-1 py-2 px-3 rounded-xl bg-[#e53238] text-white text-xs font-bold shadow-xs hover:bg-[#c92429] transition-colors cursor-pointer">
-                    Connect Now
-                  </button>
-                  <button className="py-2 px-3 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold hover:bg-gray-100 transition-colors cursor-pointer">
-                    Save
-                  </button>
+                  <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                    {sentIds.has(m.profile.id) ? (
+                      <button
+                        onClick={() => runAction(m.profile.id, "unsend")}
+                        disabled={busyId === m.profile.id}
+                        className="flex-1 py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-60"
+                      >
+                        ✓ Sent
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => runAction(m.profile.id, "interest")}
+                        disabled={busyId === m.profile.id}
+                        className="flex-1 py-2 px-3 rounded-xl bg-[#e53238] text-white text-xs font-bold shadow-xs hover:bg-[#c92429] transition-colors cursor-pointer disabled:opacity-60"
+                      >
+                        {busyId === m.profile.id ? "..." : "Connect Now"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => runAction(m.profile.id, shortlistedIds.has(m.profile.id) ? "unshortlist" : "shortlist")}
+                      disabled={busyId === m.profile.id}
+                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 ${
+                        shortlistedIds.has(m.profile.id)
+                          ? "border-amber-200 bg-amber-50 text-amber-700"
+                          : "border-gray-200 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {shortlistedIds.has(m.profile.id) ? "✓ Saved" : "Save"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </main>

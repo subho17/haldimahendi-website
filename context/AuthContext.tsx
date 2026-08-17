@@ -88,11 +88,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 2. Safely save to localStorage (with quota error protection for large Base64 images)
     try {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+      const storageAvatar =
+        avatar.startsWith("data:") && avatar.length > 5000
+          ? "/images/default-avatar.png"
+          : avatar;
+      const userForStorage = {
+        ...newUser,
+        avatarUrl: storageAvatar,
+        avatar_url: storageAvatar,
+      };
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userForStorage));
     } catch (e) {
-      console.warn("Failed to store full user in localStorage (avatar image may be large):", e);
+      console.warn("Failed to store user in localStorage:", e);
       try {
-        // Fallback: save user without large avatar image string to avoid quota error
         const slimUser = { ...newUser, avatarUrl: "/images/default-avatar.png", avatar_url: "/images/default-avatar.png" };
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(slimUser));
       } catch (err) {

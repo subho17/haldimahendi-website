@@ -109,6 +109,16 @@ export type ProfileData = {
   mobileNumber: string;
   avatarUrl?: string;
   provider: 'otp' | 'google' | 'password';
+  gender?: string;
+  age?: number;
+  height?: string;
+  maritalStatus?: string;
+  religion?: string;
+  motherTongue?: string;
+  education?: string;
+  profession?: string;
+  city?: string;
+  bio?: string;
 };
 
 export async function saveProfile(profileData: ProfileData): Promise<void> {
@@ -120,14 +130,43 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
   try {
     await ensureProfilesTable();
     await pool!.query(`
-      INSERT INTO profiles (user_id, display_name, mobile_number, avatar_url, provider, provider_id, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, now())
+      INSERT INTO profiles (
+        user_id, display_name, mobile_number, avatar_url, provider, provider_id,
+        gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, created_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, now())
       ON CONFLICT (user_id) DO UPDATE
-      SET display_name = EXCLUDED.display_name,
-          avatar_url = EXCLUDED.avatar_url,
-          updated_at = now()
-    `, [profileData.userId, profileData.displayName, profileData.mobileNumber,
-        profileData.avatarUrl || undefined, profileData.provider, profileData.userId]);
+      SET display_name   = EXCLUDED.display_name,
+          avatar_url     = EXCLUDED.avatar_url,
+          gender         = COALESCE(EXCLUDED.gender, profiles.gender),
+          age            = COALESCE(EXCLUDED.age, profiles.age),
+          height         = COALESCE(EXCLUDED.height, profiles.height),
+          marital_status = COALESCE(EXCLUDED.marital_status, profiles.marital_status),
+          religion       = COALESCE(EXCLUDED.religion, profiles.religion),
+          mother_tongue  = COALESCE(EXCLUDED.mother_tongue, profiles.mother_tongue),
+          education      = COALESCE(EXCLUDED.education, profiles.education),
+          profession     = COALESCE(EXCLUDED.profession, profiles.profession),
+          city           = COALESCE(EXCLUDED.city, profiles.city),
+          bio            = COALESCE(EXCLUDED.bio, profiles.bio),
+          updated_at     = now()
+    `, [
+      profileData.userId,
+      profileData.displayName,
+      profileData.mobileNumber,
+      profileData.avatarUrl || undefined,
+      profileData.provider,
+      profileData.userId,
+      profileData.gender || null,
+      profileData.age || null,
+      profileData.height || null,
+      profileData.maritalStatus || null,
+      profileData.religion || null,
+      profileData.motherTongue || null,
+      profileData.education || null,
+      profileData.profession || null,
+      profileData.city || null,
+      profileData.bio || null,
+    ]);
   } catch (e) {
     console.warn('[DB] Failed to save profile to Postgres database:', e);
   }
