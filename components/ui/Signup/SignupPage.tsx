@@ -17,6 +17,9 @@ import {
   LogIn,
   BookOpen,
   Briefcase,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -69,11 +72,16 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
   const [height, setHeight] = useState("5'8\"");
   const [maritalStatus, setMaritalStatus] = useState("Never Married");
   const [religion, setReligion] = useState("Hindu");
-  const [motherTongue, setMotherTongue] = useState("Hindi");
+  const [motherTongue] = useState("Hindi");
   const [education, setEducation] = useState("B.Tech / Graduate");
   const [profession, setProfession] = useState("Software Engineer");
   const [city, setCity] = useState("Mumbai");
-  const [bio, setBio] = useState("Looking for a caring, well-educated, and family-oriented life partner.");
+  const [bio] = useState("Looking for a caring, well-educated, and family-oriented life partner.");
+
+  // Login password (optional, used for password-based login later)
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -214,6 +222,17 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
     setIsLoading(true);
     setError("");
 
+    if (password && password.length < 6) {
+      setIsLoading(false);
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+    if (password && password !== confirmPassword) {
+      setIsLoading(false);
+      setError("Passwords do not match. Please re-enter.");
+      return;
+    }
+
     const finalDisplayName = displayName.trim() || (email ? email.split("@")[0] : `Member (${mobileNumber.slice(-4)})`);
 
     const profileData = {
@@ -233,16 +252,18 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
       education,
       profession,
       city,
+      bio,
       provider: (email ? "google" : "otp") as "otp" | "google" | "facebook",
     };
 
     login(profileData);
 
     try {
+      const saveData = password ? { ...profileData, password } : profileData;
       await fetch("/api/user/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData),
+        body: JSON.stringify(saveData),
       });
     } catch (e) {
       console.warn("Failed to persist matrimonial profile to server:", e);
@@ -705,6 +726,42 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   placeholder="e.g. Mumbai, Delhi"
                   className="w-full pl-8 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
                 />
+              </div>
+            </div>
+
+            {/* Password (optional, for password login later) */}
+            <div className="pt-2 border-t border-gray-100">
+              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">
+                Create a Login Password <span className="text-gray-300 normal-case font-medium">(optional)</span>
+              </p>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="relative">
+                  <Lock className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Create a password (min 6 characters)"
+                    className="w-full pl-8 pr-10 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm password"
+                    className="w-full pl-8 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                  />
+                </div>
               </div>
             </div>
 

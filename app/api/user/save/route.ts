@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { saveProfile, ProfileData } from '@/lib/otpStore';
+import { hashPassword } from '@/lib/password';
 
 const USERS_FILE = path.join(process.cwd(), "scratch", "users_db.json");
 
@@ -25,6 +26,9 @@ interface UserRecord {
   profession?: string;
   city?: string;
   bio?: string;
+  password?: string;
+  passwordHash?: string;
+  passwordSalt?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -64,6 +68,20 @@ export async function POST(req: Request) {
     const avatar = userData.avatarUrl || userData.avatar_url || "/images/default-avatar.png";
     const mobile = userData.mobileNumber || userData.mobile_number || "";
 
+    // Hash the password (if provided) — never store it in plaintext.
+    let passwordHash: string | undefined;
+    let passwordSalt: string | undefined;
+    if (userData.password && userData.password.length >= 6) {
+      const hashed = await hashPassword(userData.password);
+      passwordHash = hashed.hash;
+      passwordSalt = hashed.salt;
+    } else if (userData.password) {
+      return NextResponse.json(
+        { success: false, message: "Password must be at least 6 characters long." },
+        { status: 400 }
+      );
+    }
+
     const updatedUser: UserRecord = {
       ...userData,
       profileId: userData.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
@@ -78,11 +96,17 @@ export async function POST(req: Request) {
       updatedAt: new Date().toISOString(),
     };
 
+    // Store the derived hash/salt alongside the record, then strip them and
+    // the plaintext password from what is persisted/sent back to the client.
+    const storedRecord: UserRecord = { ...updatedUser, passwordHash, passwordSalt };
+    delete updatedUser.password;
+    delete storedRecord.password;
+
     if (existingIndex >= 0) {
-      users[existingIndex] = { ...users[existingIndex], ...updatedUser };
+      users[existingIndex] = { ...users[existingIndex], ...storedRecord };
     } else {
-      updatedUser.createdAt = userData.createdAt || new Date().toISOString();
-      users.push(updatedUser);
+      storedRecord.createdAt = userData.createdAt || new Date().toISOString();
+      users.push(storedRecord);
     }
 
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
@@ -105,6 +129,8 @@ export async function POST(req: Request) {
         profession: userData.profession,
         city: userData.city,
         bio: userData.bio,
+        passwordHash,
+        passwordSalt,
       };
       await saveProfile(profileData);
     } catch (e) {

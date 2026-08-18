@@ -15,11 +15,8 @@ import {
   Search,
   X,
   MapPin,
-  Briefcase,
   ChevronRight,
   Loader2,
-  Sparkles,
-  Heart,
 } from "lucide-react";
 
 interface SearchResultProfile {
@@ -50,12 +47,14 @@ export default function AuthenticatedNavbar() {
   const [selectedReligion, setSelectedReligion] = useState("Any");
   const [searchResults, setSearchResults] = useState<SearchResultProfile[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [matchCount, setMatchCount] = useState<number | null>(null);
 
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const userAvatar = user?.avatar_url || user?.avatarUrl;
   const userName = user?.display_name || user?.name || "Shaadi Member";
   const userMobile = user?.mobile_number || user?.mobileNumber || "";
+  const userId = user?.mobile_number || user?.mobileNumber || user?.email || user?.profileId || "";
 
   // Derive active main tab from the current pathname
   const activeMainTab = pathname.includes("/matches")
@@ -123,6 +122,27 @@ export default function AuthenticatedNavbar() {
       return () => clearTimeout(timer);
     }
   }, [isSearchOpen, searchQuery, selectedGender, selectedReligion, performSearch]);
+
+  // Load the live eligible match count for the Matches badge.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/matches?userId=${encodeURIComponent(userId)}`);
+        const data = await res.json();
+        if (!cancelled && data.success) {
+          setMatchCount(typeof data.meta?.matches === "number" ? data.meta.matches : null);
+        }
+      } catch (e) {
+        console.error("Failed to load match count:", e);
+        if (!cancelled) setMatchCount(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const handleSearchMouseEnter = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -205,9 +225,11 @@ export default function AuthenticatedNavbar() {
                 }`}
               >
                 <span>Matches</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-white text-[#e53238] font-extrabold text-[11px] leading-none shadow-xs">
-                  20
-                </span>
+                {matchCount !== null && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-white text-[#e53238] font-extrabold text-[11px] leading-none shadow-xs">
+                    {matchCount}
+                  </span>
+                )}
               </Link>
               {activeMainTab === "matches" && (
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-white"></span>

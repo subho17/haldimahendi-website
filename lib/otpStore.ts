@@ -119,6 +119,8 @@ export type ProfileData = {
   profession?: string;
   city?: string;
   bio?: string;
+  passwordHash?: string;
+  passwordSalt?: string;
 };
 
 export async function saveProfile(profileData: ProfileData): Promise<void> {
@@ -132,9 +134,10 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
     await pool!.query(`
       INSERT INTO profiles (
         user_id, display_name, mobile_number, avatar_url, provider, provider_id,
-        gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, created_at
+        gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio,
+        password_hash, password_salt, created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, now())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, now())
       ON CONFLICT (user_id) DO UPDATE
       SET display_name   = EXCLUDED.display_name,
           avatar_url     = EXCLUDED.avatar_url,
@@ -148,6 +151,8 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
           profession     = COALESCE(EXCLUDED.profession, profiles.profession),
           city           = COALESCE(EXCLUDED.city, profiles.city),
           bio            = COALESCE(EXCLUDED.bio, profiles.bio),
+          password_hash  = COALESCE(EXCLUDED.password_hash, profiles.password_hash),
+          password_salt  = COALESCE(EXCLUDED.password_salt, profiles.password_salt),
           updated_at     = now()
     `, [
       profileData.userId,
@@ -166,6 +171,8 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
       profileData.profession || null,
       profileData.city || null,
       profileData.bio || null,
+      profileData.passwordHash || null,
+      profileData.passwordSalt || null,
     ]);
   } catch (e) {
     console.warn('[DB] Failed to save profile to Postgres database:', e);

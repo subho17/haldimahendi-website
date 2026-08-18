@@ -1,7 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle, Sparkles } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  ArrowRight,
+  AlertCircle,
+  Sparkles,
+  Smartphone,
+  MessageSquare,
+  Timer,
+  RotateCcw,
+} from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -29,6 +42,8 @@ const parseGoogleCredential = (credentialToken: string) => {
   }
 };
 
+type LoginMode = "otp" | "password";
+
 export default function LoginPage({
   onOpenForgotPassword,
   onOpenSignup,
@@ -37,11 +52,26 @@ export default function LoginPage({
   const { login } = useAuth();
   const router = useRouter();
 
+  // Mode: OTP is the default because signup is OTP-based (no password is set).
+  const [mode, setMode] = useState<LoginMode>("otp");
+
+  // Password mode fields
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // OTP mode fields
+  const [otpMobile, setOtpMobile] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
   const isRealClient =
@@ -49,7 +79,32 @@ export default function LoginPage({
     !clientId.includes("YOUR_GOOGLE_CLIENT_ID") &&
     clientId.endsWith(".apps.googleusercontent.com");
 
-  const handlePasswordLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (cooldown <= 0) {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+      cooldownTimerRef.current = null;
+      return;
+    }
+    if (cooldownTimerRef.current) return;
+    cooldownTimerRef.current = setInterval(() => {
+      setCooldown((c) => {
+        if (c <= 1) {
+          if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+          cooldownTimerRef.current = null;
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+      cooldownTimerRef.current = null;
+    };
+  }, [cooldown]);
+
+  const cleanMobile = (value: string) => value.replace(/\D/g, "").slice(-10);
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier) {
       setError("Please enter your Profile ID, Email, or Mobile Number.");
@@ -62,15 +117,133 @@ export default function LoginPage({
     setError("");
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch("/api/auth/password-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.message || "Login failed. Please try again.");
+        return;
+      }
+
+      const p = data.profile;
       login({
-        mobileNumber: identifier.replace(/\D/g, "") || "9876543210",
-        name: `Member (${identifier.slice(0, 8)})`,
+        profileId: p?.id || undefined,
+        mobileNumber: p?.mobileNumber || identifier,
+        email: p?.email || "",
+        name: p?.name || `Member (${identifier.slice(0, 8)})`,
+        display_name: p?.name,
+        avatarUrl: p?.avatarUrl || "/images/default-avatar.png",
+        avatar_url: p?.avatarUrl,
         provider: "password",
+        gender: p?.gender,
+        maritalStatus: p?.maritalStatus,
+        city: p?.city,
       });
       router.push("/dashboard");
-    }, 600);
+    } catch (err) {
+      console.error("[Login] Password login failed:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const clean = cleanMobile(otpMobile);
+    if (clean.length < 10) {
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    setError("");
+    setOtpSending(true);
+    try {
+      const res = await fetch("/api/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobileNumber: clean }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsOtpSent(true);
+        setOtp("");
+        setCooldown(30);
+      } else {
+        setError(data.message || "Failed to send OTP. Please try again.");
+      }
+    } catch (err) {
+      console.error("[Login] OTP send failed:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = cleanMobile(otpMobile);
+    if (clean.length < 10) {
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    if (!otp.trim()) {
+      setError("Please enter the OTP code.");
+      return;
+    }
+    setError("");
+    setOtpVerifying(true);
+    try {
+      const res = await fetch("/api/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobileNumber: clean, otp: otp.trim() }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.message || "Invalid OTP code.");
+        return;
+      }
+
+      // Load the member's saved profile so they land back in their account.
+      let profile: {
+        id?: string;
+        name?: string;
+        avatarUrl?: string | null;
+        gender?: string | null;
+        maritalStatus?: string | null;
+        city?: string | null;
+      } | null = null;
+      try {
+        const pRes = await fetch(`/api/profile?id=${encodeURIComponent(clean)}`);
+        const pData = await pRes.json();
+        if (pData.success) profile = pData.profile;
+      } catch (err) {
+        console.warn("[Login] Could not load profile after OTP verify:", err);
+      }
+
+      login({
+        profileId: profile?.id || undefined,
+        mobileNumber: clean,
+        name: profile?.name || `Member (${clean.slice(-4)})`,
+        display_name: profile?.name || undefined,
+        avatarUrl: profile?.avatarUrl || "/images/default-avatar.png",
+        avatar_url: profile?.avatarUrl || undefined,
+        provider: "otp",
+        gender: profile?.gender || undefined,
+        maritalStatus: profile?.maritalStatus || undefined,
+        city: profile?.city || undefined,
+      });
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("[Login] OTP verify failed:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setOtpVerifying(false);
+    }
   };
 
   // Google OAuth Login Hook
@@ -141,13 +314,47 @@ export default function LoginPage({
         </div>
 
         {/* Title */}
-        <div className="space-y-1 mb-6">
+        <div className="space-y-1 mb-5">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
             Member Login 👋
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm font-normal">
-            Welcome back! Enter your details to access your profile.
+            Welcome back! Sign in with OTP or password to access your profile.
           </p>
+        </div>
+
+        {/* Mode Toggle */}
+        <div className="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl mb-5">
+          <button
+            type="button"
+            onClick={() => {
+              setMode("otp");
+              setError("");
+            }}
+            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              mode === "otp"
+                ? "bg-white text-[#e53238] shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Smartphone className="w-4 h-4" />
+            Login with OTP
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode("password");
+              setError("");
+            }}
+            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              mode === "password"
+                ? "bg-white text-[#e53238] shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+            Login with Password
+          </button>
         </div>
 
         {/* Error Banner */}
@@ -158,82 +365,191 @@ export default function LoginPage({
           </div>
         )}
 
-        {/* Password Login Form */}
-        <form onSubmit={handlePasswordLogin} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
-              Email / Mobile / Profile ID <span className="text-[#e53238]">*</span>
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="e.g. SH1234567 or user@mail.com"
-                required
-                className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
-              />
-            </div>
-          </div>
+        {mode === "otp" ? (
+          <>
+            {!isOtpSent ? (
+              /* Step 1: Enter mobile & send OTP */
+              <form onSubmit={handleSendOtp} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
+                    Mobile Number <span className="text-[#e53238]">*</span>
+                  </label>
+                  <div className="relative">
+                    <Smartphone className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
+                      value={otpMobile}
+                      onChange={(e) => setOtpMobile(e.target.value.replace(/\D/g, ""))}
+                      placeholder="Enter 10-digit mobile number"
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
 
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Password <span className="text-[#e53238]">*</span>
+                <button
+                  type="submit"
+                  disabled={otpSending || cleanMobile(otpMobile).length < 10}
+                  className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+                >
+                  {otpSending ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Send OTP</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              /* Step 2: Enter OTP & verify */
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
+                    Enter OTP
+                  </label>
+                  <div className="relative">
+                    <Timer className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      placeholder="Enter the 4-digit OTP"
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                    />
+                  </div>
+                  <p className="text-[11px] text-gray-400 font-medium">
+                    OTP sent to +91 {cleanMobile(otpMobile)}
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={otpVerifying || otp.trim().length === 0}
+                  className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+                >
+                  {otpVerifying ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span>Verify & Login</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center justify-between text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setIsOtpSent(false)}
+                    className="font-semibold text-gray-500 hover:text-gray-800 cursor-pointer"
+                  >
+                    Change number
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSendOtp()}
+                    disabled={cooldown > 0}
+                    className="font-bold text-[#e53238] hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {cooldown > 0 ? (
+                      <span className="flex items-center gap-1">
+                        <Timer className="w-3.5 h-3.5" /> Resend in {cooldown}s
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <RotateCcw className="w-3.5 h-3.5" /> Resend OTP
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </>
+        ) : (
+          /* Password Login Form */
+          <form onSubmit={handlePasswordLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
+                Email / Mobile / Profile ID <span className="text-[#e53238]">*</span>
               </label>
-              {onOpenForgotPassword ? (
+              <div className="relative">
+                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="e.g. SH1234567 or user@mail.com"
+                  required
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Password <span className="text-[#e53238]">*</span>
+                </label>
+                {onOpenForgotPassword ? (
+                  <button
+                    type="button"
+                    onClick={onOpenForgotPassword}
+                    className="text-xs font-semibold text-[#e53238] hover:underline cursor-pointer"
+                  >
+                    Forgot?
+                  </button>
+                ) : (
+                  <Link
+                    href="/auth/forgetpassowrd"
+                    className="text-xs font-semibold text-[#e53238] hover:underline"
+                  >
+                    Forgot?
+                  </Link>
+                )}
+              </div>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  className="w-full pl-10 pr-11 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                />
                 <button
                   type="button"
-                  onClick={onOpenForgotPassword}
-                  className="text-xs font-semibold text-[#e53238] hover:underline cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
-                  Forgot?
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-              ) : (
-                <Link
-                  href="/auth/forgetpassowrd"
-                  className="text-xs font-semibold text-[#e53238] hover:underline"
-                >
-                  Forgot?
-                </Link>
-              )}
+              </div>
             </div>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                className="w-full pl-10 pr-11 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <span>Login to Account</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+            >
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Login to Account</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+        )}
 
         {/* Social Login Section */}
         <div className="relative my-5 text-center">

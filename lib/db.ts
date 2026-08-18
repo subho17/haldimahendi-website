@@ -104,6 +104,8 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profession TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS city TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS country TEXT DEFAULT 'India';
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_hash TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_salt TEXT;
     `);
 
     // Step 3: Create function & trigger
