@@ -22,6 +22,7 @@ import {
   MessageCircle,
   CheckCircle2,
   Info,
+  Crown,
 } from "lucide-react";
 
 interface SearchResultProfile {
@@ -275,19 +276,19 @@ export default function AuthenticatedNavbar() {
       
       {/* 1. TOP RED BRAND BAR */}
       <div className="bg-[#e53238] text-white h-14 sm:h-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto h-full flex items-center justify-between">
+        <div className="max-w-7xl mx-auto h-full flex items-center justify-between gap-3 lg:gap-6">
           
           {/* Left: Shaadi Logo */}
-          <Link href="/dashboard" className="flex items-center group">
+          <Link href="/dashboard" className="flex items-center group shrink-0">
             <div className="flex items-center gap-1 select-none">
               <span className="relative flex items-center">
-                <span className="font-extrabold text-3xl sm:text-4xl tracking-tight font-serif italic text-white">
+                <span className="font-extrabold text-2xl sm:text-3xl lg:text-4xl tracking-tight font-serif italic text-white">
                   shaadi
                 </span>
                 {/* Interlocking Rings Emblem */}
-                <span className="absolute left-6 sm:left-8 -top-1 sm:-top-1.5 flex items-center -space-x-1">
-                  <span className="w-2.5 h-2.5 rounded-full border-2 border-white bg-transparent"></span>
-                  <span className="w-2.5 h-2.5 rounded-full border-2 border-cyan-300 bg-transparent"></span>
+                <span className="absolute left-5 sm:left-7 -top-1 sm:-top-1.5 flex items-center -space-x-1">
+                  <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border-2 border-white bg-transparent"></span>
+                  <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border-2 border-cyan-300 bg-transparent"></span>
                 </span>
               </span>
               <span className="font-bold text-xs sm:text-sm text-cyan-200 self-end mb-1">
@@ -297,13 +298,13 @@ export default function AuthenticatedNavbar() {
           </Link>
 
           {/* Middle: Main Header Links */}
-          <nav className="hidden md:flex items-center space-x-6 lg:space-x-10 h-full font-semibold text-sm sm:text-base">
+          <nav className="hidden md:flex items-center space-x-1 sm:space-x-2 lg:space-x-4 h-full font-semibold text-xs sm:text-sm lg:text-base shrink-0">
             
             {/* My Shaadi */}
-            <div className="relative h-full flex items-center">
+            <div className="relative h-full flex items-center shrink-0">
               <Link
                 href="/dashboard"
-                className={`flex items-center h-full px-2 transition-colors ${
+                className={`whitespace-nowrap flex items-center h-full px-2 lg:px-3 transition-colors ${
                   activeMainTab === "my-shaadi"
                     ? "text-white font-bold"
                     : "text-red-100 hover:text-white"
@@ -317,10 +318,10 @@ export default function AuthenticatedNavbar() {
             </div>
 
             {/* Matches */}
-            <div className="relative h-full flex items-center">
+            <div className="relative h-full flex items-center shrink-0">
               <Link
                 href="/matches"
-                className={`flex items-center gap-1.5 h-full px-2 transition-colors ${
+                className={`whitespace-nowrap flex items-center gap-1.5 h-full px-2 lg:px-3 transition-colors ${
                   activeMainTab === "matches"
                     ? "text-white font-bold"
                     : "text-red-100 hover:text-white"
@@ -340,7 +341,7 @@ export default function AuthenticatedNavbar() {
 
             {/* ⭐ SEARCH HOVER DROPDOWN PANEL */}
             <div
-              className="relative h-full flex items-center"
+              className="relative h-full flex items-center shrink-0"
               ref={searchMenuRef}
               onMouseEnter={handleSearchMouseEnter}
               onMouseLeave={handleSearchMouseLeave}
@@ -348,7 +349,7 @@ export default function AuthenticatedNavbar() {
               <Link
                 href="/search"
                 onClick={() => setIsSearchOpen(false)}
-                className={`flex items-center gap-1.5 h-full px-2 transition-colors cursor-pointer ${
+                className={`whitespace-nowrap flex items-center gap-1.5 h-full px-2 lg:px-3 transition-colors cursor-pointer ${
                   activeMainTab === "search" || isSearchOpen
                     ? "text-white font-bold"
                     : "text-red-100 hover:text-white"
@@ -531,10 +532,10 @@ export default function AuthenticatedNavbar() {
             </div>
 
             {/* Inbox */}
-            <div className="relative h-full flex items-center">
+            <div className="relative h-full flex items-center shrink-0">
               <Link
                 href="/inbox"
-                className={`flex items-center h-full px-2 transition-colors ${
+                className={`whitespace-nowrap flex items-center h-full px-2 lg:px-3 transition-colors ${
                   activeMainTab === "inbox"
                     ? "text-white font-bold"
                     : "text-red-100 hover:text-white"
@@ -548,10 +549,10 @@ export default function AuthenticatedNavbar() {
             </div>
 
             {/* Chats */}
-            <div className="relative h-full flex items-center">
+            <div className="relative h-full flex items-center shrink-0">
               <Link
                 href="/chat"
-                className={`flex items-center h-full px-2 transition-colors ${
+                className={`whitespace-nowrap flex items-center h-full px-2 lg:px-3 transition-colors ${
                   activeMainTab === "chat"
                     ? "text-white font-bold"
                     : "text-red-100 hover:text-white"
@@ -564,26 +565,44 @@ export default function AuthenticatedNavbar() {
               )}
             </div>
 
+            {/* Premium Plans */}
+            <div className="relative h-full flex items-center shrink-0">
+              <Link
+                href="/membership"
+                className={`whitespace-nowrap flex items-center gap-1.5 h-full px-2 lg:px-3 transition-all ${
+                  pathname.includes("/membership")
+                    ? "text-amber-200 font-bold"
+                    : "text-amber-100 hover:text-white"
+                }`}
+              >
+                <Crown className="w-4 h-4" />
+                <span>Premium</span>
+              </Link>
+              {pathname.includes("/membership") && (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-white"></span>
+              )}
+            </div>
+
           </nav>
 
           {/* Right Actions: Offer Badge, Help, Profile Avatar */}
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 shrink-0">
             
             {/* Promo Banner Button */}
-            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-white/40 bg-white/10 text-white text-xs font-extrabold uppercase tracking-wide hover:bg-white/20 transition-all cursor-pointer shadow-xs">
+            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-white/40 bg-white/10 text-white text-[11px] font-extrabold uppercase tracking-wide hover:bg-white/20 transition-all cursor-pointer shadow-xs shrink-0 whitespace-nowrap">
               <Percent className="w-3.5 h-3.5" />
               <span>UPTO 60% OFF</span>
             </div>
 
             {/* Notifications Bell */}
-            <div className="relative" ref={notifMenuRef}>
+            <div className="relative shrink-0" ref={notifMenuRef}>
               <button
                 type="button"
                 onClick={handleNotifOpen}
                 aria-label="Notifications"
-                className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/40 bg-white/10 text-white hover:bg-white/20 transition-all cursor-pointer"
+                className="relative flex items-center justify-center w-9 h-9 rounded-full border border-white/40 bg-white/10 text-white hover:bg-white/20 transition-all cursor-pointer shrink-0"
               >
-                <Bell className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 {unread > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-[#7a4a00] text-[10px] font-extrabold flex items-center justify-center leading-none shadow-xs border border-white">
                     {unread > 99 ? "99+" : unread}
@@ -649,11 +668,11 @@ export default function AuthenticatedNavbar() {
             </div>
 
             {/* Help Dropdown */}
-            <div className="relative" ref={helpMenuRef}>
+            <div className="relative shrink-0" ref={helpMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsHelpMenuOpen(!isHelpMenuOpen)}
-                className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-white hover:text-red-100 transition-colors cursor-pointer py-1"
+                className="whitespace-nowrap flex items-center gap-1 text-xs sm:text-sm font-semibold text-white hover:text-red-100 transition-colors cursor-pointer py-1"
               >
                 <span>Help</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isHelpMenuOpen ? "rotate-180" : ""}`} />
@@ -675,11 +694,11 @@ export default function AuthenticatedNavbar() {
             </div>
 
             {/* User Profile Avatar & Dropdown */}
-            <div className="relative" ref={userMenuRef}>
+            <div className="relative shrink-0" ref={userMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 p-1 px-2 rounded-full border border-white/40 hover:border-white transition-all cursor-pointer bg-white/10"
+                className="whitespace-nowrap flex items-center gap-2 p-1 px-2.5 rounded-full border border-white/40 hover:border-white transition-all cursor-pointer bg-white/10"
               >
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-100 border border-white flex items-center justify-center text-red-800 font-bold overflow-hidden shadow-xs shrink-0">
                   {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
@@ -690,7 +709,7 @@ export default function AuthenticatedNavbar() {
                     </span>
                   )}
                 </div>
-                <span className="hidden sm:inline font-bold text-xs text-white max-w-[100px] truncate">
+                <span className="hidden sm:inline font-bold text-xs text-white max-w-[90px] lg:max-w-[120px] truncate">
                   {userName.split(" ")[0]}
                 </span>
                 <ChevronDown className={`w-3.5 h-3.5 text-white transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />

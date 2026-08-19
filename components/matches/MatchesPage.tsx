@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Filter, Loader2, Heart } from "lucide-react";
+import { Filter, Loader2, Heart, Crown } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 
 interface MatchProfile {
@@ -23,6 +23,7 @@ interface MatchProfile {
   maritalStatus?: string | null;
   gender?: string | null;
   avatarUrl?: string | null;
+  premium?: boolean;
 }
 
 interface MatchResult {
@@ -157,6 +158,11 @@ export default function MatchesPage() {
               >
                 <div>
                   <div className="relative w-full h-52 bg-slate-100 overflow-hidden flex items-center justify-center">
+                    {m.profile.premium && (
+                      <span className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 text-[10px] font-black text-amber-900 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-1 rounded-full shadow-md border border-amber-200/70 uppercase">
+                        <Crown className="w-3 h-3" /> Premium
+                      </span>
+                    )}
                     {m.profile.avatarUrl && m.profile.avatarUrl !== "/images/default-avatar.png" ? (
                       <img
                         src={m.profile.avatarUrl}

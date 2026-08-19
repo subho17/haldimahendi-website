@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
-import { Search, Loader2, MapPin, UserX } from "lucide-react";
+import { Search, Loader2, MapPin, UserX, Crown } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -22,6 +22,8 @@ interface SearchProfile {
   gender: string;
   avatarUrl: string;
   bio?: string;
+  verified?: boolean;
+  premium?: boolean;
 }
 
 export default function SearchPage() {
@@ -220,6 +222,11 @@ export default function SearchPage() {
                   >
                     <div>
                       <div className="relative w-full h-48 bg-slate-100 overflow-hidden flex items-center justify-center">
+                        {p.premium && (
+                          <span className="absolute top-3 left-3 inline-flex items-center gap-1 z-10 text-[10px] font-black text-amber-900 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-1 rounded-full shadow-md border border-amber-200/70 uppercase">
+                            <Crown className="w-3 h-3" /> Premium
+                          </span>
+                        )}
                         {p.avatarUrl && p.avatarUrl !== "/images/default-avatar.png" ? (
                           <img
                             src={p.avatarUrl}

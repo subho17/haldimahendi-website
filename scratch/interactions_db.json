@@ -1,46 +1,11 @@
 {
   "interests": [
     {
-      "id": "in_1787051173344_dqee",
+      "id": "in_1787133418071_lof2",
       "senderId": "subhadeepchanda36@gmail.com",
       "recipientId": "SH095196",
       "status": "pending",
-      "createdAt": "2026-08-18T11:06:13.343Z"
-    },
-    {
-      "id": "in_1787038268680_u4nr",
-      "senderId": "subhadeepchanda36@gmail.com",
-      "recipientId": "SH218322",
-      "status": "pending",
-      "createdAt": "2026-08-18T07:31:08.680Z"
-    },
-    {
-      "id": "in_1787038267160_76b4",
-      "senderId": "subhadeepchanda36@gmail.com",
-      "recipientId": "SH615005",
-      "status": "pending",
-      "createdAt": "2026-08-18T07:31:07.160Z"
-    },
-    {
-      "id": "in_1787038265316_5k5s",
-      "senderId": "subhadeepchanda36@gmail.com",
-      "recipientId": "SH963815",
-      "status": "pending",
-      "createdAt": "2026-08-18T07:31:05.316Z"
-    },
-    {
-      "id": "in_1787038263173_ebi9",
-      "senderId": "subhadeepchanda36@gmail.com",
-      "recipientId": "SH397555",
-      "status": "pending",
-      "createdAt": "2026-08-18T07:31:03.173Z"
-    },
-    {
-      "id": "in_1787038251235_b9yd",
-      "senderId": "subhadeepchanda36@gmail.com",
-      "recipientId": "SH998877",
-      "status": "pending",
-      "createdAt": "2026-08-18T07:30:51.235Z"
+      "createdAt": "2026-08-19T09:56:58.070Z"
     },
     {
       "id": "in_1787038249730_6yvx",

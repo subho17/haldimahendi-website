@@ -17,6 +17,22 @@ export interface UserProfile {
   maritalStatus?: string;
   city?: string;
   createdAt?: string;
+  dob?: string;
+  birthTime?: string;
+  birthPlace?: string;
+  rashi?: string;
+  nakshatra?: string;
+  manglik?: string;
+  gotra?: string;
+  fatherOccupation?: string;
+  motherOccupation?: string;
+  siblings?: string;
+  familyType?: string;
+  familyValues?: string;
+  diet?: string;
+  smoking?: string;
+  drinking?: string;
+  disability?: string;
 }
 
 interface AuthContextType {
@@ -81,6 +97,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       maritalStatus: userData.maritalStatus,
       city: userData.city,
       createdAt: userData.createdAt || new Date().toISOString(),
+      dob: userData.dob,
+      birthTime: userData.birthTime,
+      birthPlace: userData.birthPlace,
+      rashi: userData.rashi,
+      nakshatra: userData.nakshatra,
+      manglik: userData.manglik,
+      gotra: userData.gotra,
+      fatherOccupation: userData.fatherOccupation,
+      motherOccupation: userData.motherOccupation,
+      siblings: userData.siblings,
+      familyType: userData.familyType,
+      familyValues: userData.familyValues,
+      diet: userData.diet,
+      smoking: userData.smoking,
+      drinking: userData.drinking,
+      disability: userData.disability,
     };
 
     // 1. ALWAYS update React state first so user is immediately authenticated in memory

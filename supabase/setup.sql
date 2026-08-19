@@ -149,3 +149,33 @@ CREATE INDEX IF NOT EXISTS idx_verifications_status ON verifications (status, cr
 -- Mirror the verified verdict onto the member profile (idempotent).
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'none';
+
+-- Membership tier for premium features (free | premium | premium_plus).
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS membership_tier TEXT DEFAULT 'free',
+  ADD COLUMN IF NOT EXISTS membership_expires_at TIMESTAMPTZ;
+
+-- Extended profile: astrology & horoscope.
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS dob DATE,
+  ADD COLUMN IF NOT EXISTS birth_time TEXT,
+  ADD COLUMN IF NOT EXISTS birth_place TEXT,
+  ADD COLUMN IF NOT EXISTS rashi TEXT,
+  ADD COLUMN IF NOT EXISTS nakshatra TEXT,
+  ADD COLUMN IF NOT EXISTS manglik TEXT,
+  ADD COLUMN IF NOT EXISTS gotra TEXT;
+
+-- Extended profile: family details.
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS father_occupation TEXT,
+  ADD COLUMN IF NOT EXISTS mother_occupation TEXT,
+  ADD COLUMN IF NOT EXISTS siblings TEXT,
+  ADD COLUMN IF NOT EXISTS family_type TEXT,
+  ADD COLUMN IF NOT EXISTS family_values TEXT;
+
+-- Extended profile: lifestyle.
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS diet TEXT,
+  ADD COLUMN IF NOT EXISTS smoking TEXT,
+  ADD COLUMN IF NOT EXISTS drinking TEXT,
+  ADD COLUMN IF NOT EXISTS disability TEXT;

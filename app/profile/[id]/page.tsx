@@ -6,6 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   ShieldCheck,
   Loader2,
@@ -24,6 +25,9 @@ import {
   Flag,
   Ban,
   X,
+  Crown,
+  Phone,
+  Lock,
 } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 
@@ -44,6 +48,28 @@ interface PublicProfile {
   bio?: string | null;
   createdAt?: string | null;
   verified: boolean;
+  membership?: {
+    tier: string;
+    isPremium: boolean;
+    label: string;
+  };
+  dob?: string | null;
+  birthTime?: string | null;
+  birthPlace?: string | null;
+  rashi?: string | null;
+  nakshatra?: string | null;
+  manglik?: string | null;
+  gotra?: string | null;
+  fatherOccupation?: string | null;
+  motherOccupation?: string | null;
+  siblings?: string | null;
+  familyType?: string | null;
+  familyValues?: string | null;
+  diet?: string | null;
+  smoking?: string | null;
+  drinking?: string | null;
+  disability?: string | null;
+  mobile?: string | null;
 }
 
 function formatCapitalize(str?: string | null): string {
@@ -89,7 +115,7 @@ export default function PublicProfilePage() {
     }
     if (mounted && isAuthenticated && profileId) {
       Promise.all([
-        fetch(`/api/profile?id=${encodeURIComponent(profileId)}`).then((r) => r.json()),
+        fetch(`/api/profile?id=${encodeURIComponent(profileId)}${viewerId ? `&viewerId=${encodeURIComponent(viewerId)}` : ""}`).then((r) => r.json()),
         fetch(`/api/interests?userId=${encodeURIComponent(viewerId)}`).then((r) => r.json()),
         fetch(`/api/block?userId=${encodeURIComponent(viewerId)}`).then((r) => r.json()),
       ])
@@ -241,6 +267,14 @@ export default function PublicProfilePage() {
     { Icon: Languages, label: "Mother Tongue", value: formattedMotherTongue || "—" },
     { Icon: GraduationCap, label: "Education", value: profile.education || "—" },
     { Icon: Briefcase, label: "Profession", value: formattedProfession || "—" },
+    { Icon: Sparkles, label: "Rashi", value: profile.rashi || "—" },
+    { Icon: Sparkles, label: "Nakshatra", value: profile.nakshatra || "—" },
+    { Icon: Users, label: "Manglik", value: profile.manglik || "—" },
+    { Icon: Heart, label: "Diet", value: profile.diet || "—" },
+    { Icon: Heart, label: "Smoking", value: profile.smoking || "—" },
+    { Icon: Heart, label: "Drinking", value: profile.drinking || "—" },
+    { Icon: Users, label: "Family Type", value: profile.familyType || "—" },
+    { Icon: Users, label: "Family Values", value: profile.familyValues || "—" },
   ];
 
   return (
@@ -264,7 +298,7 @@ export default function PublicProfilePage() {
           <div className="p-6 sm:p-8 border-b border-slate-100">
             <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-left">
               
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-3xl ring-2 ring-rose-100 shrink-0">
+              <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-5xl ring-2 ring-rose-100 shrink-0">
                 {profile.avatarUrl && profile.avatarUrl !== "/images/default-avatar.png" ? (
                   <img src={profile.avatarUrl} alt={formattedName} className="w-full h-full object-cover" />
                 ) : (
@@ -282,6 +316,12 @@ export default function PublicProfilePage() {
                     <Award className="w-3.5 h-3.5 text-[#e53238] shrink-0" />
                     <span>{profile.verified ? "Verified Match Profile" : "Member Profile"}</span>
                   </span>
+                  {profile.membership?.isPremium && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 font-bold text-xs border border-amber-300 shadow-2xs">
+                      <Crown className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span>{profile.membership.label || "Premium"} Member</span>
+                    </span>
+                  )}
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{formattedName}</h1>
@@ -346,6 +386,50 @@ export default function PublicProfilePage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Premium-gated Contact Reveal */}
+            <div className="my-6 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/60 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700">
+                    <Phone className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">Contact Details</h3>
+                    {profile.mobile ? (
+                      <p className="text-sm font-bold text-slate-800 mt-0.5">
+                        +91 {profile.mobile}
+                        <span className="ml-2 text-[10px] font-black uppercase text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full align-middle">
+                          Premium unlocked
+                        </span>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                        {isAuthenticated
+                          ? "Contact details are available to Premium members."
+                          : "Log in & upgrade to Premium to unlock contact details."}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {!profile.mobile && isAuthenticated && (
+                  <Link
+                    href="/membership"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-white text-xs font-black shadow-md hover:from-amber-500 hover:to-amber-600 transition-all cursor-pointer"
+                  >
+                    <Crown className="w-4 h-4" /> Upgrade
+                  </Link>
+                )}
+                {!profile.mobile && !isAuthenticated && (
+                  <Link
+                    href="/login"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#e53238] text-white text-xs font-black shadow-md hover:bg-[#c92429] transition-all cursor-pointer"
+                  >
+                    <Lock className="w-4 h-4" /> Login
+                  </Link>
+                )}
               </div>
             </div>
 

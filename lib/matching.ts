@@ -10,6 +10,8 @@
 //     specify are skipped (never punished).
 // ============================================================
 
+import { computeKundliGunas, manglikScore } from './kundli';
+
 export interface MatchPreferences {
   userId?: string;
   partnerGender?: string; // 'Woman' | 'Man' | 'Any'
@@ -39,6 +41,14 @@ export interface MatchCandidate {
   gender?: string | null;
   avatarUrl?: string | null;
   createdAt?: string | number | Date | null;
+  premium?: boolean;
+  tier?: string;
+  rashi?: string | null;
+  nakshatra?: string | null;
+  manglik?: string | boolean | null;
+  diet?: string | null;
+  smoking?: string | null;
+  drinking?: string | null;
 }
 
 export interface MatchResult {
@@ -56,11 +66,12 @@ const WEIGHTS = {
   religion: 20,
   motherTongue: 15,
   maritalStatus: 10,
-  age: 15,
-  height: 15,
-  city: 10,
+  age: 13,
+  height: 13,
+  city: 9,
   education: 10,
   profession: 5,
+  kundli: 5,
 } as const;
 
 // ------------------------------------------------------------------
@@ -275,7 +286,23 @@ function scoreProfession(_p: MatchPreferences, c: MatchCandidate): number {
   return c.profession && c.profession.trim().length > 0 ? 1 : 0.5;
 }
 
-function scoreMatchInternal(p: MatchPreferences, c: MatchCandidate): { score: number; breakdown: Record<string, number> } {
+function scoreKundli(
+  viewer: { nakshatra?: string | null; manglik?: string | boolean | null },
+  c: MatchCandidate
+): number {
+  if (!viewer.nakshatra && !c.nakshatra) return 1;
+  const gunas = computeKundliGunas(viewer.nakshatra, c.nakshatra);
+  if (gunas) {
+    const manglik = manglikScore(viewer.manglik, c.manglik);
+    const base = gunas.gunas / gunas.max;
+    return Math.max(0, Math.min(1, base * (manglik === null ? 1 : manglik)));
+  }
+  // Only one side has kundli info — no penalty, no bonus.
+  if (!viewer.nakshatra || !c.nakshatra) return 1;
+  return 0;
+}
+
+function scoreMatchInternal(p: MatchPreferences, c: MatchCandidate, viewer?: ViewerProfile): { score: number; breakdown: Record<string, number> } {
   const breakdown: Record<string, number> = {};
   let score = 0;
 
@@ -292,8 +319,16 @@ function scoreMatchInternal(p: MatchPreferences, c: MatchCandidate): { score: nu
   apply('city', scoreCity(p, c));
   apply('education', scoreEducation(p, c));
   apply('profession', scoreProfession(p, c));
+  apply('kundli', scoreKundli(viewer || {}, c));
 
   return { score: Math.round(score), breakdown };
+}
+
+interface ViewerProfile {
+  id?: string;
+  gender?: string | null;
+  nakshatra?: string | null;
+  manglik?: string | boolean | null;
 }
 
 // ------------------------------------------------------------------
@@ -302,10 +337,11 @@ function scoreMatchInternal(p: MatchPreferences, c: MatchCandidate): { score: nu
 export function findMatches(
   prefs: MatchPreferences,
   candidates: MatchCandidate[],
-  opts?: { viewer?: Pick<MatchCandidate, 'id' | 'gender'> }
+  opts?: { viewer?: ViewerProfile }
 ): MatchResult[] {
   const viewerId = opts?.viewer?.id;
   const viewerGender = genderBucket(opts?.viewer?.gender);
+  const viewer = opts?.viewer;
 
   // If the user didn't say who they're looking for and we know their
   // own gender, default to the opposite gender and exclude candidates
@@ -321,7 +357,7 @@ export function findMatches(
     if (viewerId && candidate.id && candidate.id === viewerId) continue;
 
     const eligible = isEligible(effectivePrefs, candidate);
-    const { score, breakdown } = scoreMatchInternal(effectivePrefs, candidate);
+    const { score, breakdown } = scoreMatchInternal(effectivePrefs, candidate, viewer);
 
     results.push({
       profile: candidate,

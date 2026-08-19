@@ -101,7 +101,25 @@ export function ensureProfilesTable(): Promise<void> {
         provider         TEXT NOT NULL DEFAULT 'otp',
         provider_id      TEXT,
         created_at       TIMESTAMPTZ DEFAULT now(),
-        updated_at       TIMESTAMPTZ DEFAULT now()
+        updated_at       TIMESTAMPTZ DEFAULT now(),
+        membership_tier  TEXT DEFAULT 'free',
+        membership_expires_at TIMESTAMPTZ,
+        dob            DATE,
+        birth_time     TEXT,
+        birth_place    TEXT,
+        rashi          TEXT,
+        nakshatra      TEXT,
+        manglik        TEXT,
+        gotra          TEXT,
+        father_occupation TEXT,
+        mother_occupation TEXT,
+        siblings       TEXT,
+        family_type    TEXT,
+        family_values  TEXT,
+        diet           TEXT,
+        smoking        TEXT,
+        drinking       TEXT,
+        disability     TEXT
       )
     `);
 
@@ -120,6 +138,24 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_hash TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_salt TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'none';
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS membership_tier TEXT DEFAULT 'free';
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS membership_expires_at TIMESTAMPTZ;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS dob DATE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_time TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_place TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS rashi TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS nakshatra TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS manglik TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gotra TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS father_occupation TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mother_occupation TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS siblings TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS family_type TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS family_values TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS diet TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS smoking TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS drinking TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS disability TEXT;
     `);
 
     // Step 3: Create function & trigger

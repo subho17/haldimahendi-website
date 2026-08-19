@@ -99,7 +99,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <div className="hidden md:flex items-center transition-all duration-300 space-x-6 lg:space-x-10">
+        <div className="hidden md:flex items-center transition-all duration-300 space-x-8 lg:space-x-12">
           <Link
             href="/about"
             className={`relative font-semibold text-gray-700 hover:text-[#e53238] transition-all duration-300 group py-1 ${
@@ -118,6 +118,16 @@ export default function Navbar() {
           >
             <span>Help</span>
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#e53238] transition-all duration-300 group-hover:w-full"></span>
+          </Link>
+
+          <Link
+            href="/membership"
+            className={`relative font-bold text-amber-600 hover:text-amber-500 transition-all duration-300 group py-1 inline-flex items-center gap-1 ${
+              isScrolled ? 'text-sm' : 'text-lg lg:text-xl'
+            }`}
+          >
+            <span>Premium</span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
 
           {/* Login Pill Button & Dropdown */}

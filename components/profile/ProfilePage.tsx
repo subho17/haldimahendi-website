@@ -26,10 +26,12 @@ import {
   Globe,
   Award,
   Check,
+  Crown,
 } from "lucide-react";
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
 import { useMounted } from "@/hooks/useMounted";
 import VerificationCard from "@/components/profile/VerificationCard";
+import { RASHIS, NAKSHATRAS } from "@/lib/kundli";
 
 const DEFAULT_AVATARS = [
   { label: "Female Avatar 1", url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250" },
@@ -57,6 +59,11 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [membership, setMembership] = useState<{ isPremium: boolean; label: string; expiresAt: string | null }>({
+    isPremium: false,
+    label: "",
+    expiresAt: null,
+  });
 
   // Editable Form Fields initialized lazily from user context
   const [displayName, setDisplayName] = useState(() => user?.display_name || user?.name || "Shaadi Member");
@@ -73,11 +80,52 @@ export default function ProfilePage() {
   const [country] = useState("India");
   const [bio, setBio] = useState("Looking for a caring, family-oriented partner with good moral values.");
 
+  // Phase 5: Extended profile fields (astrology, lifestyle, family)
+  const [dob, setDob] = useState(() => user?.dob || "");
+  const [birthTime, setBirthTime] = useState(() => user?.birthTime || "");
+  const [birthPlace, setBirthPlace] = useState(() => user?.birthPlace || "");
+  const [rashi, setRashi] = useState(() => user?.rashi || "");
+  const [nakshatra, setNakshatra] = useState(() => user?.nakshatra || "");
+  const [manglik, setManglik] = useState(() => user?.manglik || "");
+  const [gotra, setGotra] = useState(() => user?.gotra || "");
+  const [fatherOccupation, setFatherOccupation] = useState(() => user?.fatherOccupation || "");
+  const [motherOccupation, setMotherOccupation] = useState(() => user?.motherOccupation || "");
+  const [siblings, setSiblings] = useState(() => user?.siblings || "");
+  const [familyType, setFamilyType] = useState(() => user?.familyType || "");
+  const [familyValues, setFamilyValues] = useState(() => user?.familyValues || "");
+  const [diet, setDiet] = useState(() => user?.diet || "");
+  const [smoking, setSmoking] = useState(() => user?.smoking || "");
+  const [drinking, setDrinking] = useState(() => user?.drinking || "");
+  const [disability, setDisability] = useState(() => user?.disability || "");
+
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
       router.push("/");
     }
   }, [mounted, isAuthenticated, isLoading, router]);
+
+  useEffect(() => {
+    if (!mounted || !user) return;
+    const id =
+      user?.profileId ||
+      user?.mobile_number ||
+      user?.mobileNumber ||
+      user?.email ||
+      "";
+    if (!id) return;
+    fetch(`/api/membership?userId=${encodeURIComponent(id)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success && data.membership) {
+          setMembership({
+            isPremium: !!data.membership.isPremium,
+            label: data.membership.plan?.badgeLabel || data.membership.tier || "",
+            expiresAt: data.membership.expiresAt || null,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [mounted, user]);
 
   if (!mounted || isLoading || !isAuthenticated) {
     return (
@@ -125,20 +173,61 @@ export default function ProfilePage() {
   };
 
   // Handle Form Save
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     const updatedName = displayName.trim() || user?.name || "Shaadi Member";
 
-    login({
+    const updatedUser = {
       ...user,
       name: updatedName,
       display_name: updatedName,
       avatarUrl: avatarUrl || DEFAULT_AVATARS[0].url,
       avatar_url: avatarUrl || DEFAULT_AVATARS[0].url,
       gender,
+      age: parseInt(age, 10) || undefined,
+      height,
       maritalStatus,
+      religion,
+      motherTongue,
+      education,
+      profession,
       city,
-    });
+      bio,
+      dob,
+      birthTime,
+      birthPlace,
+      rashi,
+      nakshatra,
+      manglik,
+      gotra,
+      fatherOccupation,
+      motherOccupation,
+      siblings,
+      familyType,
+      familyValues,
+      diet,
+      smoking,
+      drinking,
+      disability,
+    };
+
+    login(updatedUser);
+
+    // Persist to backend (scratch + Postgres) so public profile & search reflect edits.
+    try {
+      await fetch("/api/user/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profileId: user?.profileId,
+          mobileNumber: user?.mobile_number || user?.mobileNumber || "",
+          email: user?.email || "",
+          ...updatedUser,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to persist profile:", err);
+    }
 
     setIsEditing(false);
     setSuccessMessage("Profile details updated successfully!");
@@ -157,7 +246,7 @@ export default function ProfilePage() {
   const viewerId = user?.mobile_number || user?.mobileNumber || user?.email || user?.profileId || "";
 
   // Compute profile completeness score dynamically
-  const fieldsToCheck = [displayName, avatarUrl, gender, age, height, maritalStatus, religion, motherTongue, education, profession, city, bio];
+  const fieldsToCheck = [displayName, avatarUrl, gender, age, height, maritalStatus, religion, motherTongue, education, profession, city, bio, rashi, nakshatra, diet, smoking, drinking, familyType, fatherOccupation];
   const filledCount = fieldsToCheck.filter((f) => f && f.trim() !== "").length;
   const completionPercentage = Math.round((filledCount / fieldsToCheck.length) * 100);
 
@@ -190,7 +279,7 @@ export default function ProfilePage() {
               {/* Avatar & Upload Camera Trigger */}
               <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-left">
                 <div className="relative group shrink-0">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-3xl ring-2 ring-rose-100">
+                  <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-4xl ring-2 ring-rose-100">
                     {rawAvatar && rawAvatar !== "/images/default-avatar.png" ? (
                       <img src={rawAvatar} alt={formattedDisplayName} className="w-full h-full object-cover" />
                     ) : (
@@ -223,6 +312,12 @@ export default function ProfilePage() {
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       <span>100% Verified Member</span>
                     </span>
+                    {membership.isPremium && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 font-bold text-xs border border-amber-300 shadow-2xs">
+                        <Crown className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>{membership.label || "Premium"} Member</span>
+                      </span>
+                    )}
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80 shadow-2xs">
                       <Award className="w-3.5 h-3.5 text-[#e53238] shrink-0" />
                       <span>Verified Match Profile</span>
@@ -510,7 +605,257 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Section 4: Bio */}
+                {/* Section 4: Astrology & Horoscope */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <Sparkles className="w-4 h-4 text-[#e53238]" />
+                    <span>Astrology & Horoscope (Kundli)</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-500 -mt-2">
+                    Used for kundli compatibility scoring in matches.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Date of Birth */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Date of Birth</label>
+                      <input
+                        type="date"
+                        value={dob}
+                        onChange={(e) => setDob(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
+                      />
+                    </div>
+
+                    {/* Birth Time */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Birth Time</label>
+                      <input
+                        type="time"
+                        value={birthTime}
+                        onChange={(e) => setBirthTime(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
+                      />
+                    </div>
+
+                    {/* Birth Place */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Birth Place</label>
+                      <input
+                        type="text"
+                        value={birthPlace}
+                        onChange={(e) => setBirthPlace(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
+                        placeholder="e.g. Kolkata, West Bengal"
+                      />
+                    </div>
+
+                    {/* Rashi */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Rashi (Moon Sign)</label>
+                      <select
+                        value={rashi}
+                        onChange={(e) => setRashi(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select Rashi</option>
+                        {RASHIS.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Nakshatra */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Nakshatra (Star)</label>
+                      <select
+                        value={nakshatra}
+                        onChange={(e) => setNakshatra(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select Nakshatra</option>
+                        {NAKSHATRAS.map((n) => (
+                          <option key={n.name} value={n.name}>{n.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Manglik */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Manglik (Mangal Dosh)</label>
+                      <select
+                        value={manglik}
+                        onChange={(e) => setManglik(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Not sure / Skip</option>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                    </div>
+
+                    {/* Gotra */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Gotra</label>
+                      <input
+                        type="text"
+                        value={gotra}
+                        onChange={(e) => setGotra(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
+                        placeholder="e.g. Kashyap"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 5: Lifestyle */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <Heart className="w-4 h-4 text-[#e53238]" />
+                    <span>Lifestyle</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Diet */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Diet</label>
+                      <select
+                        value={diet}
+                        onChange={(e) => setDiet(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select</option>
+                        <option>Vegetarian</option>
+                        <option>Eggetarian</option>
+                        <option>Non-Vegetarian</option>
+                        <option>Jain</option>
+                        <option>Vegan</option>
+                      </select>
+                    </div>
+
+                    {/* Smoking */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Smoking</label>
+                      <select
+                        value={smoking}
+                        onChange={(e) => setSmoking(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select</option>
+                        <option>No</option>
+                        <option>Yes</option>
+                        <option>Occasionally</option>
+                      </select>
+                    </div>
+
+                    {/* Drinking */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Drinking</label>
+                      <select
+                        value={drinking}
+                        onChange={(e) => setDrinking(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select</option>
+                        <option>No</option>
+                        <option>Yes</option>
+                        <option>Socially</option>
+                      </select>
+                    </div>
+
+                    {/* Disability */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Disability</label>
+                      <select
+                        value={disability}
+                        onChange={(e) => setDisability(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select</option>
+                        <option>None</option>
+                        <option>Physical Disability</option>
+                        <option>Visual Impairment</option>
+                        <option>Hearing Impairment</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 6: Family Details */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <Users className="w-4 h-4 text-[#e53238]" />
+                    <span>Family Details</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Father occupation */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Father&apos;s Occupation</label>
+                      <input
+                        type="text"
+                        value={fatherOccupation}
+                        onChange={(e) => setFatherOccupation(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
+                        placeholder="e.g. Business Owner"
+                      />
+                    </div>
+
+                    {/* Mother occupation */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Mother&apos;s Occupation</label>
+                      <input
+                        type="text"
+                        value={motherOccupation}
+                        onChange={(e) => setMotherOccupation(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
+                        placeholder="e.g. Homemaker"
+                      />
+                    </div>
+
+                    {/* Siblings */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Siblings</label>
+                      <input
+                        type="text"
+                        value={siblings}
+                        onChange={(e) => setSiblings(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
+                        placeholder="e.g. 1 brother, 1 sister"
+                      />
+                    </div>
+
+                    {/* Family Type */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Family Type</label>
+                      <select
+                        value={familyType}
+                        onChange={(e) => setFamilyType(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select</option>
+                        <option>Nuclear Family</option>
+                        <option>Joint Family</option>
+                        <option>Extended Family</option>
+                      </select>
+                    </div>
+
+                    {/* Family Values */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Family Values</label>
+                      <select
+                        value={familyValues}
+                        onChange={(e) => setFamilyValues(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select</option>
+                        <option>Traditional</option>
+                        <option>Moderate</option>
+                        <option>Liberal</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 7: Bio */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-2">
                   <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-[#e53238]" />
@@ -707,6 +1052,213 @@ export default function ProfilePage() {
 
                   </div>
                 </div>
+
+                {/* Section 3: Astrology & Horoscope */}
+                {(rashi || nakshatra || manglik || dob) && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                      <Sparkles className="w-4 h-4 text-[#e53238]" />
+                      <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
+                        Horoscope & Kundli
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {dob && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Date of Birth</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{dob}{birthTime ? `, ${birthTime}` : ""}</span>
+                          </div>
+                        </div>
+                      )}
+                      {birthPlace && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <MapPin className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Birth Place</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{birthPlace}</span>
+                          </div>
+                        </div>
+                      )}
+                      {rashi && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Rashi</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{rashi}</span>
+                          </div>
+                        </div>
+                      )}
+                      {nakshatra && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nakshatra</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{nakshatra}</span>
+                          </div>
+                        </div>
+                      )}
+                      {manglik && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Manglik</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{manglik}</span>
+                          </div>
+                        </div>
+                      )}
+                      {gotra && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Users className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gotra</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{gotra}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 4: Lifestyle */}
+                {(diet || smoking || drinking || disability) && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                      <Heart className="w-4 h-4 text-[#e53238]" />
+                      <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
+                        Lifestyle
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {diet && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Heart className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Diet</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{diet}</span>
+                          </div>
+                        </div>
+                      )}
+                      {smoking && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Heart className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Smoking</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{smoking}</span>
+                          </div>
+                        </div>
+                      )}
+                      {drinking && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Heart className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Drinking</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{drinking}</span>
+                          </div>
+                        </div>
+                      )}
+                      {disability && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Heart className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Disability</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{disability}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 5: Family Details */}
+                {(fatherOccupation || motherOccupation || siblings || familyType || familyValues) && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                      <Users className="w-4 h-4 text-[#e53238]" />
+                      <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
+                        Family Details
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {fatherOccupation && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Users className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Father&apos;s Occupation</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{fatherOccupation}</span>
+                          </div>
+                        </div>
+                      )}
+                      {motherOccupation && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Users className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mother&apos;s Occupation</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{motherOccupation}</span>
+                          </div>
+                        </div>
+                      )}
+                      {siblings && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Users className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Siblings</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{siblings}</span>
+                          </div>
+                        </div>
+                      )}
+                      {familyType && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Users className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Family Type</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{familyType}</span>
+                          </div>
+                        </div>
+                      )}
+                      {familyValues && (
+                        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                            <Users className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Family Values</span>
+                            <span className="text-xs font-bold text-slate-900 truncate block">{familyValues}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
               </div>
             )}

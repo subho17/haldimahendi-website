@@ -262,6 +262,22 @@ export type ProfileData = {
   bio?: string;
   passwordHash?: string;
   passwordSalt?: string;
+  dob?: string;
+  birthTime?: string;
+  birthPlace?: string;
+  rashi?: string;
+  nakshatra?: string;
+  manglik?: string;
+  gotra?: string;
+  fatherOccupation?: string;
+  motherOccupation?: string;
+  siblings?: string;
+  familyType?: string;
+  familyValues?: string;
+  diet?: string;
+  smoking?: string;
+  drinking?: string;
+  disability?: string;
 };
 
 export async function saveProfile(profileData: ProfileData): Promise<void> {
@@ -276,9 +292,11 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
       INSERT INTO profiles (
         user_id, display_name, mobile_number, avatar_url, provider, provider_id,
         gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio,
-        password_hash, password_salt, created_at
+        password_hash, password_salt, dob, birth_time, birth_place, rashi, nakshatra, manglik, gotra,
+        father_occupation, mother_occupation, siblings, family_type, family_values, diet, smoking, drinking, disability,
+        created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, now())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, now())
       ON CONFLICT (user_id) DO UPDATE
       SET display_name   = EXCLUDED.display_name,
           avatar_url     = EXCLUDED.avatar_url,
@@ -294,6 +312,22 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
           bio            = COALESCE(EXCLUDED.bio, profiles.bio),
           password_hash  = COALESCE(EXCLUDED.password_hash, profiles.password_hash),
           password_salt  = COALESCE(EXCLUDED.password_salt, profiles.password_salt),
+          dob            = COALESCE(EXCLUDED.dob, profiles.dob),
+          birth_time     = COALESCE(EXCLUDED.birth_time, profiles.birth_time),
+          birth_place    = COALESCE(EXCLUDED.birth_place, profiles.birth_place),
+          rashi          = COALESCE(EXCLUDED.rashi, profiles.rashi),
+          nakshatra      = COALESCE(EXCLUDED.nakshatra, profiles.nakshatra),
+          manglik        = COALESCE(EXCLUDED.manglik, profiles.manglik),
+          gotra          = COALESCE(EXCLUDED.gotra, profiles.gotra),
+          father_occupation = COALESCE(EXCLUDED.father_occupation, profiles.father_occupation),
+          mother_occupation = COALESCE(EXCLUDED.mother_occupation, profiles.mother_occupation),
+          siblings       = COALESCE(EXCLUDED.siblings, profiles.siblings),
+          family_type    = COALESCE(EXCLUDED.family_type, profiles.family_type),
+          family_values  = COALESCE(EXCLUDED.family_values, profiles.family_values),
+          diet           = COALESCE(EXCLUDED.diet, profiles.diet),
+          smoking        = COALESCE(EXCLUDED.smoking, profiles.smoking),
+          drinking       = COALESCE(EXCLUDED.drinking, profiles.drinking),
+          disability     = COALESCE(EXCLUDED.disability, profiles.disability),
           updated_at     = now()
     `, [
       profileData.userId,
@@ -314,6 +348,22 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
       profileData.bio || null,
       profileData.passwordHash || null,
       profileData.passwordSalt || null,
+      profileData.dob || null,
+      profileData.birthTime || null,
+      profileData.birthPlace || null,
+      profileData.rashi || null,
+      profileData.nakshatra || null,
+      profileData.manglik || null,
+      profileData.gotra || null,
+      profileData.fatherOccupation || null,
+      profileData.motherOccupation || null,
+      profileData.siblings || null,
+      profileData.familyType || null,
+      profileData.familyValues || null,
+      profileData.diet || null,
+      profileData.smoking || null,
+      profileData.drinking || null,
+      profileData.disability || null,
     ]);
   } catch (e) {
     console.warn('[DB] Failed to save profile to Postgres database:', e);

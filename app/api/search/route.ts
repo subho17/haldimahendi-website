@@ -4,6 +4,7 @@ import path from 'path';
 import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
 import { genderMatches } from '@/lib/matching';
 import { getInvisibleIds } from '@/lib/reportStore';
+import { resolveStatus } from '@/lib/membershipStore';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -24,6 +25,8 @@ interface SearchProfile {
   gender: string;
   avatarUrl: string;
   verified?: boolean;
+  premium?: boolean;
+  tier?: string;
   bio?: string;
 }
 
@@ -45,6 +48,8 @@ const SAMPLE_PROFILES: SearchProfile[] = [
     gender: 'Bride',
     avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=350',
     verified: true,
+    premium: true,
+    tier: 'premium',
     bio: 'Warm, career-oriented professional looking for a life partner with mutual respect.',
   },
   {
@@ -125,6 +130,8 @@ export async function GET(req: Request) {
             avatar_url?: string;
             bio?: string;
             verificationStatus?: string;
+            membershipTier?: string;
+            membershipExpiresAt?: string;
           }) => ({
             id: u.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
             name: u.display_name || u.name || 'Shaadi Member',
@@ -140,6 +147,8 @@ export async function GET(req: Request) {
             gender: u.gender || 'Groom',
             avatarUrl: u.avatar_url || u.avatarUrl || '/images/default-avatar.png',
             verified: u.verificationStatus === 'approved',
+            premium: resolveStatus(u.membershipTier, u.membershipExpiresAt).isPremium,
+            tier: resolveStatus(u.membershipTier, u.membershipExpiresAt).tier,
             bio: u.bio || 'Registered Member on Shaadi Matrimonial.',
           })
         );
@@ -154,7 +163,7 @@ export async function GET(req: Request) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(`
-          SELECT id, user_id, display_name, mobile_number, avatar_url, gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, verification_status
+          SELECT id, user_id, display_name, mobile_number, avatar_url, gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, verification_status, membership_tier, membership_expires_at
           FROM profiles
           ORDER BY created_at DESC
         `);
@@ -174,6 +183,8 @@ export async function GET(req: Request) {
           gender: r.gender || 'Groom',
           avatarUrl: r.avatar_url || '/images/default-avatar.png',
           verified: r.verification_status === 'approved',
+          premium: resolveStatus(r.membership_tier, r.membership_expires_at).isPremium,
+          tier: resolveStatus(r.membership_tier, r.membership_expires_at).tier,
           bio: r.bio || 'Verified Matrimonial Member.',
         }));
 

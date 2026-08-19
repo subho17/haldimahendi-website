@@ -5,6 +5,7 @@ import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
 import { loadPreferences } from '@/lib/prefsStore';
 import { findMatches, type MatchCandidate, type MatchPreferences } from '@/lib/matching';
 import { getInvisibleIds } from '@/lib/reportStore';
+import { resolveStatus } from '@/lib/membershipStore';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -26,15 +27,15 @@ export async function GET(req: Request) {
     // ------------------------------------------------------------------
     // Load viewer profile (for same-gender exclusion defaults)
     // ------------------------------------------------------------------
-    let viewer: { id: string; gender?: string | null } = { id: userId };
+    let viewer: { id: string; gender?: string | null; nakshatra?: string | null; manglik?: string | boolean | null } = { id: userId };
     if (hasPool) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(
-          'SELECT user_id, gender FROM profiles WHERE user_id = $1',
+          'SELECT user_id, gender, nakshatra, manglik FROM profiles WHERE user_id = $1',
           [userId]
         );
-        if (rows.length > 0) viewer = { id: rows[0].user_id || userId, gender: rows[0].gender };
+        if (rows.length > 0) viewer = { id: rows[0].user_id || userId, gender: rows[0].gender, nakshatra: rows[0].nakshatra, manglik: rows[0].manglik };
       } catch (e) {
         console.warn('Error loading viewer profile:', e);
       }
@@ -45,10 +46,12 @@ export async function GET(req: Request) {
         if (fs.existsSync(USERS_FILE)) {
           const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
           const hit = users.find(
-            (u: { profileId?: string; mobileNumber?: string; email?: string; gender?: string }) =>
+            (u: { profileId?: string; mobileNumber?: string; email?: string; gender?: string; nakshatra?: string; manglik?: string | boolean }) =>
               u.profileId === userId || u.mobileNumber === userId || u.email === userId
           );
           if (hit?.gender) viewer = { ...viewer, gender: hit.gender };
+          if (hit?.nakshatra) viewer = { ...viewer, nakshatra: hit.nakshatra };
+          if (hit?.manglik != null) viewer = { ...viewer, manglik: hit.manglik };
         }
         void dir;
       } catch {
@@ -66,13 +69,16 @@ export async function GET(req: Request) {
         await ensureProfilesTable();
         const { rows } = await pool!.query(`
           SELECT user_id, display_name, avatar_url, gender, age, height, marital_status,
-                 religion, mother_tongue, education, profession, city, country, created_at
+                 religion, mother_tongue, education, profession, city, country, created_at,
+                 membership_tier, membership_expires_at, rashi, nakshatra, manglik, diet,
+                 smoking, drinking
           FROM profiles
           WHERE user_id <> $1
           ORDER BY created_at DESC
         `, [userId]);
 
         rows.forEach((r) => {
+          const mem = resolveStatus(r.membership_tier, r.membership_expires_at);
           const rec: MatchCandidate = {
             id: normalizeId(r.user_id),
             name: r.display_name || 'Member',
@@ -88,6 +94,14 @@ export async function GET(req: Request) {
             gender: r.gender,
             avatarUrl: r.avatar_url,
             createdAt: r.created_at,
+            premium: mem.isPremium,
+            tier: mem.tier,
+            rashi: r.rashi,
+            nakshatra: r.nakshatra,
+            manglik: r.manglik,
+            diet: r.diet,
+            smoking: r.smoking,
+            drinking: r.drinking,
           };
           candidates.push(rec);
         });
@@ -120,10 +134,19 @@ export async function GET(req: Request) {
           avatar_url?: string;
           avatarUrl?: string;
           createdAt?: string;
+          membershipTier?: string;
+          membershipExpiresAt?: string;
+          rashi?: string;
+          nakshatra?: string;
+          manglik?: string | boolean;
+          diet?: string;
+          smoking?: string;
+          drinking?: string;
         }) => {
           const uid = normalizeId(u.profileId || u.mobileNumber || u.email);
           if (!uid || uid === userId) return;
           if (candidates.some((c) => c.id === uid)) return;
+          const mem = resolveStatus(u.membershipTier, u.membershipExpiresAt);
           candidates.push({
             id: uid,
             name: u.display_name || u.name || 'Member',
@@ -139,6 +162,14 @@ export async function GET(req: Request) {
             gender: u.gender,
             avatarUrl: u.avatar_url || u.avatarUrl,
             createdAt: u.createdAt,
+            premium: mem.isPremium,
+            tier: mem.tier,
+            rashi: u.rashi,
+            nakshatra: u.nakshatra,
+            manglik: u.manglik,
+            diet: u.diet,
+            smoking: u.smoking,
+            drinking: u.drinking,
           });
         });
       }

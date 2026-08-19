@@ -1,6 +1,19 @@
 {
   "notifications": [
     {
+      "id": "nt_1787133418400_yrr9",
+      "userId": "SH095196",
+      "actorId": "subhadeepchanda36@gmail.com",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "Subhadeep sent you an interest.",
+      "data": {
+        "profileId": "subhadeepchanda36@gmail.com"
+      },
+      "read": false,
+      "createdAt": "2026-08-19T09:56:58.400Z"
+    },
+    {
       "id": "nt_1787051173678_7uc0",
       "userId": "SH095196",
       "actorId": "subhadeepchanda36@gmail.com",

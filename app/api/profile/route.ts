@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
+import { resolveStatus, getMembership } from '@/lib/membershipStore';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -26,6 +27,28 @@ export interface PublicProfile {
   bio?: string | null;
   createdAt?: string | null;
   verified: boolean;
+  membership?: {
+    tier: string;
+    isPremium: boolean;
+    label: string;
+  };
+  dob?: string | null;
+  birthTime?: string | null;
+  birthPlace?: string | null;
+  rashi?: string | null;
+  nakshatra?: string | null;
+  manglik?: string | null;
+  gotra?: string | null;
+  fatherOccupation?: string | null;
+  motherOccupation?: string | null;
+  siblings?: string | null;
+  familyType?: string | null;
+  familyValues?: string | null;
+  diet?: string | null;
+  smoking?: string | null;
+  drinking?: string | null;
+  disability?: string | null;
+  mobile?: string | null;
 }
 
 // Sample profiles shown in live search (mirror of /api/search) so that
@@ -47,6 +70,18 @@ const SAMPLE_PROFILES: PublicProfile[] = [
     avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=350',
     bio: 'Warm, career-oriented professional looking for a life partner with mutual respect.',
     verified: true,
+    membership: { tier: 'premium', isPremium: true, label: 'Premium' },
+    rashi: 'Taurus (Vrishabha)',
+    nakshatra: 'Rohini',
+    manglik: 'No',
+    diet: 'Vegetarian',
+    smoking: 'No',
+    drinking: 'No',
+    fatherOccupation: 'Business Owner',
+    motherOccupation: 'Homemaker',
+    siblings: '1 brother, 1 sister',
+    familyType: 'Nuclear Family',
+    familyValues: 'Moderate',
   },
   {
     id: 'SH1002',
@@ -64,6 +99,17 @@ const SAMPLE_PROFILES: PublicProfile[] = [
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=350',
     bio: 'Family-centered finance professional passionate about fitness and travelling.',
     verified: true,
+    rashi: 'Leo (Simha)',
+    nakshatra: 'Magha',
+    manglik: 'Yes',
+    diet: 'Non-Vegetarian',
+    smoking: 'No',
+    drinking: 'Socially',
+    fatherOccupation: 'Retired Bank Officer',
+    motherOccupation: 'Teacher',
+    siblings: '1 brother',
+    familyType: 'Joint Family',
+    familyValues: 'Traditional',
   },
   {
     id: 'SH1003',
@@ -81,6 +127,17 @@ const SAMPLE_PROFILES: PublicProfile[] = [
     avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=350',
     bio: 'Simple and progressive individual seeking a caring and understanding partner.',
     verified: true,
+    rashi: 'Virgo (Kanya)',
+    nakshatra: 'Uttara Phalguni',
+    manglik: 'No',
+    diet: 'Eggetarian',
+    smoking: 'No',
+    drinking: 'No',
+    fatherOccupation: 'Government Officer',
+    motherOccupation: 'Homemaker',
+    siblings: '1 sister',
+    familyType: 'Nuclear Family',
+    familyValues: 'Moderate',
   },
 ];
 
@@ -89,24 +146,41 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = normalizeId(searchParams.get('id'));
+    const viewerId = normalizeId(searchParams.get('viewerId'));
     if (!id) {
       return NextResponse.json({ success: false, message: 'Missing id parameter' }, { status: 400 });
     }
+
+    // Contact details are premium-gated: only revealed to premium viewers.
+    let viewerIsPremium = false;
+    if (viewerId) {
+      try {
+        viewerIsPremium = (await getMembership(viewerId)).isPremium;
+      } catch {
+        viewerIsPremium = false;
+      }
+    }
+    const revealContact = viewerIsPremium && id !== viewerId;
 
     // 1. Postgres profiles
     if (hasPool) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(
-          `SELECT user_id, display_name, avatar_url, gender, age, height, marital_status,
+          `SELECT user_id, display_name, avatar_url, mobile_number, gender, age, height, marital_status,
                   religion, mother_tongue, education, profession, city, country, bio, created_at,
-                  verification_status
+                  verification_status, membership_tier, membership_expires_at,
+                  dob, birth_time, birth_place, rashi, nakshatra, manglik, gotra,
+                  father_occupation, mother_occupation, siblings, family_type, family_values,
+                  diet, smoking, drinking, disability
            FROM profiles
            WHERE user_id = $1 OR mobile_number = $1`,
           [id]
         );
         if (rows.length > 0) {
           const r = rows[0];
+          const mem = resolveStatus(r.membership_tier, r.membership_expires_at);
+          const dob = r.dob instanceof Date ? r.dob.toISOString().slice(0, 10) : r.dob;
           return NextResponse.json({
             success: true,
             profile: {
@@ -126,6 +200,28 @@ export async function GET(req: Request) {
               bio: r.bio,
               createdAt: r.created_at?.toISOString?.() || null,
               verified: r.verification_status === 'approved',
+              membership: {
+                tier: mem.tier,
+                isPremium: mem.isPremium,
+                label: mem.plan?.badgeLabel || '',
+              },
+              dob: dob || null,
+              birthTime: r.birth_time || null,
+              birthPlace: r.birth_place || null,
+              rashi: r.rashi || null,
+              nakshatra: r.nakshatra || null,
+              manglik: r.manglik || null,
+              gotra: r.gotra || null,
+              fatherOccupation: r.father_occupation || null,
+              motherOccupation: r.mother_occupation || null,
+              siblings: r.siblings || null,
+              familyType: r.family_type || null,
+              familyValues: r.family_values || null,
+              diet: r.diet || null,
+              smoking: r.smoking || null,
+              drinking: r.drinking || null,
+              disability: r.disability || null,
+              mobile: revealContact ? (r.mobile_number || null) : null,
             } as PublicProfile,
           });
         }
@@ -143,6 +239,14 @@ export async function GET(req: Request) {
             u.profileId === id || u.mobileNumber === id || u.email === id
         );
         if (hit) {
+          const mem = resolveStatus(hit.membershipTier, hit.membershipExpiresAt);
+          const hitDob = (h: { dob?: unknown; dateOfBirth?: unknown }): string | null => {
+            const d = h.dob || h.dateOfBirth || null;
+            if (!d) return null;
+            if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d)) return d.slice(0, 10);
+            const dt = new Date(String(d));
+            return Number.isNaN(dt.getTime()) ? null : dt.toISOString().slice(0, 10);
+          };
           return NextResponse.json({
             success: true,
             profile: {
@@ -162,6 +266,28 @@ export async function GET(req: Request) {
               bio: hit.bio,
               createdAt: hit.createdAt || null,
               verified: hit.verificationStatus === 'approved',
+              membership: {
+                tier: mem.tier,
+                isPremium: mem.isPremium,
+                label: mem.plan?.badgeLabel || '',
+              },
+              dob: hitDob(hit),
+              birthTime: hit.birthTime || null,
+              birthPlace: hit.birthPlace || null,
+              rashi: hit.rashi || null,
+              nakshatra: hit.nakshatra || null,
+              manglik: hit.manglik || null,
+              gotra: hit.gotra || null,
+              fatherOccupation: hit.fatherOccupation || null,
+              motherOccupation: hit.motherOccupation || null,
+              siblings: hit.siblings || null,
+              familyType: hit.familyType || null,
+              familyValues: hit.familyValues || null,
+              diet: hit.diet || null,
+              smoking: hit.smoking || null,
+              drinking: hit.drinking || null,
+              disability: hit.disability || null,
+              mobile: revealContact ? (hit.mobileNumber || hit.mobile_number || null) : null,
             } as PublicProfile,
           });
         }
@@ -173,7 +299,8 @@ export async function GET(req: Request) {
     // 3. Sample profiles
     const sample = SAMPLE_PROFILES.find((p) => p.id === id);
     if (sample) {
-      return NextResponse.json({ success: true, profile: sample });
+      const withMobile = revealContact ? { ...sample, mobile: '98765 43210' } : sample;
+      return NextResponse.json({ success: true, profile: withMobile });
     }
 
     return NextResponse.json({ success: false, message: 'Profile not found' }, { status: 404 });

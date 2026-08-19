@@ -31,6 +31,22 @@ interface UserRecord {
   passwordSalt?: string;
   createdAt?: string;
   updatedAt?: string;
+  dob?: string;
+  birthTime?: string;
+  birthPlace?: string;
+  rashi?: string;
+  nakshatra?: string;
+  manglik?: string;
+  gotra?: string;
+  fatherOccupation?: string;
+  motherOccupation?: string;
+  siblings?: string;
+  familyType?: string;
+  familyValues?: string;
+  diet?: string;
+  smoking?: string;
+  drinking?: string;
+  disability?: string;
 }
 
 function ensureDbFile() {
@@ -131,6 +147,22 @@ export async function POST(req: Request) {
         bio: userData.bio,
         passwordHash,
         passwordSalt,
+        dob: userData.dob,
+        birthTime: userData.birthTime,
+        birthPlace: userData.birthPlace,
+        rashi: userData.rashi,
+        nakshatra: userData.nakshatra,
+        manglik: userData.manglik,
+        gotra: userData.gotra,
+        fatherOccupation: userData.fatherOccupation,
+        motherOccupation: userData.motherOccupation,
+        siblings: userData.siblings,
+        familyType: userData.familyType,
+        familyValues: userData.familyValues,
+        diet: userData.diet,
+        smoking: userData.smoking,
+        drinking: userData.drinking,
+        disability: userData.disability,
       };
       await saveProfile(profileData);
     } catch (e) {
