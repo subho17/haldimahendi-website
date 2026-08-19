@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { saveOtp } from '@/lib/otpStore';
+import { saveOtp, checkSendAllowed, recordSend } from '@/lib/otpStore';
 import https from 'https';
 
 // SMS Provider Configuration
@@ -157,9 +157,22 @@ export async function POST(req: Request) {
       );
     }
 
+    // Rate limit + cooldown enforcement (server-side)
+    const sendCheck = await checkSendAllowed(cleanMobile);
+    if (!sendCheck.allowed) {
+      const message =
+        sendCheck.reason === 'locked'
+          ? 'Too many OTP requests. Your number is temporarily blocked. Please try again later.'
+          : sendCheck.reason === 'cooldown'
+            ? `Please wait ${sendCheck.retryAfterSeconds}s before requesting another OTP.`
+            : 'Too many OTP requests. Please try again in a few minutes.';
+      return NextResponse.json({ success: false, message }, { status: 429 });
+    }
+
     // Generate secure 4-digit OTP
     const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
     await saveOtp(cleanMobile, otpCode);
+    await recordSend(cleanMobile);
 
     // Dispatch SMS based on selected provider
     let smsResult = { success: false };

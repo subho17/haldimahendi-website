@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { isAcceptedConnection } from '@/lib/interactionStore';
 import { getConversationById, sendChatMessage } from '@/lib/chatStore';
+import { isBlocked } from '@/lib/reportStore';
+import { createNotification } from '@/lib/notificationStore';
+import { buildProfileLookup } from '@/lib/profileLookup';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -49,10 +52,36 @@ export async function POST(req: Request) {
       );
     }
 
+    // Blocked members cannot message each other in either direction.
+    const [blockedBySender, blockedByRecipient] = await Promise.all([
+      isBlocked(senderId, recipientId),
+      isBlocked(recipientId, senderId),
+    ]);
+    if (blockedBySender || blockedByRecipient) {
+      return NextResponse.json(
+        { success: false, message: 'You cannot message this member.' },
+        { status: 403 }
+      );
+    }
+
     const message = await sendChatMessage(conversationId, senderId, recipientId, content);
     if (!message) {
       return NextResponse.json({ success: false, message: 'Failed to send message' }, { status: 500 });
     }
+
+    // In-app notification for the recipient (best-effort).
+    try {
+      const lookup = await buildProfileLookup();
+      const sender = lookup.get(senderId);
+      await createNotification(recipientId, 'message', `${sender?.name || 'A member'} sent you a message: "${content.slice(0, 80)}"`, {
+        actorId: senderId,
+        title: 'New Message',
+        data: { conversationId, profileId: senderId },
+      });
+    } catch (e) {
+      console.warn('[Chat] Failed to create message notification:', e);
+    }
+
     return NextResponse.json({ success: true, message });
   } catch (e) {
     console.error('Error sending chat message:', e);

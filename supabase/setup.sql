@@ -3,12 +3,23 @@
 -- Run in: Supabase Dashboard > SQL Editor
 
 CREATE TABLE IF NOT EXISTS otp_codes (
-  mobile_number  TEXT PRIMARY KEY,
-  code           TEXT NOT NULL,
-  expires_at     TIMESTAMPTZ NOT NULL,
-  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-  verified_at    TIMESTAMPTZ
+  mobile_number   TEXT PRIMARY KEY,
+  code            TEXT NOT NULL,
+  expires_at      TIMESTAMPTZ NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  verified_at     TIMESTAMPTZ,
+  send_count      INT NOT NULL DEFAULT 0,
+  last_sent_at    TIMESTAMPTZ,
+  failed_attempts INT NOT NULL DEFAULT 0,
+  locked_until    TIMESTAMPTZ
 );
+
+-- If otp_codes already exists, add the security columns (idempotent).
+ALTER TABLE otp_codes
+  ADD COLUMN IF NOT EXISTS send_count INT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS last_sent_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS failed_attempts INT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
 
 -- Partner preferences that power the matchmaking engine.
 CREATE TABLE IF NOT EXISTS partner_preferences (
@@ -81,3 +92,60 @@ CREATE INDEX IF NOT EXISTS idx_chat_messages_conv ON chat_messages (conversation
 --   ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
 -- Then enable Realtime for the table: Dashboard > Database > Replication >
 -- enable replication for public.chat_messages.
+
+-- User-submitted moderation reports against a member.
+CREATE TABLE IF NOT EXISTS reports (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_id TEXT NOT NULL,
+  reported_id TEXT NOT NULL,
+  reason      TEXT NOT NULL,
+  details     TEXT,
+  status      TEXT NOT NULL DEFAULT 'open', -- open | resolved | dismissed
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Blocked members (blocker -> blocked): hidden from feeds, no chat/interests.
+CREATE TABLE IF NOT EXISTS blocks (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  blocker_id TEXT NOT NULL,
+  blocked_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (blocker_id, blocked_id)
+);
+
+-- In-app notifications (interest received, accepted, new message, system).
+CREATE TABLE IF NOT EXISTS notifications (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    TEXT NOT NULL,
+  actor_id   TEXT,
+  type       TEXT NOT NULL DEFAULT 'system', -- interest | accept | message | system
+  title      TEXT,
+  message    TEXT NOT NULL,
+  data       JSONB,
+  read       BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications (user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_blocks_blocker ON blocks (blocker_id);
+CREATE INDEX IF NOT EXISTS idx_reports_reported ON reports (reported_id, status);
+
+-- Member photo/ID verification submissions.
+CREATE TABLE IF NOT EXISTS verifications (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      TEXT NOT NULL,
+  id_type      TEXT NOT NULL,          -- aadhaar | pan | passport | driving_license | voter_id
+  id_number    TEXT NOT NULL,
+  selfie_url   TEXT,
+  document_url TEXT,
+  status       TEXT NOT NULL DEFAULT 'pending', -- pending | approved | rejected
+  reviewed_at  TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_verifications_user ON verifications (user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_verifications_status ON verifications (status, created_at);
+
+-- Mirror the verified verdict onto the member profile (idempotent).
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'none';

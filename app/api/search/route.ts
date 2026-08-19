@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
 import { genderMatches } from '@/lib/matching';
+import { getInvisibleIds } from '@/lib/reportStore';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -96,6 +97,8 @@ export async function GET(req: Request) {
     const city = searchParams.get('city') || '';
     const motherTongue = searchParams.get('motherTongue') || '';
     const query = (searchParams.get('q') || '').toLowerCase();
+    const userId = (searchParams.get('userId') || '').trim();
+    const invisibleIds = userId ? new Set(await getInvisibleIds(userId)) : new Set<string>();
 
     let allProfiles: SearchProfile[] = [...SAMPLE_PROFILES];
 
@@ -121,6 +124,7 @@ export async function GET(req: Request) {
             avatarUrl?: string;
             avatar_url?: string;
             bio?: string;
+            verificationStatus?: string;
           }) => ({
             id: u.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
             name: u.display_name || u.name || 'Shaadi Member',
@@ -135,7 +139,7 @@ export async function GET(req: Request) {
             maritalStatus: u.maritalStatus || 'Never Married',
             gender: u.gender || 'Groom',
             avatarUrl: u.avatar_url || u.avatarUrl || '/images/default-avatar.png',
-            verified: true,
+            verified: u.verificationStatus === 'approved',
             bio: u.bio || 'Registered Member on Shaadi Matrimonial.',
           })
         );
@@ -150,7 +154,7 @@ export async function GET(req: Request) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(`
-          SELECT id, user_id, display_name, mobile_number, avatar_url, gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio
+          SELECT id, user_id, display_name, mobile_number, avatar_url, gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, verification_status
           FROM profiles
           ORDER BY created_at DESC
         `);
@@ -169,7 +173,7 @@ export async function GET(req: Request) {
           maritalStatus: r.marital_status || 'Never Married',
           gender: r.gender || 'Groom',
           avatarUrl: r.avatar_url || '/images/default-avatar.png',
-          verified: true,
+          verified: r.verification_status === 'approved',
           bio: r.bio || 'Verified Matrimonial Member.',
         }));
 
@@ -187,6 +191,7 @@ export async function GET(req: Request) {
 
     // Filter profiles based on criteria
     const filtered = allProfiles.filter((p) => {
+      if (invisibleIds.has(p.id)) return false;
       if (gender && !genderMatches(gender, p.gender)) return false;
       if (p.age < minAge || p.age > maxAge) return false;
       if (religion && religion !== 'Any' && p.religion.toLowerCase() !== religion.toLowerCase()) return false;

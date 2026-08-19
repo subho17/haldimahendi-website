@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     if (!result.valid) {
       return NextResponse.json(
         { success: false, message: result.reason || 'Invalid OTP code' },
-        { status: 400 }
+        { status: result.locked ? 429 : 400 }
       );
     }
 

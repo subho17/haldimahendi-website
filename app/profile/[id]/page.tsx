@@ -21,6 +21,9 @@ import {
   Award,
   Ruler,
   Languages,
+  Flag,
+  Ban,
+  X,
 } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 
@@ -69,7 +72,13 @@ export default function PublicProfilePage() {
   const [interestSent, setInterestSent] = useState(false);
   const [shortlisted, setShortlisted] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reportBusy, setReportBusy] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
 
   const viewerId = user?.mobileNumber || user?.email || user?.profileId || "";
 
@@ -82,14 +91,18 @@ export default function PublicProfilePage() {
       Promise.all([
         fetch(`/api/profile?id=${encodeURIComponent(profileId)}`).then((r) => r.json()),
         fetch(`/api/interests?userId=${encodeURIComponent(viewerId)}`).then((r) => r.json()),
+        fetch(`/api/block?userId=${encodeURIComponent(viewerId)}`).then((r) => r.json()),
       ])
-        .then(([profileData, interestData]) => {
+        .then(([profileData, interestData, blockData]) => {
           if (profileData.success && profileData.profile) {
             setProfile(profileData.profile);
             if (interestData.success) {
               setInterestSent((interestData.sentIds || []).includes(profileData.profile.id));
               setShortlisted((interestData.shortlistedIds || []).includes(profileData.profile.id));
               setConnected((interestData.acceptedIds || []).includes(profileData.profile.id));
+            }
+            if (blockData.success) {
+              setBlocked((blockData.blockedIds || []).includes(profileData.profile.id));
             }
           } else {
             setNotFound(true);
@@ -128,6 +141,56 @@ export default function PublicProfilePage() {
       alert("Something went wrong. Please try again.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const toggleBlock = async () => {
+    if (!viewerId || busy || !profile) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/block", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actorId: viewerId, otherId: profile.id, action: blocked ? "unblock" : "block" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBlocked(!blocked);
+        if (!blocked) {
+          alert("Member blocked. They will no longer appear in your matches or be able to contact you.");
+        }
+      } else {
+        alert(data.message || "Something went wrong");
+      }
+    } catch (e) {
+      console.error("Block failed:", e);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!viewerId || !profile || !reportReason) return;
+    setReportBusy(true);
+    try {
+      const res = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actorId: viewerId, otherId: profile.id, reason: reportReason, details: reportDetails }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReportDone(true);
+      } else {
+        alert(data.message || "Failed to submit report");
+      }
+    } catch (e) {
+      console.error("Report failed:", e);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setReportBusy(false);
     }
   };
 
@@ -184,7 +247,7 @@ export default function PublicProfilePage() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
       <Navbar />
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         
         {/* Back Link */}
         <a
@@ -197,20 +260,11 @@ export default function PublicProfilePage() {
         {/* Outer Card */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden transition-all duration-300">
           
-          {/* Decorative Cover Banner */}
-          <div className="relative h-32 sm:h-44 bg-gradient-to-r from-rose-600 via-[#e53238] to-pink-600 overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_60%)]" />
-            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-[11px] font-bold tracking-wide uppercase flex items-center gap-1.5 shadow-xs border border-white/20">
-              <Award className="w-3.5 h-3.5" />
-              <span>{profile.verified ? "Verified Member" : "Member Profile"}</span>
-            </div>
-          </div>
-
-          {/* Profile Header Block */}
-          <div className="px-6 sm:px-10 pb-8 pt-0">
-            <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-16 sm:-mt-20 border-b border-slate-100 pb-8 text-center sm:text-left">
+          {/* Profile Header Block (Clean, No Banner) */}
+          <div className="p-6 sm:p-8 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-left">
               
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-4xl ring-1 ring-slate-200/60 shrink-0">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-3xl ring-2 ring-rose-100 shrink-0">
                 {profile.avatarUrl && profile.avatarUrl !== "/images/default-avatar.png" ? (
                   <img src={profile.avatarUrl} alt={formattedName} className="w-full h-full object-cover" />
                 ) : (
@@ -219,9 +273,15 @@ export default function PublicProfilePage() {
               </div>
 
               <div className="flex-1 min-w-0 space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80 shadow-2xs">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>{profile.verified ? "100% Verified Member" : "Registered Member"}</span>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80 shadow-2xs">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>{profile.verified ? "100% Verified Member" : "Registered Member"}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80 shadow-2xs">
+                    <Award className="w-3.5 h-3.5 text-[#e53238] shrink-0" />
+                    <span>{profile.verified ? "Verified Match Profile" : "Member Profile"}</span>
+                  </span>
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{formattedName}</h1>
@@ -251,6 +311,9 @@ export default function PublicProfilePage() {
               </div>
 
             </div>
+          </div>
+
+          <div className="p-6 sm:p-8 pt-6">
 
             {/* About Myself Callout */}
             {profile.bio && (
@@ -330,8 +393,119 @@ export default function PublicProfilePage() {
               </button>
             </div>
 
+            {/* Safety Actions */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-3">
+              <button
+                onClick={() => {
+                  setReportReason("");
+                  setReportDetails("");
+                  setReportDone(false);
+                  setShowReportModal(true);
+                }}
+                disabled={busy}
+                className="flex-1 w-full py-2.5 rounded-xl border border-rose-200 bg-rose-50/50 text-rose-700 text-xs font-bold hover:bg-rose-100 transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                <Flag className="w-4 h-4" /> Report
+              </button>
+              <button
+                onClick={toggleBlock}
+                disabled={busy}
+                className={`flex-1 w-full py-2.5 rounded-xl border text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 ${
+                  blocked
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                <Ban className="w-4 h-4" /> {blocked ? "Unblock Member" : "Block Member"}
+              </button>
+            </div>
+
           </div>
         </div>
+
+        {/* Report Modal */}
+        {showReportModal && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setShowReportModal(false)}
+          >
+            <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setShowReportModal(false)}
+                aria-label="Close report popup"
+                className="absolute -top-3 -right-3 z-10 bg-white rounded-full p-1.5 shadow-lg border border-gray-100 text-gray-600 hover:text-gray-900 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {reportDone ? (
+                <div className="text-center space-y-4 py-6">
+                  <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto">
+                    <Flag className="w-6 h-6 text-emerald-500" />
+                  </div>
+                  <h3 className="text-lg font-extrabold text-slate-900">Report Submitted</h3>
+                  <p className="text-xs text-slate-500">
+                    Thank you. Our moderation team will review your report and take appropriate action.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowReportModal(false)}
+                    className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3 rounded-xl text-sm transition-colors cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={submitReport} className="space-y-4">
+                  <div className="text-center">
+                    <div className="w-14 h-14 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-3">
+                      <Flag className="w-6 h-6 text-[#e53238]" />
+                    </div>
+                    <h3 className="text-lg font-extrabold text-slate-900">Report {formattedName}</h3>
+                    <p className="text-xs text-slate-500">Help us keep Shaadi safe. Reports are reviewed by our team.</p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 block">Reason *</label>
+                    <select
+                      value={reportReason}
+                      onChange={(e) => setReportReason(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                    >
+                      <option value="">Select a reason...</option>
+                      <option value="fake_profile">Fake / Misleading Profile</option>
+                      <option value="harassment">Harassment / Abusive Behaviour</option>
+                      <option value="inappropriate_content">Inappropriate Content</option>
+                      <option value="fraud_or_scam">Fraud / Financial Scam</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 block">Details (optional)</label>
+                    <textarea
+                      value={reportDetails}
+                      onChange={(e) => setReportDetails(e.target.value)}
+                      rows={4}
+                      maxLength={2000}
+                      placeholder="Provide any additional details to help our team..."
+                      className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 outline-hidden focus:bg-white focus:border-[#e53238] resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={reportBusy || !reportReason}
+                    className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3 rounded-xl text-sm shadow-md transition-colors cursor-pointer disabled:opacity-60"
+                  >
+                    {reportBusy ? "Submitting..." : "Submit Report"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />

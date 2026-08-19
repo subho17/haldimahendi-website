@@ -99,7 +99,8 @@ export async function GET(req: Request) {
         await ensureProfilesTable();
         const { rows } = await pool!.query(
           `SELECT user_id, display_name, avatar_url, gender, age, height, marital_status,
-                  religion, mother_tongue, education, profession, city, country, bio, created_at
+                  religion, mother_tongue, education, profession, city, country, bio, created_at,
+                  verification_status
            FROM profiles
            WHERE user_id = $1 OR mobile_number = $1`,
           [id]
@@ -124,7 +125,7 @@ export async function GET(req: Request) {
               avatarUrl: r.avatar_url,
               bio: r.bio,
               createdAt: r.created_at?.toISOString?.() || null,
-              verified: true,
+              verified: r.verification_status === 'approved',
             } as PublicProfile,
           });
         }
@@ -160,7 +161,7 @@ export async function GET(req: Request) {
               avatarUrl: hit.avatar_url || hit.avatarUrl,
               bio: hit.bio,
               createdAt: hit.createdAt || null,
-              verified: true,
+              verified: hit.verificationStatus === 'approved',
             } as PublicProfile,
           });
         }

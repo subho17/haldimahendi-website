@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
 import { useMounted } from "@/hooks/useMounted";
+import VerificationCard from "@/components/profile/VerificationCard";
 
 const DEFAULT_AVATARS = [
   { label: "Female Avatar 1", url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250" },
@@ -153,6 +154,7 @@ export default function ProfilePage() {
   const formattedProfession = formatCapitalize(profession);
   const userMobile = user?.mobile_number || user?.mobileNumber || "9163399882";
   const userProfileId = user?.profileId || "SH270341";
+  const viewerId = user?.mobile_number || user?.mobileNumber || user?.email || user?.profileId || "";
 
   // Compute profile completeness score dynamically
   const fieldsToCheck = [displayName, avatarUrl, gender, age, height, maritalStatus, religion, motherTongue, education, profession, city, bio];
@@ -163,7 +165,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
       <Navbar />
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
         {/* Success Toast */}
         {successMessage && (
@@ -181,24 +183,14 @@ export default function ProfilePage() {
         {/* Outer Profile Container */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden transition-all duration-300">
 
-          {/* Decorative Cover Banner */}
-          <div className="relative h-32 sm:h-44 bg-gradient-to-r from-rose-600 via-[#e53238] to-pink-600 overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_60%)]" />
-            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
-            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-[11px] font-bold tracking-wide uppercase flex items-center gap-1.5 shadow-xs border border-white/20">
-              <Award className="w-3.5 h-3.5" />
-              <span>Verified Match Profile</span>
-            </div>
-          </div>
-
-          {/* Profile Header Content (Overlapping Cover) */}
-          <div className="px-6 sm:px-10 pb-8 pt-0">
-            <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6 -mt-16 sm:-mt-20 border-b border-slate-100 pb-8">
+          {/* Profile Header Content (Clean Header, No Banner) */}
+          <div className="p-6 sm:p-8 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-6">
               
               {/* Avatar & Upload Camera Trigger */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-end gap-5 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-left">
                 <div className="relative group shrink-0">
-                  <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-4xl ring-1 ring-slate-200/60">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-3xl ring-2 ring-rose-100">
                     {rawAvatar && rawAvatar !== "/images/default-avatar.png" ? (
                       <img src={rawAvatar} alt={formattedDisplayName} className="w-full h-full object-cover" />
                     ) : (
@@ -209,11 +201,11 @@ export default function ProfilePage() {
                   {/* Upload Button overlay */}
                   <label
                     title="Change profile photo"
-                    className={`absolute bottom-1 right-1 p-2.5 rounded-full bg-[#e53238] text-white cursor-pointer shadow-lg hover:bg-[#c92429] hover:scale-105 transition-all ${
+                    className={`absolute bottom-0 right-0 p-2 rounded-full bg-[#e53238] text-white cursor-pointer shadow-md hover:bg-[#c92429] hover:scale-105 transition-all ${
                       isUploading ? "animate-pulse" : ""
                     }`}
                   >
-                    <Camera className="w-4 h-4" />
+                    <Camera className="w-3.5 h-3.5" />
                     <input
                       type="file"
                       accept="image/*"
@@ -225,10 +217,16 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Name & Quick Metadata */}
-                <div className="space-y-1.5 pt-2">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80 shadow-2xs">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>100% Verified Member</span>
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80 shadow-2xs">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>100% Verified Member</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80 shadow-2xs">
+                      <Award className="w-3.5 h-3.5 text-[#e53238] shrink-0" />
+                      <span>Verified Match Profile</span>
+                    </span>
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
@@ -257,14 +255,14 @@ export default function ProfilePage() {
               </div>
 
               {/* Edit Toggle Action */}
-              <div className="w-full sm:w-auto flex justify-center sm:justify-end shrink-0 pt-2 sm:pt-0">
+              <div className="w-full sm:w-auto flex justify-center sm:justify-end shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsEditing(!isEditing)}
                   className={`w-full sm:w-auto px-6 py-2.5 font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all ${
                     isEditing
                       ? "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
-                      : "bg-[#e53238] text-white hover:bg-[#c92429] shadow-rose-500/20"
+                      : "bg-[#e53238] text-[#ffffff] hover:bg-[#c92429] shadow-rose-500/20"
                   }`}
                 >
                   {isEditing ? (
@@ -282,6 +280,9 @@ export default function ProfilePage() {
               </div>
 
             </div>
+          </div>
+
+          <div className="p-6 sm:p-8 pt-6">
 
             {/* Profile Completion Bar */}
             <div className="my-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -301,6 +302,9 @@ export default function ProfilePage() {
                 ✨ A 100% complete profile gets up to <strong className="text-slate-800">3x more interest requests</strong>.
               </p>
             </div>
+
+            {/* Trust & Verification */}
+            {viewerId && <VerificationCard userId={viewerId} />}
 
             {/* EDIT MODE FORM */}
             {isEditing ? (

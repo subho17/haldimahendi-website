@@ -23,5 +23,19 @@
     "passwordHash": "ea05f47f5e63188ba1faa442f6a92942443e3a7de82940593ca4cb99e855301925c81688179bd9b4d21973d4a14e9d0680769f062a2a85cdbd25be5a462f8428",
     "passwordSalt": "e5e516dba2d8df56b39a86397795cc89",
     "createdAt": "2026-08-18T10:13:14.145Z"
+  },
+  {
+    "profileId": "SH095196",
+    "mobileNumber": "",
+    "mobile_number": "",
+    "email": "subhadeepchanda36@gmail.com",
+    "name": "Subhadeep",
+    "display_name": "Subhadeep",
+    "avatarUrl": "https://ycaeelqanntvzzcvqilu.supabase.co/storage/v1/object/public/profile%20photos/user-photos/1787119738994_y1ir1n_Gemini_Generated_Image_bauwh1b.png",
+    "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocLGnZPz-hTROImRuyOblghDGrFJEFKOxe8_DWhegzYRF-wdtonV=s96-c",
+    "provider": "google",
+    "createdAt": "2026-08-18T10:46:14.424Z",
+    "updatedAt": "2026-08-18T10:46:14.652Z",
+    "verificationStatus": "approved"
   }
 ]

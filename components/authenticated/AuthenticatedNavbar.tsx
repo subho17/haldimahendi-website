@@ -17,6 +17,11 @@ import {
   MapPin,
   ChevronRight,
   Loader2,
+  Bell,
+  Heart,
+  MessageCircle,
+  CheckCircle2,
+  Info,
 } from "lucide-react";
 
 interface SearchResultProfile {
@@ -32,6 +37,17 @@ interface SearchResultProfile {
   bio?: string;
 }
 
+interface NavNotification {
+  id: string;
+  type: "interest" | "accept" | "message" | "system";
+  title?: string;
+  message: string;
+  data?: Record<string, string>;
+  read: boolean;
+  createdAt: string;
+  timeLabel?: string;
+}
+
 export default function AuthenticatedNavbar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -39,6 +55,11 @@ export default function AuthenticatedNavbar() {
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isHelpMenuOpen, setIsHelpMenuOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  const [notifications, setNotifications] = useState<NavNotification[]>([]);
+  const [unread, setUnread] = useState(0);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   // Search Hover & Dropdown state
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -69,6 +90,7 @@ export default function AuthenticatedNavbar() {
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const helpMenuRef = useRef<HTMLDivElement>(null);
+  const notifMenuRef = useRef<HTMLDivElement>(null);
   const searchMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,6 +102,9 @@ export default function AuthenticatedNavbar() {
       }
       if (helpMenuRef.current && !helpMenuRef.current.contains(event.target as Node)) {
         setIsHelpMenuOpen(false);
+      }
+      if (notifMenuRef.current && !notifMenuRef.current.contains(event.target as Node)) {
+        setIsNotifOpen(false);
       }
       if (searchMenuRef.current && !searchMenuRef.current.contains(event.target as Node)) {
         setIsSearchOpen(false);
@@ -166,6 +191,83 @@ export default function AuthenticatedNavbar() {
     if (selectedGender) params.set("gender", selectedGender);
     if (selectedReligion && selectedReligion !== "Any") params.set("religion", selectedReligion);
     router.push(`/search?${params.toString()}`);
+  };
+
+  // Load notifications + unread badge, polling every 30s.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    const load = async () => {
+      setNotifLoading(true);
+      const now = Date.now();
+      const fmt = (iso: string) => {
+        try {
+          const diff = now - new Date(iso).getTime();
+          const mins = Math.floor(diff / 60000);
+          if (mins < 1) return "just now";
+          if (mins < 60) return `${mins}m ago`;
+          const hrs = Math.floor(mins / 60);
+          if (hrs < 24) return `${hrs}h ago`;
+          return `${Math.floor(hrs / 24)}d ago`;
+        } catch {
+          return "";
+        }
+      };
+      try {
+        const res = await fetch(`/api/notifications?userId=${encodeURIComponent(userId)}`);
+        const data = await res.json();
+        if (!cancelled && data.success) {
+          setNotifications(
+            (data.notifications || []).map((n: NavNotification) => ({ ...n, timeLabel: fmt(n.createdAt) }))
+          );
+          setUnread(typeof data.unread === "number" ? data.unread : 0);
+        }
+      } catch (e) {
+        console.error("Failed to load notifications:", e);
+      } finally {
+        if (!cancelled) setNotifLoading(false);
+      }
+    };
+    load();
+    const interval = setInterval(load, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [userId]);
+
+  const handleNotifOpen = () => {
+    setIsNotifOpen(!isNotifOpen);
+    if (!isNotifOpen && unread > 0) {
+      fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, action: "readAll" }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success) setUnread(data.unread || 0);
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleNotifClick = (n: NavNotification) => {
+    setIsNotifOpen(false);
+    if (n.data?.conversationId && (n.type === "message" || n.type === "accept")) {
+      router.push(`/chat?otherId=${encodeURIComponent(n.data.profileId || "")}`);
+    } else if (n.data?.profileId) {
+      router.push(`/profile/${encodeURIComponent(n.data.profileId)}`);
+    } else {
+      router.push("/inbox");
+    }
+  };
+
+  const notifIcon = (n: NavNotification) => {
+    if (n.type === "message") return <MessageCircle className="w-4 h-4 text-cyan-500" />;
+    if (n.type === "accept") return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+    if (n.type === "interest") return <Heart className="w-4 h-4 text-[#e53238]" />;
+    return <Info className="w-4 h-4 text-gray-400" />;
   };
 
   return (
@@ -471,6 +573,79 @@ export default function AuthenticatedNavbar() {
             <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-white/40 bg-white/10 text-white text-xs font-extrabold uppercase tracking-wide hover:bg-white/20 transition-all cursor-pointer shadow-xs">
               <Percent className="w-3.5 h-3.5" />
               <span>UPTO 60% OFF</span>
+            </div>
+
+            {/* Notifications Bell */}
+            <div className="relative" ref={notifMenuRef}>
+              <button
+                type="button"
+                onClick={handleNotifOpen}
+                aria-label="Notifications"
+                className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/40 bg-white/10 text-white hover:bg-white/20 transition-all cursor-pointer"
+              >
+                <Bell className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                {unread > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-[#7a4a00] text-[10px] font-extrabold flex items-center justify-center leading-none shadow-xs border border-white">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
+              </button>
+
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-2 w-[340px] sm:w-[380px] bg-white rounded-2xl shadow-xl border border-gray-100 z-50 text-gray-800 text-xs overflow-hidden animate-in fade-in zoom-in-95">
+                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <span className="font-black text-sm text-gray-900">Notifications</span>
+                    {notifLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 text-gray-400 animate-spin" />
+                    ) : unread > 0 ? (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold text-[10px]">
+                        {unread} new
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="max-h-[340px] overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="py-10 text-center text-gray-400">
+                        <Bell className="w-8 h-8 mx-auto mb-2 text-gray-200" />
+                        <p className="font-bold text-gray-500">No notifications yet</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Interests, accepts and messages will appear here.</p>
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <button
+                          key={n.id}
+                          type="button"
+                          onClick={() => handleNotifClick(n)}
+                          className={`w-full text-left px-4 py-3 flex items-start gap-3 border-b border-gray-50 transition-colors cursor-pointer hover:bg-red-50/50 ${
+                            !n.read ? "bg-amber-50/40" : ""
+                          }`}
+                        >
+                          <span className="mt-0.5 shrink-0">{notifIcon(n)}</span>
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center justify-between gap-2">
+                              <span className="font-bold text-gray-900 truncate">{n.title || (n.type === "message" ? "New Message" : n.type === "accept" ? "Interest Accepted" : "Update")}</span>
+                              {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-[#e53238] shrink-0" />}
+                            </span>
+                            <span className="block text-gray-600 leading-snug mt-0.5">{n.message}</span>
+                            <span className="block text-[10px] text-gray-400 font-semibold mt-1">{n.timeLabel}</span>
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="px-4 py-2.5 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => router.push("/inbox")}
+                      className="w-full text-center text-[#e53238] font-bold hover:underline cursor-pointer"
+                    >
+                      View All in Inbox
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Help Dropdown */}

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -147,56 +148,77 @@ export default function MatchesPage() {
             </a>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {eligible.map((m, idx) => (
               <div
                 key={m.profile.id || idx}
-                className="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                onClick={() => router.push(`/profile/${encodeURIComponent(m.profile.id)}?back=/matches`)}
+                className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer"
               >
                 <div>
-                  <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-red-100 to-amber-100 text-[#e53238] flex items-center justify-center font-black text-lg mx-auto border-2 border-white shadow-sm group-hover:scale-105 transition-transform">
-                    {m.profile.name[0]}
-                    <span className="absolute -top-1 -right-2 text-[10px] font-black text-white bg-emerald-500 rounded-full px-2 py-0.5 shadow-sm">
-                      {m.score}%
+                  <div className="relative w-full h-52 bg-slate-100 overflow-hidden flex items-center justify-center">
+                    {m.profile.avatarUrl && m.profile.avatarUrl !== "/images/default-avatar.png" ? (
+                      <img
+                        src={m.profile.avatarUrl}
+                        alt={m.profile.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#e53238] to-amber-500 flex items-center justify-center text-white font-black text-5xl shadow-inner group-hover:scale-105 transition-transform duration-300">
+                        {m.profile.name[0]}
+                      </div>
+                    )}
+
+                    {m.isNew && (
+                      <span className="absolute top-3 left-3 text-[10px] font-black text-white bg-[#e53238] px-2.5 py-0.5 rounded-full shadow-md uppercase">
+                        NEW
+                      </span>
+                    )}
+
+                    <span className="absolute top-3 right-3 text-xs font-black text-white bg-emerald-600/90 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-md border border-white/20">
+                      {m.score}% Match
                     </span>
                   </div>
 
-                  <div className="text-center mb-3 mt-3">
-                    <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors">
-                      {m.profile.name}
-                      {m.isNew && (
-                        <span className="ml-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 align-middle">
-                          NEW
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-xs text-gray-500 font-semibold">{m.profile.id}</p>
-                  </div>
+                  <div className="p-4 sm:p-5">
+                    <div className="mb-3">
+                      <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors text-base">
+                        {m.profile.name}
+                      </h3>
+                      <p className="text-xs text-gray-400 font-semibold">{m.profile.id}</p>
+                    </div>
 
-                  <div className="space-y-1 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-4">
-                    <p>
-                      <span className="font-bold text-gray-700">Age / Height:</span>{" "}
-                      {m.profile.age ?? "—"} yrs, {m.profile.height || "—"}
-                    </p>
-                    <p>
-                      <span className="font-bold text-gray-700">Community:</span>{" "}
-                      {m.profile.religion || "—"}, {m.profile.motherTongue || "—"}
-                    </p>
-                    <p>
-                      <span className="font-bold text-gray-700">Location:</span>{" "}
-                      {[m.profile.city, m.profile.country || "India"].filter(Boolean).join(", ") || "—"}
-                    </p>
-                    <p>
-                      <span className="font-bold text-gray-700">Profession:</span>{" "}
-                      {m.profile.profession || m.profile.education || "—"}
-                    </p>
+                    <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100">
+                      <p>
+                        <span className="font-bold text-gray-700">Age / Height:</span>{" "}
+                        {m.profile.age ?? "—"} yrs, {m.profile.height || "—"}
+                      </p>
+                      <p>
+                        <span className="font-bold text-gray-700">Community:</span>{" "}
+                        {m.profile.religion || "—"}, {m.profile.motherTongue || "—"}
+                      </p>
+                      <p>
+                        <span className="font-bold text-gray-700">Location:</span>{" "}
+                        {[m.profile.city, m.profile.country || "India"].filter(Boolean).join(", ") || "—"}
+                      </p>
+                      <p>
+                        <span className="font-bold text-gray-700">Profession:</span>{" "}
+                        {m.profile.profession || m.profile.education || "—"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div
+                  className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0 flex items-center gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {sentIds.has(m.profile.id) ? (
                     <button
-                      onClick={() => runAction(m.profile.id, "unsend")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        runAction(m.profile.id, "unsend");
+                      }}
                       disabled={busyId === m.profile.id}
                       className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-60"
                       title="Withdraw interest"
@@ -205,7 +227,10 @@ export default function MatchesPage() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => runAction(m.profile.id, "interest")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        runAction(m.profile.id, "interest");
+                      }}
                       disabled={busyId === m.profile.id}
                       className="flex-1 py-2.5 px-3 rounded-xl bg-[#e53238] text-white text-xs font-bold shadow-xs hover:bg-[#c92429] transition-colors cursor-pointer disabled:opacity-60"
                     >
@@ -214,7 +239,10 @@ export default function MatchesPage() {
                   )}
                   {shortlistedIds.has(m.profile.id) ? (
                     <button
-                      onClick={() => runAction(m.profile.id, "unshortlist")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        runAction(m.profile.id, "unshortlist");
+                      }}
                       disabled={busyId === m.profile.id}
                       className="py-2.5 px-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-60"
                       title="Remove from shortlist"
@@ -223,7 +251,10 @@ export default function MatchesPage() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => runAction(m.profile.id, "shortlist")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        runAction(m.profile.id, "shortlist");
+                      }}
                       disabled={busyId === m.profile.id}
                       className="py-2.5 px-3 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-60"
                     >

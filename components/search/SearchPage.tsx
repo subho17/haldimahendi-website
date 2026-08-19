@@ -6,6 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { Search, Loader2, MapPin, UserX } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface SearchProfile {
   id: string;
@@ -24,6 +25,7 @@ interface SearchProfile {
 }
 
 export default function SearchPage() {
+  const router = useRouter();
   const [lookingFor, setLookingFor] = useState("Woman");
   const [ageFrom, setAgeFrom] = useState("21");
   const [ageTo, setAgeTo] = useState("35");
@@ -213,39 +215,51 @@ export default function SearchPage() {
                 {results.map((p) => (
                   <div
                     key={p.id}
-                    className="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                    onClick={() => router.push(`/profile/${encodeURIComponent(p.id)}?back=/search`)}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer"
                   >
                     <div>
-                      <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-red-100 to-amber-100 text-[#e53238] flex items-center justify-center font-black text-lg mx-auto border-2 border-white shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
+                      <div className="relative w-full h-48 bg-slate-100 overflow-hidden flex items-center justify-center">
                         {p.avatarUrl && p.avatarUrl !== "/images/default-avatar.png" ? (
-                          <img src={p.avatarUrl} alt={p.name} className="w-full h-full object-cover" />
+                          <img
+                            src={p.avatarUrl}
+                            alt={p.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
                         ) : (
-                          p.name.charAt(0)
+                          <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#e53238] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">
+                            {p.name.charAt(0)}
+                          </div>
                         )}
                       </div>
 
-                      <div className="text-center mb-3 mt-3">
-                        <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors">
-                          {p.name} <span className="text-xs text-emerald-600 font-bold">✓</span>
-                        </h3>
-                        <p className="text-xs text-gray-500 font-semibold">{p.id}</p>
-                      </div>
+                      <div className="p-4 sm:p-5">
+                        <div className="mb-3">
+                          <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors text-base flex items-center gap-1">
+                            <span>{p.name}</span>
+                            <span className="text-xs text-emerald-600 font-bold">✓</span>
+                          </h3>
+                          <p className="text-xs text-gray-400 font-semibold">{p.id}</p>
+                        </div>
 
-                      <div className="space-y-1 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-4">
-                        <p><span className="font-bold text-gray-700">Age / Height:</span> {p.age} yrs, {p.height}</p>
-                        <p><span className="font-bold text-gray-700">Community:</span> {p.religion}, {p.motherTongue || "—"}</p>
-                        <p><span className="font-bold text-gray-700">Status:</span> {p.maritalStatus}</p>
-                        <p className="flex items-center gap-1"><MapPin className="w-3 h-3 text-gray-400" /> <span className="font-bold text-gray-700">Location:</span> {p.city}</p>
-                        <p><span className="font-bold text-gray-700">Profession:</span> {p.profession || p.education}</p>
+                        <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100">
+                          <p><span className="font-bold text-gray-700">Age / Height:</span> {p.age} yrs, {p.height}</p>
+                          <p><span className="font-bold text-gray-700">Community:</span> {p.religion}, {p.motherTongue || "—"}</p>
+                          <p><span className="font-bold text-gray-700">Status:</span> {p.maritalStatus}</p>
+                          <p className="flex items-center gap-1"><MapPin className="w-3 h-3 text-gray-400" /> <span className="font-bold text-gray-700">Location:</span> {p.city}</p>
+                          <p><span className="font-bold text-gray-700">Profession:</span> {p.profession || p.education}</p>
+                        </div>
                       </div>
                     </div>
 
-                    <Link
-                      href={`/profile/${encodeURIComponent(p.id)}?back=/search`}
-                      className="block w-full py-2.5 px-3 rounded-xl bg-[#e53238] text-white text-xs font-bold shadow-xs hover:bg-[#c92429] transition-colors text-center cursor-pointer"
-                    >
-                      View Full Profile
-                    </Link>
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0" onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        href={`/profile/${encodeURIComponent(p.id)}?back=/search`}
+                        className="block w-full py-2.5 px-3 rounded-xl bg-[#e53238] text-white text-xs font-bold shadow-xs hover:bg-[#c92429] transition-colors text-center cursor-pointer"
+                      >
+                        View Full Profile
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -4,6 +4,7 @@ import path from 'path';
 import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
 import { loadPreferences } from '@/lib/prefsStore';
 import { findMatches, type MatchCandidate, type MatchPreferences } from '@/lib/matching';
+import { getInvisibleIds } from '@/lib/reportStore';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -149,7 +150,10 @@ export async function GET(req: Request) {
     // ------------------------------------------------------------------
     // Run the matchmaking engine
     // ------------------------------------------------------------------
-    const matches = findMatches(prefs, candidates, { viewer });
+    const invisibleIds = await getInvisibleIds(userId);
+    const visibleCandidates = candidates.filter((c) => !invisibleIds.includes(c.id));
+
+    const matches = findMatches(prefs, visibleCandidates, { viewer });
 
     const eligible = matches.filter((m) => m.isEligible);
     const totalEligible = eligible.length;
@@ -162,7 +166,7 @@ export async function GET(req: Request) {
       message: 'Matches generated successfully',
       preferences: prefs,
       meta: {
-        totalCandidates: candidates.length,
+        totalCandidates: visibleCandidates.length,
         matches: totalEligible,
         newCount,
       },

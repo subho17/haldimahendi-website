@@ -14,10 +14,14 @@ interface MatchProfile {
   id: string;
   name: string;
   age?: number | null;
+  height?: string | null;
+  religion?: string | null;
+  motherTongue?: string | null;
   city?: string | null;
   country?: string | null;
   profession?: string | null;
   education?: string | null;
+  avatarUrl?: string | null;
 }
 
 interface MatchResult {
@@ -242,28 +246,59 @@ export default function DashboardPage() {
               {recommended.map((m) => (
                 <div
                   key={m.profile.id}
-                  className="p-5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-lg transition-all duration-300 flex flex-col justify-between group"
+                  onClick={() => router.push(`/profile/${encodeURIComponent(m.profile.id)}?back=/dashboard`)}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer"
                 >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-full bg-red-100 text-[#e53238] flex items-center justify-center font-bold text-lg border-2 border-white shadow-xs">
-                      {m.profile.name[0]}
+                  <div>
+                    <div className="relative w-full h-48 bg-slate-100 overflow-hidden flex items-center justify-center">
+                      {m.profile.avatarUrl && m.profile.avatarUrl !== "/images/default-avatar.png" ? (
+                        <img
+                          src={m.profile.avatarUrl}
+                          alt={m.profile.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#e53238] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">
+                          {m.profile.name[0]}
+                        </div>
+                      )}
+
+                      <span className="absolute top-3 right-3 text-xs font-black text-white bg-emerald-600/90 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-md border border-white/20">
+                        {m.score}% Match
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors">
-                        {m.profile.name}
-                        <span className="ml-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 align-middle">
-                          {m.score}%
-                        </span>
-                      </h3>
-                      <p className="text-xs text-gray-500">{m.profile.age ?? "—"} yrs • {m.profile.city || "—"}</p>
-                      <p className="text-xs text-gray-600 font-medium">{m.profile.profession || m.profile.education || ""}</p>
+
+                    <div className="p-4 sm:p-5">
+                      <div className="mb-3">
+                        <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors text-base">
+                          {m.profile.name}
+                        </h3>
+                        <p className="text-xs text-gray-400 font-semibold">{m.profile.id}</p>
+                      </div>
+
+                      <div className="space-y-1 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100">
+                        <p>
+                          <span className="font-bold text-gray-700">Age / City:</span>{" "}
+                          {m.profile.age ?? "—"} yrs, {m.profile.city || "—"}
+                        </p>
+                        <p>
+                          <span className="font-bold text-gray-700">Profession:</span>{" "}
+                          {m.profile.profession || m.profile.education || "—"}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                  <div
+                    className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0 flex items-center gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {sentIds.has(m.profile.id) ? (
                       <button
-                        onClick={() => runAction(m.profile.id, "unsend")}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          runAction(m.profile.id, "unsend");
+                        }}
                         disabled={busyId === m.profile.id}
                         className="flex-1 py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-60"
                       >
@@ -271,7 +306,10 @@ export default function DashboardPage() {
                       </button>
                     ) : (
                       <button
-                        onClick={() => runAction(m.profile.id, "interest")}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          runAction(m.profile.id, "interest");
+                        }}
                         disabled={busyId === m.profile.id}
                         className="flex-1 py-2 px-3 rounded-xl bg-[#e53238] text-white text-xs font-bold shadow-xs hover:bg-[#c92429] transition-colors cursor-pointer disabled:opacity-60"
                       >
@@ -279,7 +317,10 @@ export default function DashboardPage() {
                       </button>
                     )}
                     <button
-                      onClick={() => runAction(m.profile.id, shortlistedIds.has(m.profile.id) ? "unshortlist" : "shortlist")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        runAction(m.profile.id, shortlistedIds.has(m.profile.id) ? "unshortlist" : "shortlist");
+                      }}
                       disabled={busyId === m.profile.id}
                       className={`py-2 px-3 rounded-xl border text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 ${
                         shortlistedIds.has(m.profile.id)

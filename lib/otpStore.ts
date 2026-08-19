@@ -2,9 +2,32 @@
 // when DATABASE_URL is not configured or un-reachable.
 import { pool, hasPool, ensureOtpTable, ensureProfilesTable } from '@/lib/db';
 
+// --- Rate limit / lockout policy -------------------------------
+const SEND_COOLDOWN_MS = 60_000; // min gap between OTP sends
+const SEND_WINDOW_MS = 15 * 60_000; // rolling window for send quota
+const MAX_SENDS_PER_WINDOW = 3; // max OTP sends per window
+const MAX_FAILED_ATTEMPTS = 5; // wrong codes before lockout
+const LOCKOUT_MS = 30 * 60_000; // lockout duration after repeated failures
+
 type OtpRecord = {
   code: string;
   expiresAt: number;
+  sendCount: number;
+  lastSentAt: number;
+  failedAttempts: number;
+  lockedUntil: number;
+};
+
+type SendCheck = {
+  allowed: boolean;
+  retryAfterSeconds?: number;
+  reason?: 'locked' | 'cooldown' | 'rate_limited';
+};
+
+type VerifyResult = {
+  valid: boolean;
+  reason?: string;
+  locked?: boolean;
 };
 
 // Fallback in-memory store
@@ -18,22 +41,72 @@ if (process.env.NODE_ENV !== 'production') {
   globalForOtp.otpStore = otpStore;
 }
 
-export async function saveOtp(mobileNumber: string, code: string, ttlSeconds = 300): Promise<void> {
-  const cleanMobile = mobileNumber.trim();
-  const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+async function getRecord(mobile: string): Promise<OtpRecord | undefined> {
+  const mem = otpStore.get(mobile);
+  if (!hasPool) return mem;
 
-  // Always save to in-memory map first as guarantee
-  otpStore.set(cleanMobile, { code, expiresAt: expiresAt.getTime() });
+  try {
+    await ensureOtpTable();
+    const { rows } = await pool!.query<{
+      code: string;
+      expiresAt: string;
+      sendCount: number;
+      lastSentAt: string;
+      failedAttempts: number;
+      lockedUntil: string;
+    }>(
+      `SELECT code,
+              EXTRACT(EPOCH FROM expires_at) * 1000 AS "expiresAt",
+              COALESCE(send_count, 0) AS "sendCount",
+              COALESCE(EXTRACT(EPOCH FROM last_sent_at) * 1000, 0) AS "lastSentAt",
+              COALESCE(failed_attempts, 0) AS "failedAttempts",
+              COALESCE(EXTRACT(EPOCH FROM locked_until) * 1000, 0) AS "lockedUntil"
+       FROM otp_codes
+       WHERE mobile_number = $1`,
+      [mobile]
+    );
+    const row = rows[0];
+    if (row) {
+      return {
+        code: row.code,
+        expiresAt: Number(row.expiresAt),
+        sendCount: Number(row.sendCount),
+        lastSentAt: Number(row.lastSentAt),
+        failedAttempts: Number(row.failedAttempts),
+        lockedUntil: Number(row.lockedUntil),
+      };
+    }
+  } catch (e) {
+    console.warn('[DB] Failed to query OTP from database, using in-memory store:', e);
+  }
+  return mem;
+}
+
+async function setRecord(mobile: string, rec: OtpRecord): Promise<void> {
+  otpStore.set(mobile, rec);
 
   if (hasPool) {
     try {
       await ensureOtpTable();
       await pool!.query(
-        `INSERT INTO otp_codes (mobile_number, code, expires_at)
-         VALUES ($1, $2, $3)
+        `INSERT INTO otp_codes (mobile_number, code, expires_at, send_count, last_sent_at, failed_attempts, locked_until)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (mobile_number) DO UPDATE
-         SET code = EXCLUDED.code, expires_at = EXCLUDED.expires_at`,
-        [cleanMobile, code, expiresAt]
+         SET code = EXCLUDED.code,
+             expires_at = EXCLUDED.expires_at,
+             send_count = EXCLUDED.send_count,
+             last_sent_at = EXCLUDED.last_sent_at,
+             failed_attempts = EXCLUDED.failed_attempts,
+             locked_until = EXCLUDED.locked_until`,
+        [
+          mobile,
+          rec.code,
+          new Date(rec.expiresAt),
+          rec.sendCount,
+          new Date(rec.lastSentAt),
+          rec.failedAttempts,
+          rec.lockedUntil ? new Date(rec.lockedUntil) : null,
+        ]
       );
     } catch (e) {
       console.warn('[DB] Failed to save OTP to database, using in-memory store:', e);
@@ -41,61 +114,129 @@ export async function saveOtp(mobileNumber: string, code: string, ttlSeconds = 3
   }
 }
 
+async function deleteRecord(mobile: string): Promise<void> {
+  otpStore.delete(mobile);
+  if (hasPool) {
+    try {
+      await pool!.query('DELETE FROM otp_codes WHERE mobile_number = $1', [mobile]);
+    } catch (e) {
+      console.warn('[DB] Failed to delete OTP from database:', e);
+    }
+  }
+}
+
+export async function checkSendAllowed(mobile: string): Promise<SendCheck> {
+  const now = Date.now();
+  const rec = await getRecord(mobile);
+
+  if (!rec) return { allowed: true };
+
+  if (rec.lockedUntil > now) {
+    return {
+      allowed: false,
+      reason: 'locked',
+      retryAfterSeconds: Math.ceil((rec.lockedUntil - now) / 1000),
+    };
+  }
+
+  const sinceLastSend = now - rec.lastSentAt;
+  if (rec.lastSentAt > 0 && sinceLastSend < SEND_COOLDOWN_MS) {
+    return {
+      allowed: false,
+      reason: 'cooldown',
+      retryAfterSeconds: Math.ceil((SEND_COOLDOWN_MS - sinceLastSend) / 1000),
+    };
+  }
+
+  if (rec.sendCount >= MAX_SENDS_PER_WINDOW && sinceLastSend < SEND_WINDOW_MS) {
+    return {
+      allowed: false,
+      reason: 'rate_limited',
+      retryAfterSeconds: Math.ceil((SEND_WINDOW_MS - sinceLastSend) / 1000),
+    };
+  }
+
+  return { allowed: true };
+}
+
+export async function recordSend(mobile: string): Promise<void> {
+  const now = Date.now();
+  const rec = (await getRecord(mobile)) || {
+    code: '',
+    expiresAt: 0,
+    sendCount: 0,
+    lastSentAt: 0,
+    failedAttempts: 0,
+    lockedUntil: 0,
+  };
+
+  // New rolling window? Reset the send count.
+  if (rec.lastSentAt > 0 && now - rec.lastSentAt > SEND_WINDOW_MS) {
+    rec.sendCount = 0;
+  }
+
+  rec.sendCount += 1;
+  rec.lastSentAt = now;
+  await setRecord(mobile, rec);
+}
+
+export async function saveOtp(mobileNumber: string, code: string, ttlSeconds = 300): Promise<void> {
+  const cleanMobile = mobileNumber.trim();
+  const expiresAt = new Date(Date.now() + ttlSeconds * 1000).getTime();
+
+  const existing = await getRecord(cleanMobile);
+  await setRecord(cleanMobile, {
+    code,
+    expiresAt,
+    sendCount: existing?.sendCount ?? 0,
+    lastSentAt: existing?.lastSentAt ?? 0,
+    failedAttempts: existing?.failedAttempts ?? 0,
+    lockedUntil: existing?.lockedUntil ?? 0,
+  });
+}
+
 export async function verifyOtp(
   mobileNumber: string,
   code: string
-): Promise<{ valid: boolean; reason?: string }> {
+): Promise<VerifyResult> {
   const cleanMobile = mobileNumber.trim();
 
-  // Try DB first if pool available
-  if (hasPool) {
-    try {
-      await ensureOtpTable();
-      const { rows } = await pool!.query<{ code: string; expiresAt: string }>(
-        `SELECT code, EXTRACT(EPOCH FROM expires_at) * 1000 AS "expiresAt"
-         FROM otp_codes
-         WHERE mobile_number = $1`,
-        [cleanMobile]
-      );
-
-      const record = rows[0];
-      if (record) {
-        if (Date.now() > Number(record.expiresAt)) {
-          await pool!.query('DELETE FROM otp_codes WHERE mobile_number = $1', [cleanMobile]).catch(() => {});
-          otpStore.delete(cleanMobile);
-          return { valid: false, reason: 'OTP has expired. Please request a new code.' };
-        }
-
-        if (record.code !== code.trim()) {
-          return { valid: false, reason: 'Invalid OTP code. Please check and try again.' };
-        }
-
-        await pool!.query('DELETE FROM otp_codes WHERE mobile_number = $1', [cleanMobile]).catch(() => {});
-        otpStore.delete(cleanMobile);
-        return { valid: true };
-      }
-    } catch (e) {
-      console.warn('[DB] Failed to query OTP from database, falling back to in-memory store:', e);
-    }
-  }
-
-  // Fallback to in-memory store
-  const record = otpStore.get(cleanMobile);
+  const record = await getRecord(cleanMobile);
 
   if (!record) {
     return { valid: false, reason: 'No OTP request found for this mobile number.' };
   }
 
+  if (record.lockedUntil > Date.now()) {
+    const mins = Math.ceil((record.lockedUntil - Date.now()) / 60000);
+    return {
+      valid: false,
+      locked: true,
+      reason: `Too many incorrect attempts. Please try again in ${mins} minute${mins === 1 ? '' : 's'}.`,
+    };
+  }
+
   if (Date.now() > record.expiresAt) {
-    otpStore.delete(cleanMobile);
+    await deleteRecord(cleanMobile);
     return { valid: false, reason: 'OTP has expired. Please request a new code.' };
   }
 
   if (record.code !== code.trim()) {
+    record.failedAttempts += 1;
+    if (record.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+      record.lockedUntil = Date.now() + LOCKOUT_MS;
+      await setRecord(cleanMobile, record);
+      return {
+        valid: false,
+        locked: true,
+        reason: 'Too many incorrect attempts. Account temporarily locked. Please try again in 30 minutes.',
+      };
+    }
+    await setRecord(cleanMobile, record);
     return { valid: false, reason: 'Invalid OTP code. Please check and try again.' };
   }
 
-  otpStore.delete(cleanMobile);
+  await deleteRecord(cleanMobile);
   return { valid: true };
 }
 

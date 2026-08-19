@@ -41,15 +41,28 @@ let ensureChatPromise: Promise<void> | undefined;
 export function ensureOtpTable(): Promise<void> {
   if (!hasPool) return Promise.resolve();
   if (!ensureOtpPromise) {
-    ensureOtpPromise = pool!.query(
-      `CREATE TABLE IF NOT EXISTS otp_codes (
-        mobile_number  TEXT PRIMARY KEY,
-        code           TEXT NOT NULL,
-        expires_at     TIMESTAMPTZ NOT NULL,
-        created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-        verified_at    TIMESTAMPTZ
-      )`
-    ).then(() => undefined);
+    ensureOtpPromise = (async () => {
+      await pool!.query(
+        `CREATE TABLE IF NOT EXISTS otp_codes (
+          mobile_number  TEXT PRIMARY KEY,
+          code           TEXT NOT NULL,
+          expires_at     TIMESTAMPTZ NOT NULL,
+          created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+          verified_at    TIMESTAMPTZ,
+          send_count     INT NOT NULL DEFAULT 0,
+          last_sent_at   TIMESTAMPTZ,
+          failed_attempts INT NOT NULL DEFAULT 0,
+          locked_until   TIMESTAMPTZ
+        )`
+      );
+      await pool!.query(
+        `ALTER TABLE otp_codes
+         ADD COLUMN IF NOT EXISTS send_count INT NOT NULL DEFAULT 0,
+         ADD COLUMN IF NOT EXISTS last_sent_at TIMESTAMPTZ,
+         ADD COLUMN IF NOT EXISTS failed_attempts INT NOT NULL DEFAULT 0,
+         ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ`
+      );
+    })();
   }
   return ensureOtpPromise;
 }
@@ -106,6 +119,7 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS country TEXT DEFAULT 'India';
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_hash TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_salt TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'none';
     `);
 
     // Step 3: Create function & trigger
@@ -266,4 +280,127 @@ export function ensureChatTables(): Promise<void> {
   })();
 
   return ensureChatPromise;
+}
+
+// ============================================================
+// ⭐ SAFETY TABLES (REPORTS + BLOCKS) — auto-created on first use
+// ============================================================
+
+let ensureSafetyPromise: Promise<void> | undefined;
+
+// reports: user-submitted moderation reports against a member.
+//   status: 'open' (awaiting review) | 'resolved' | 'dismissed'
+// blocks: one user hiding/interacting-blocking another (blocker -> blocked).
+export function ensureSafetyTables(): Promise<void> {  if (!hasPool) return Promise.resolve();
+  if (ensureSafetyPromise) return ensureSafetyPromise;
+
+  ensureSafetyPromise = (async () => {
+    await pool!.query(`
+      CREATE TABLE IF NOT EXISTS reports (
+        id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        reporter_id TEXT NOT NULL,
+        reported_id TEXT NOT NULL,
+        reason      TEXT NOT NULL,
+        details     TEXT,
+        status      TEXT NOT NULL DEFAULT 'open',
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
+
+    await pool!.query(`
+      CREATE TABLE IF NOT EXISTS blocks (
+        id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        blocker_id TEXT NOT NULL,
+        blocked_id TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        UNIQUE (blocker_id, blocked_id)
+      )
+    `);
+
+    await pool!.query(`
+      CREATE INDEX IF NOT EXISTS idx_reports_reported
+      ON reports (reported_id, status)
+    `);
+    await pool!.query(`
+      CREATE INDEX IF NOT EXISTS idx_blocks_blocker
+      ON blocks (blocker_id)
+    `);
+  })();
+
+  return ensureSafetyPromise;
+}
+
+// ============================================================
+// ⭐ NOTIFICATIONS TABLE — auto-created on first use
+// ============================================================
+
+let ensureNotificationsPromise: Promise<void> | undefined;
+// notifications: in-app events for a member (interest received, accepted,
+// new message, system). `read` controls the unread badge.
+export function ensureNotificationsTable(): Promise<void> {
+  if (!hasPool) return Promise.resolve();
+  if (ensureNotificationsPromise) return ensureNotificationsPromise;
+
+  ensureNotificationsPromise = (async () => {
+    await pool!.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id    TEXT NOT NULL,
+        actor_id   TEXT,
+        type       TEXT NOT NULL DEFAULT 'system',
+        title      TEXT,
+        message    TEXT NOT NULL,
+        data       JSONB,
+        read       BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
+
+    await pool!.query(`
+      CREATE INDEX IF NOT EXISTS idx_notifications_user
+      ON notifications (user_id, created_at)
+    `);
+  })();
+
+  return ensureNotificationsPromise;
+}
+
+// ============================================================
+// ⭐ VERIFICATIONS TABLE — auto-created on first use
+// ============================================================
+
+let ensureVerificationsPromise: Promise<void> | undefined;
+
+// verifications: member photo/ID verification submissions.
+//   status: 'pending' | 'approved' | 'rejected'
+export function ensureVerificationsTable(): Promise<void> {
+  if (!hasPool) return Promise.resolve();
+  if (ensureVerificationsPromise) return ensureVerificationsPromise;
+
+  ensureVerificationsPromise = (async () => {
+    await pool!.query(`
+      CREATE TABLE IF NOT EXISTS verifications (
+        id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id     TEXT NOT NULL,
+        id_type     TEXT NOT NULL,
+        id_number   TEXT NOT NULL,
+        selfie_url  TEXT,
+        document_url TEXT,
+        status      TEXT NOT NULL DEFAULT 'pending',
+        reviewed_at TIMESTAMPTZ,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
+
+    await pool!.query(`
+      CREATE INDEX IF NOT EXISTS idx_verifications_user
+      ON verifications (user_id, created_at)
+    `);
+    await pool!.query(`
+      CREATE INDEX IF NOT EXISTS idx_verifications_status
+      ON verifications (status, created_at)
+    `);
+  })();
+
+  return ensureVerificationsPromise;
 }

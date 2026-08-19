@@ -10,6 +10,8 @@ import {
   type InterestStatus,
 } from '@/lib/interactionStore';
 import { buildProfileLookup } from '@/lib/profileLookup';
+import { isBlocked } from '@/lib/reportStore';
+import { notifyInterestEvent } from '@/lib/notificationStore';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -87,6 +89,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Invalid action' }, { status: 400 });
     }
 
+    // Blocked members cannot send interests or shortlist each other.
+    if (action === 'interest' || action === 'shortlist') {
+      const [blockedByActor, blockedByOther] = await Promise.all([
+        isBlocked(actorId, otherId),
+        isBlocked(otherId, actorId),
+      ]);
+      if (blockedByActor || blockedByOther) {
+        return NextResponse.json(
+          { success: false, message: 'You cannot interact with this member.' },
+          { status: 403 }
+        );
+      }
+    }
+
     switch (action) {
       case 'interest':
         await sendInterest(actorId, otherId);
@@ -106,6 +122,22 @@ export async function POST(req: Request) {
       case 'decline':
         await setInterestStatus(otherId, actorId, 'declined');
         break;
+    }
+
+    // Notify the other party about interest events (best-effort).
+    if (action === 'interest' || action === 'accept') {
+      try {
+        const lookup = await buildProfileLookup();
+        const actor = lookup.get(normalizeId(actorId));
+        await notifyInterestEvent({
+          actorId,
+          actorName: actor?.name || 'A member',
+          recipientId: otherId,
+          action: action === 'interest' ? 'interest' : 'accept',
+        });
+      } catch (e) {
+        console.warn('[Interests] Failed to create notification:', e);
+      }
     }
 
     const state = await getSendState(actorId);
