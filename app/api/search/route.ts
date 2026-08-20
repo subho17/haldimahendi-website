@@ -28,6 +28,7 @@ interface SearchProfile {
   premium?: boolean;
   tier?: string;
   bio?: string;
+  isSuspended?: boolean;
 }
 
 // Sample fallback profiles for mock demo data
@@ -132,6 +133,7 @@ export async function GET(req: Request) {
             verificationStatus?: string;
             membershipTier?: string;
             membershipExpiresAt?: string;
+            isSuspended?: boolean;
           }) => ({
             id: u.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
             name: u.display_name || u.name || 'Shaadi Member',
@@ -150,6 +152,7 @@ export async function GET(req: Request) {
             premium: resolveStatus(u.membershipTier, u.membershipExpiresAt).isPremium,
             tier: resolveStatus(u.membershipTier, u.membershipExpiresAt).tier,
             bio: u.bio || 'Registered Member on Shaadi Matrimonial.',
+            isSuspended: !!u.isSuspended,
           })
         );
         allProfiles = [...dbProfiles, ...allProfiles];
@@ -163,7 +166,7 @@ export async function GET(req: Request) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(`
-          SELECT id, user_id, display_name, mobile_number, avatar_url, gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, verification_status, membership_tier, membership_expires_at
+          SELECT id, user_id, display_name, mobile_number, avatar_url, gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, verification_status, membership_tier, membership_expires_at, is_suspended
           FROM profiles
           ORDER BY created_at DESC
         `);
@@ -186,6 +189,7 @@ export async function GET(req: Request) {
           premium: resolveStatus(r.membership_tier, r.membership_expires_at).isPremium,
           tier: resolveStatus(r.membership_tier, r.membership_expires_at).tier,
           bio: r.bio || 'Verified Matrimonial Member.',
+          isSuspended: !!r.is_suspended,
         }));
 
         // Deduplicate by ID
@@ -203,6 +207,7 @@ export async function GET(req: Request) {
     // Filter profiles based on criteria
     const filtered = allProfiles.filter((p) => {
       if (invisibleIds.has(p.id)) return false;
+      if ((p as SearchProfile & { isSuspended?: boolean }).isSuspended) return false;
       if (gender && !genderMatches(gender, p.gender)) return false;
       if (p.age < minAge || p.age > maxAge) return false;
       if (religion && religion !== 'Any' && p.religion.toLowerCase() !== religion.toLowerCase()) return false;

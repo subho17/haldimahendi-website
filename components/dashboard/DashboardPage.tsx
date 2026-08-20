@@ -70,6 +70,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (mounted && isAuthenticated && userId) {
+      fetch("/api/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      }).catch(() => {});
       Promise.all([
         fetch(`/api/matches?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
         fetch(`/api/interests?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),

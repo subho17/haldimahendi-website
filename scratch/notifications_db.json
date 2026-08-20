@@ -1,6 +1,58 @@
 {
   "notifications": [
     {
+      "id": "nt_1787211858306_z3nr",
+      "userId": "SH095196",
+      "actorId": "9988221729",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "Gagan kalra sent you an interest.",
+      "data": {
+        "profileId": "9988221729"
+      },
+      "read": false,
+      "createdAt": "2026-08-20T07:44:18.306Z"
+    },
+    {
+      "id": "nt_1787211792040_0dc5",
+      "userId": "SH095196",
+      "actorId": "9988221729",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "Gagan kalra sent you an interest.",
+      "data": {
+        "profileId": "9988221729"
+      },
+      "read": false,
+      "createdAt": "2026-08-20T07:43:12.040Z"
+    },
+    {
+      "id": "nt_1787211651754_r19j",
+      "userId": "SH095196",
+      "actorId": "subhadeepchanda36@gmail.com",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "Subh sent you an interest.",
+      "data": {
+        "profileId": "subhadeepchanda36@gmail.com"
+      },
+      "read": false,
+      "createdAt": "2026-08-20T07:40:51.754Z"
+    },
+    {
+      "id": "nt_1787211299857_e4ay",
+      "userId": "SH095196",
+      "actorId": "9988221729",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "Gagan kalra sent you an interest.",
+      "data": {
+        "profileId": "9988221729"
+      },
+      "read": false,
+      "createdAt": "2026-08-20T07:34:59.857Z"
+    },
+    {
       "id": "nt_1787133418400_yrr9",
       "userId": "SH095196",
       "actorId": "subhadeepchanda36@gmail.com",

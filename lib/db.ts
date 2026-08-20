@@ -156,6 +156,8 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS smoking TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS drinking TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS disability TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ;
     `);
 
     // Step 3: Create function & trigger

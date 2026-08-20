@@ -71,9 +71,9 @@ export async function GET(req: Request) {
           SELECT user_id, display_name, avatar_url, gender, age, height, marital_status,
                  religion, mother_tongue, education, profession, city, country, created_at,
                  membership_tier, membership_expires_at, rashi, nakshatra, manglik, diet,
-                 smoking, drinking
+                 smoking, drinking, is_suspended
           FROM profiles
-          WHERE user_id <> $1
+          WHERE user_id <> $1 AND COALESCE(is_suspended, FALSE) = FALSE
           ORDER BY created_at DESC
         `, [userId]);
 
@@ -142,9 +142,11 @@ export async function GET(req: Request) {
           diet?: string;
           smoking?: string;
           drinking?: string;
+          isSuspended?: boolean;
         }) => {
           const uid = normalizeId(u.profileId || u.mobileNumber || u.email);
           if (!uid || uid === userId) return;
+          if (u.isSuspended) return;
           if (candidates.some((c) => c.id === uid)) return;
           const mem = resolveStatus(u.membershipTier, u.membershipExpiresAt);
           candidates.push({
