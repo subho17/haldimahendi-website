@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
-import { Crown, Check, X, Lock, ShieldCheck } from "lucide-react";
+import { Crown, Check, X, Lock, ShieldCheck, Tag } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useMounted } from "@/hooks/useMounted";
 
@@ -98,6 +98,10 @@ export default function MembershipPage() {
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number; finalPrice: number } | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [formError, setFormError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -143,6 +147,38 @@ export default function MembershipPage() {
     return `${digits.slice(0, 2)}/${digits.slice(2)}`;
   };
 
+  const applyCoupon = async () => {
+    setCouponError("");
+    if (!couponCode.trim() || !selectedPlan) return;
+    setValidatingCoupon(true);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, planId: selectedPlan.id, userId }),
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setAppliedCoupon({
+          code: data.coupon.code,
+          discountAmount: data.discountAmount,
+          finalPrice: data.finalPrice,
+        });
+        setCouponCode("");
+      } else {
+        setCouponError(data?.message || "Invalid coupon");
+      }
+    } catch {
+      setCouponError("Failed to validate coupon");
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+  };
+
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
@@ -160,12 +196,13 @@ export default function MembershipPage() {
       const res = await fetch("/api/membership", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, planId: selectedPlan.id }),
+        body: JSON.stringify({ userId, planId: selectedPlan.id, couponCode: appliedCoupon?.code || "" }),
       });
       const data = await res.json();
       if (data?.success && data.membership) {
         setStatus(data.membership);
         setStep("success");
+        setAppliedCoupon(null);
       } else {
         setFormError(data?.message || "Payment failed. Please try again.");
         setStep("form");
@@ -410,6 +447,48 @@ export default function MembershipPage() {
                       className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
                     />
                   </div>
+                </div>
+
+                {/* Coupon Input */}
+                <div className="space-y-2">
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm font-bold text-emerald-700">
+                          {appliedCoupon.code} applied
+                        </span>
+                        <span className="text-xs text-emerald-600">−₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeCoupon}
+                        className="text-xs text-emerald-600 hover:underline cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="Enter coupon code"
+                        className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyCoupon}
+                        disabled={validatingCoupon || !couponCode.trim()}
+                        className="px-4 py-2.5 rounded-xl bg-[#e53238] text-white text-sm font-bold disabled:opacity-60 cursor-pointer transition-colors whitespace-nowrap"
+                      >
+                        {validatingCoupon ? "Validating..." : "Apply"}
+                      </button>
+                    </div>
+                  )}
+                  {couponError && (
+                    <p className="text-xs font-semibold text-rose-600">{couponError}</p>
+                  )}
                 </div>
 
                 {formError && (
