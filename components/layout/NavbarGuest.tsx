@@ -120,16 +120,6 @@ export default function Navbar() {
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#e53238] transition-all duration-300 group-hover:w-full"></span>
           </Link>
 
-          <Link
-            href="/membership"
-            className={`relative font-bold text-amber-600 hover:text-amber-500 transition-all duration-300 group py-1 inline-flex items-center gap-1 ${
-              isScrolled ? 'text-sm' : 'text-lg lg:text-xl'
-            }`}
-          >
-            <span>Premium</span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-
           {/* Login Pill Button & Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button

@@ -13,7 +13,7 @@
     "maritalStatus": "Never Married",
     "city": "Mumbai",
     "createdAt": "2026-08-20T07:42:52.343Z",
-    "updatedAt": "2026-08-20T07:42:52.365Z",
+    "updatedAt": "2026-08-22T10:19:58.466Z",
     "age": 32,
     "height": "5'6\"",
     "religion": "Christian",
@@ -22,6 +22,39 @@
     "profession": "Software Engineer",
     "bio": "Looking for a caring, well-educated, and family-oriented life partner.",
     "verificationStatus": "approved",
-    "lastActiveAt": "2026-08-20T11:00:04.035Z"
+    "lastActiveAt": "2026-08-20T11:00:04.035Z",
+    "membershipTier": "free",
+    "membershipExpiresAt": null
+  },
+  {
+    "profileId": "9163399882",
+    "mobileNumber": "9163399882",
+    "mobile_number": "9163399882",
+    "email": "",
+    "name": "gagan kalra",
+    "display_name": "gagan kalra",
+    "avatarUrl": "https://ycaeelqanntvzzcvqilu.supabase.co/storage/v1/object/public/profile%20photos/avatars/1787047921687_uynr8j_20260722_140131_jpg.jpeg",
+    "avatar_url": "https://ycaeelqanntvzzcvqilu.supabase.co/storage/v1/object/public/profile%20photos/avatars/1787047921687_uynr8j_20260722_140131_jpg.jpeg",
+    "provider": "otp",
+    "gender": "Groom",
+    "maritalStatus": "Never Married",
+    "city": "kolkata",
+    "createdAt": "2026-08-20T11:52:42.639Z",
+    "updatedAt": "2026-08-20T11:52:42.735Z",
+    "lastActiveAt": "2026-08-20T11:52:46.389Z"
+  },
+  {
+    "profileId": "SH095196",
+    "mobileNumber": "",
+    "mobile_number": "",
+    "email": "subhadeepchanda36@gmail.com",
+    "name": "Subhadeep",
+    "display_name": "Subhadeep",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocLGnZPz-hTROImRuyOblghDGrFJEFKOxe8_DWhegzYRF-wdtonV=s96-c",
+    "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocLGnZPz-hTROImRuyOblghDGrFJEFKOxe8_DWhegzYRF-wdtonV=s96-c",
+    "provider": "google",
+    "createdAt": "2026-08-20T11:53:14.350Z",
+    "updatedAt": "2026-08-20T11:53:14.369Z",
+    "lastActiveAt": "2026-08-22T05:05:57.755Z"
   }
 ]
