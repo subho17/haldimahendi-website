@@ -6,7 +6,7 @@ import { Search, Bell, ChevronDown } from "lucide-react";
 
 interface AdminHeaderProps {
   activeTab: string;
-  setActiveTab: (tab: "dashboard" | "analytics" | "verifications" | "reports" | "members") => void;
+  setActiveTab: (tab: "dashboard" | "analytics" | "verifications" | "reports" | "members" | "coupons") => void;
   openReportsCount?: number;
   openVerificationsCount?: number;
   onLogout: () => void;
@@ -99,6 +99,18 @@ export default function AdminHeader({
           }`}
         >
           Analytics
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("coupons")}
+          className={`px-5 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+            activeTab === "coupons"
+              ? "bg-white text-slate-900 shadow-xs"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Coupons
         </button>
       </nav>
 

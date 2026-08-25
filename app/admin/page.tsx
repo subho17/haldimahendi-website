@@ -17,6 +17,7 @@ import AdminMembersTab, { AdminMember } from "@/components/adminpage/AdminMember
 import AdminVerificationsTab, { AdminVerification } from "@/components/adminpage/AdminVerificationsTab";
 import AdminReportsTab, { AdminReport } from "@/components/adminpage/AdminReportsTab";
 import AdminAnalyticsTab, { AdminAnalytics } from "@/components/adminpage/AdminAnalyticsTab";
+import AdminCouponsTab, { AdminCoupon } from "@/components/adminpage/AdminCouponsTab";
 
 const EMPTY_ANALYTICS: AdminAnalytics = {
   signupsByMonth: [],
@@ -35,11 +36,12 @@ export default function AdminDashboardPage() {
   const [loginError, setLoginError] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
 
-  const [tab, setTab] = useState<"dashboard" | "analytics" | "verifications" | "reports" | "members">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "analytics" | "verifications" | "reports" | "members" | "coupons">("dashboard");
   const [verifications, setVerifications] = useState<AdminVerification[]>([]);
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [analytics, setAnalytics] = useState<AdminAnalytics>(EMPTY_ANALYTICS);
   const [members, setMembers] = useState<AdminMember[]>([]);
+  const [coupons, setCoupons] = useState<AdminCoupon[]>([]);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState("");
 
@@ -55,20 +57,23 @@ export default function AdminDashboardPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [verRes, repRes, memRes, anaRes] = await Promise.all([
+      const [verRes, repRes, memRes, anaRes, couRes] = await Promise.all([
         fetch("/api/verification/review", { headers: { "x-admin-key": adminKey || "" } }),
         fetch("/api/admin/reports", { headers: { "x-admin-key": adminKey || "" } }),
         fetch("/api/admin/members", { headers: { "x-admin-key": adminKey || "" } }),
         fetch("/api/admin/analytics", { headers: { "x-admin-key": adminKey || "" } }),
+        fetch("/api/admin/coupons", { headers: { "x-admin-key": adminKey || "" } }),
       ]);
       const verData = await verRes.json();
       const repData = await repRes.json();
       const memData = await memRes.json();
       const anaData = await anaRes.json();
+      const couData = await couRes.json();
       if (verData.success) setVerifications(verData.verifications || []);
       if (repData.success) setReports(repData.reports || []);
       if (memData.success) setMembers(memData.members || []);
       if (anaData.success) setAnalytics(anaData.analytics || EMPTY_ANALYTICS);
+      if (couData.success) setCoupons(couData.coupons || []);
     } catch (e) {
       console.error("Failed to load admin data:", e);
     } finally {
@@ -212,6 +217,62 @@ export default function AdminDashboardPage() {
     } catch (e) {
       console.error(e);
       alert("Something went wrong.");
+    } finally {
+      setBusyId("");
+    }
+  };
+
+  const createCoupon = async (data: Omit<AdminCoupon, "id" | "usedCount" | "createdAt">) => {
+    setBusyId("coupon:create");
+    try {
+      const res = await fetch("/api/admin/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-key": adminKey || "" },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "Failed to create coupon");
+      setCoupons((cs) => [result.coupon, ...cs]);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    } finally {
+      setBusyId("");
+    }
+  };
+
+  const updateCoupon = async (id: string, data: Partial<AdminCoupon>) => {
+    setBusyId(`coupon:${id}`);
+    try {
+      const res = await fetch("/api/admin/coupons", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-admin-key": adminKey || "" },
+        body: JSON.stringify({ id, ...data }),
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "Failed to update coupon");
+      setCoupons((cs) => cs.map((c) => (c.id === id ? result.coupon : c)));
+    } catch (e) {
+      console.error(e);
+      throw e;
+    } finally {
+      setBusyId("");
+    }
+  };
+
+  const deleteCoupon = async (id: string) => {
+    setBusyId(`coupon:${id}`);
+    try {
+      const res = await fetch(`/api/admin/coupons?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: { "x-admin-key": adminKey || "" },
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "Failed to delete coupon");
+      setCoupons((cs) => cs.filter((c) => c.id !== id));
+    } catch (e) {
+      console.error(e);
+      throw e;
     } finally {
       setBusyId("");
     }
@@ -377,6 +438,17 @@ export default function AdminDashboardPage() {
           {/* Analytics Tab */}
           {tab === "analytics" && (
             <AdminAnalyticsTab analytics={analytics} />
+          )}
+
+          {/* Coupons Tab */}
+          {tab === "coupons" && (
+            <AdminCouponsTab
+              coupons={coupons}
+              onCreate={createCoupon}
+              onUpdate={updateCoupon}
+              onDelete={deleteCoupon}
+              busyId={busyId}
+            />
           )}
         </div>
       </div>

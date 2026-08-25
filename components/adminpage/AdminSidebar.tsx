@@ -7,14 +7,14 @@ import {
   Wallet,
   FileText,
   Users,
-  Percent,
+  Tag,
   Settings,
   LogOut,
 } from "lucide-react";
 
 interface AdminSidebarProps {
   activeTab: string;
-  setActiveTab: (tab: "dashboard" | "analytics" | "verifications" | "reports" | "members") => void;
+  setActiveTab: (tab: "dashboard" | "analytics" | "verifications" | "reports" | "members" | "coupons") => void;
   onLogout: () => void;
 }
 
@@ -95,10 +95,15 @@ export default function AdminSidebar({
 
         <button
           type="button"
-          className="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-gray-50 hover:text-slate-700 transition-all cursor-pointer"
-          title="Promotions"
+          onClick={() => setActiveTab("coupons")}
+          className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all cursor-pointer ${
+            activeTab === "coupons"
+              ? "bg-[#00875A] text-white shadow-md shadow-[#00875A]/20"
+              : "text-slate-400 hover:bg-gray-50 hover:text-slate-700"
+          }`}
+          title="Coupons"
         >
-          <Percent className="w-5 h-5" />
+          <Tag className="w-5 h-5" />
         </button>
       </div>
 
