@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -475,10 +475,12 @@ export default function AuthenticatedNavbar() {
                             className="p-3 rounded-2xl border border-gray-100 bg-gray-50/70 hover:bg-red-50/50 hover:border-red-200 transition-all flex items-center justify-between cursor-pointer group shadow-xs hover:shadow-sm"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <img
+                              <Image
                                 src={profile.avatarUrl || "/images/default-avatar.png"}
                                 alt={profile.name}
-                                className="w-11 h-11 rounded-full object-cover border-2 border-white shadow-xs shrink-0 group-hover:scale-105 transition-transform"
+                                width={44}
+                                height={44}
+                                className="rounded-full object-cover border-2 border-white shadow-xs shrink-0 group-hover:scale-105 transition-transform"
                               />
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5">
@@ -702,7 +704,7 @@ export default function AuthenticatedNavbar() {
               >
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-100 border border-white flex items-center justify-center text-red-800 font-bold overflow-hidden shadow-xs shrink-0">
                   {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
-                    <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
+                    <Image src={userAvatar} alt={userName} fill sizes="32px" className="object-cover" />
                   ) : (
                     <span className="text-xs sm:text-sm font-extrabold text-[#e53238] uppercase">
                       {userName.charAt(0)}
@@ -721,7 +723,7 @@ export default function AuthenticatedNavbar() {
                   <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-red-50 flex items-center justify-center font-bold text-red-600 shrink-0">
                       {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
-                        <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
+                        <Image src={userAvatar} alt={userName} fill sizes="40px" className="object-cover" />
                       ) : (
                         <span className="text-sm font-extrabold text-[#e53238] uppercase">{userName.charAt(0)}</span>
                       )}

@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
@@ -169,7 +169,13 @@ export default function DashboardPage() {
               {/* Profile Avatar Badge */}
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white/40 bg-white/20 backdrop-blur-md overflow-hidden flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shrink-0">
                 {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
-                  <img src={userAvatar} alt={displayName} className="w-full h-full object-cover" />
+                  <Image
+                    src={userAvatar}
+                    alt={displayName}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
                 ) : (
                   <span className="uppercase">{displayName.charAt(0)}</span>
                 )}
@@ -257,10 +263,12 @@ export default function DashboardPage() {
                   <div>
                     <div className="relative w-full h-48 bg-slate-100 overflow-hidden flex items-center justify-center">
                       {m.profile.avatarUrl && m.profile.avatarUrl !== "/images/default-avatar.png" ? (
-                        <img
+                        <Image
                           src={m.profile.avatarUrl}
                           alt={m.profile.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          fill
+                          sizes="200px"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#e53238] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">

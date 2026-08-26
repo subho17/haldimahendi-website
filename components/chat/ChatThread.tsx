@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Loader2, ArrowLeft, Send, MessageSquare } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
@@ -232,7 +232,13 @@ export default function ChatThread({
           )}
           <div className="w-10 h-10 rounded-full bg-red-100 text-[#e53238] flex items-center justify-center font-extrabold text-sm border-2 border-white shadow-xs shrink-0 overflow-hidden">
             {partner?.avatarUrl ? (
-              <img src={partner.avatarUrl} alt={partner.name} className="w-full h-full object-cover" />
+              <Image
+                src={partner.avatarUrl}
+                alt={partner.name}
+                fill
+                sizes="40px"
+                className="object-cover"
+              />
             ) : (
               partner?.name?.charAt(0) || "?"
             )}

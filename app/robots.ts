@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "https://shaadi.example.com";
+  const baseUrl = "https://haldimehendi.com";
 
   return {
     rules: [
@@ -17,7 +17,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "Bingbot",
-        allow: ["/", "/search", "/matches", "/membership", "/profile", "/help", "/safe-online"],
+        allow: ["/", "/search", "/matches", "/membership", "/profile", "/help", "/safe-online"], 
         disallow: ["/chat", "/inbox", "/photos", "/preferences", "/settings", "/auth/", "/admin/", "/api/", "/_next/", "/static/"],
       },
     ],
