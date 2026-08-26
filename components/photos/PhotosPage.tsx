@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { Camera, Upload, Loader2, Trash2, Star, X } from "lucide-react";
@@ -214,7 +214,7 @@ export default function PhotosPage() {
                       key={p.id}
                       className="group relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 aspect-square"
                     >
-                      <img src={p.url} alt="Profile" className="w-full h-full object-cover" />
+                      <Image src={p.url} alt="Profile" fill sizes="200px" className="object-cover" />
                       {p.isMain && (
                         <span className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-black">
                           <Star className="w-3 h-3" /> Main
