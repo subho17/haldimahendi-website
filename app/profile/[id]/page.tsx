@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
@@ -299,9 +299,9 @@ export default function PublicProfilePage() {
             <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-left">
               
               <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-5xl ring-2 ring-rose-100 shrink-0">
-                {profile.avatarUrl && profile.avatarUrl !== "/images/default-avatar.png" ? (
-                  <img src={profile.avatarUrl} alt={formattedName} className="w-full h-full object-cover" />
-                ) : (
+{profile.avatarUrl && profile.avatarUrl !== "/images/default-avatar.png" ? (
+                    <Image src={profile.avatarUrl} alt={formattedName} fill sizes="176px" className="object-cover" />
+                  ) : (
                   <span className="uppercase">{formattedName.charAt(0)}</span>
                 )}
               </div>
