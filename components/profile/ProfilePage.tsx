@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
@@ -281,7 +281,7 @@ export default function ProfilePage() {
                 <div className="relative group shrink-0">
                   <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-4xl ring-2 ring-rose-100">
                     {rawAvatar && rawAvatar !== "/images/default-avatar.png" ? (
-                      <img src={rawAvatar} alt={formattedDisplayName} className="w-full h-full object-cover" />
+                      <Image src={rawAvatar} alt={formattedDisplayName} fill sizes="144px" className="object-cover" />
                     ) : (
                       <span className="uppercase">{formattedDisplayName.charAt(0)}</span>
                     )}
@@ -431,7 +431,7 @@ export default function ProfilePage() {
                             isSelected ? "border-[#e53238] ring-2 ring-rose-200 scale-105 shadow-md" : "border-slate-200 opacity-70 hover:opacity-100"
                           }`}
                         >
-                          <img src={av.url} alt={av.label} className="w-full h-full object-cover" />
+                          <Image src={av.url} alt={av.label} fill sizes="56px" className="object-cover" />
                           {isSelected && (
                             <div className="absolute inset-0 bg-rose-500/20 flex items-center justify-center">
                               <Check className="w-5 h-5 text-white drop-shadow-md" />
