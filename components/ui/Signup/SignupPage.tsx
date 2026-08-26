@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element, @next/next/no-location-assign-relative-destination */
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Heart,
   Smartphone,
@@ -537,10 +537,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
             {/* Avatar Selector */}
             <div className="flex flex-col items-center justify-center gap-3 mb-2">
               <div className="relative group">
-                <img
+                <Image
                   src={avatarUrl}
                   alt="Profile Avatar"
-                  className="w-20 h-20 rounded-full object-cover border-4 border-red-100 shadow-md"
+                  width={80}
+                  height={80}
+                  className="rounded-full object-cover border-4 border-red-100 shadow-md"
                 />
                 <label className="absolute bottom-0 right-0 p-1.5 rounded-full bg-[#e53238] text-white cursor-pointer shadow-md hover:scale-105 transition">
                   <Camera className="w-3.5 h-3.5" />
@@ -563,7 +565,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                       avatarUrl === av.url ? "border-[#e53238] scale-110" : "border-gray-200 opacity-70"
                     }`}
                   >
-                    <img src={av.url} alt={av.label} className="w-full h-full object-cover" />
+                    <Image src={av.url} alt={av.label} fill sizes="32px" className="object-cover" />
                   </button>
                 ))}
               </div>
