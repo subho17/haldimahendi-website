@@ -622,7 +622,7 @@ export default function LoginPage({
             <div className="w-full border-t border-gray-100"></div>
           </div>
           <span className="relative bg-white px-3 text-xs text-gray-400 uppercase font-semibold">
-            New to Shaadi.com?
+            New to Haldimehendi.com?
           </span>
         </div>
 

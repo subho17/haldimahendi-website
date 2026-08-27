@@ -79,7 +79,7 @@ export default function AuthenticatedNavbar() {
   const userId = user?.profileId || user?.mobile_number || user?.mobileNumber || user?.email || "";
 
   // Derive active main tab from the current pathname
-  const activeMainTab = pathname.includes("/matches")
+  const activeMainTab: "dashboard" | "analytics" | "verifications" | "reports" | "members" | "coupons" | "matches" | "search" | "inbox" | "chat" | "my-haldimehendi" = pathname.includes("/matches")
     ? "matches"
     : pathname.includes("/search")
     ? "search"
@@ -87,7 +87,7 @@ export default function AuthenticatedNavbar() {
     ? "inbox"
     : pathname.includes("/chat")
     ? "chat"
-    : "my-shaadi";
+    : "my-haldimehendi";
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const helpMenuRef = useRef<HTMLDivElement>(null);
@@ -284,7 +284,7 @@ export default function AuthenticatedNavbar() {
             <div className="flex items-center gap-1 select-none">
               <span className="relative flex items-center">
                 <span className="font-extrabold text-2xl sm:text-3xl lg:text-4xl tracking-tight font-serif italic text-amber-300">
-                  shaadi
+haldimehendi
                 </span>
                 {/* Interlocking Rings Emblem */}
                 <span className="absolute left-5 sm:left-7 -top-1 sm:-top-1.5 flex items-center -space-x-1">
@@ -306,14 +306,14 @@ export default function AuthenticatedNavbar() {
               <Link
                 href="/dashboard"
                 className={`whitespace-nowrap flex items-center h-full px-2 lg:px-3 transition-colors ${
-                  activeMainTab === "my-shaadi"
+activeMainTab === "my-haldimehendi"
                     ? "text-white font-bold"
                     : "text-emerald-100 hover:text-white"
                 }`}
               >
-                My Shaadi
+My Haldimehendi
               </Link>
-              {activeMainTab === "my-shaadi" && (
+              {activeMainTab === "my-haldimehendi" && (
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-white"></span>
               )}
             </div>

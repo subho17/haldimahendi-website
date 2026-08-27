@@ -50,7 +50,7 @@ export default function AdminDashboardPage() {
   const [selectedTransaction, setSelectedTransaction] = useState<PaymentHistoryItem | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("shaadi_admin_key");
+    const stored = localStorage.getItem("haldimehendi_admin_key");
     if (stored) setTimeout(() => setAdminKey(stored), 0);
   }, []);
 
@@ -98,7 +98,7 @@ export default function AdminDashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
-        localStorage.setItem("shaadi_admin_key", data.key);
+        localStorage.setItem("haldimehendi_admin_key", data.key);
         setAdminKey(data.key);
         setPassword("");
       } else {
@@ -113,7 +113,7 @@ export default function AdminDashboardPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("shaadi_admin_key");
+    localStorage.removeItem("haldimehendi_admin_key");
     setAdminKey(null);
   };
 

@@ -76,7 +76,7 @@ export default function SafeOnlinePage() {
         <div className="mt-8 bg-red-50/70 border border-red-100 rounded-2xl p-6 text-center">
           <p className="text-xs text-gray-700 font-semibold">
             Facing any issue or suspecting fraud? Contact us at{" "}
-            <a href="mailto:help@shaadi.com" className="text-[#d97706] font-bold underline">
+            <a href="mailto:help@haldimehendi.com" className="text-[#d97706] font-bold underline">
               help@shaadi.com
             </a>{" "}
             or call 1800-123-4567.

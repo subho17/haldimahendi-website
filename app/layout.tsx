@@ -16,16 +16,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://shaadi.example.com"),
+  metadataBase: new URL("https://haldimehendi.example.com"),
   title: {
-    default: "Shaadi Matrimonial - Find Your Perfect Life Partner",
-    template: "%s | Shaadi Matrimonial",
+    default: "Haldimehendi - Find Your Perfect Life Partner",
+    template: "%s | Haldimehendi",
   },
   description: "India's trusted matrimonial platform for meaningful connections. Verified profiles, astrological matching, and premium features.",
-  keywords: ["matrimonial", "matchmaking", "marriage", "shaadi", "life partner", "wedding", "horoscope matching", "kundli"],
-  authors: [{ name: "Shaadi Matrimonial" }],
-  creator: "Shaadi Matrimonial",
-  publisher: "Shaadi Matrimonial",
+  keywords: ["matrimonial", "matchmaking", "marriage", "haldimehendi", "life partner", "wedding", "horoscope matching", "kundli"],
+  authors: [{ name: "Haldimehendi" }],
+  creator: "Haldimehendi",
+  publisher: "Haldimehendi",
   robots: {
     index: true,
     follow: true,
@@ -40,22 +40,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://shaadi.example.com",
-    siteName: "Shaadi Matrimonial",
-    title: "Shaadi Matrimonial - Find Your Perfect Life Partner",
+    url: "https://haldimehendi.example.com",
+    siteName: "Haldimehendi",
+    title: "Haldimehendi - Find Your Perfect Life Partner",
     description: "India's trusted matrimonial platform for meaningful connections.",
     images: [
       {
         url: "/images/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Shaadi Matrimonial",
+        alt: "Haldimehendi",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Shaadi Matrimonial",
+    title: "Haldimehendi",
     description: "Find your perfect life partner on India's trusted matrimonial platform.",
     images: ["/images/og-image.jpg"],
   },
@@ -63,10 +63,10 @@ export const metadata: Metadata = {
     google: "google-site-verification-code",
   },
   other: {
-    "theme-color": "#166534",
+    "theme-color": "#e53238",
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "default",
-    "apple-mobile-web-app-title": "Shaadi",
+    "apple-mobile-web-app-title": "Haldimehendi",
     "format-detection": "telephone=no",
   },
   icons: {

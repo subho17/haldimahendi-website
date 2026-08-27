@@ -79,7 +79,7 @@ export default function HelpPage() {
           <div className="bg-white rounded-2xl border border-gray-100 p-5 text-center shadow-xs">
             <Mail className="w-6 h-6 text-[#d97706] mx-auto mb-2" />
             <h3 className="font-bold text-gray-900 text-sm">Email Us</h3>
-            <p className="text-xs text-gray-500 mt-1">support@shaadi.com</p>
+            <p className="text-xs text-gray-500 mt-1">support@haldimehendi.com</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-5 text-center shadow-xs">
             <Headphones className="w-6 h-6 text-[#d97706] mx-auto mb-2" />

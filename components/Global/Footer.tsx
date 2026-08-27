@@ -34,7 +34,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/how-to-use" className="hover:text-[#d97706] transition-colors">
-                  How to Use Shaadi.com
+                  How to Use Haldimehendi.com
                 </Link>
               </li>
               <li>
@@ -68,7 +68,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/blog" className="hover:text-[#d97706] transition-colors">
-                  Shaadi Blog
+                  Haldimehendi Blog
                 </Link>
               </li>
               <li>
@@ -131,7 +131,7 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm text-gray-500">
               <li>
                 <Link href="/vip-shaadi" className="hover:text-[#d97706] transition-colors">
-                  VIP Shaadi
+                  VIP Haldimehendi
                 </Link>
               </li>
               <li>
@@ -141,7 +141,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/centres" className="hover:text-[#d97706] transition-colors">
-                  Shaadi Centres
+                  Haldimehendi Centres
                 </Link>
               </li>
               <li>
@@ -151,12 +151,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/live" className="hover:text-[#d97706] transition-colors">
-                  Shaadi Live
+                  Haldimehendi Live
                 </Link>
               </li>
               <li>
                 <Link href="/elite" className="hover:text-[#d97706] transition-colors">
-                  Elite Matrimony by Shaadi.com
+                  Elite Matrimony by Haldimehendi.com
                 </Link>
               </li>
               <li>
@@ -251,7 +251,7 @@ export default function Footer() {
             {/* Get the Shaadi App */}
             <div>
               <h3 className="font-bold text-gray-900 text-base mb-3 tracking-tight">
-                Get the Shaadi App
+Get the Haldimehendi App
               </h3>
               
               <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-2.5">
@@ -304,7 +304,7 @@ export default function Footer() {
       <div className="bg-[#1e1e24] text-gray-400 text-xs py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
           <div>
-            © 1996–{new Date().getFullYear()} Shaadi.com, The World&apos;s Leading Matchmaking Service™
+            © 1996–{new Date().getFullYear()} Haldimehendi.com, The World&apos;s Leading Matchmaking Service™
           </div>
           <div className="flex items-center gap-1 font-medium text-gray-300 hover:text-white transition-colors cursor-pointer">
             <span>Passionately created by People Group</span>

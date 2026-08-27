@@ -65,7 +65,7 @@ export default function Navbar() {
                   isScrolled ? 'text-2xl sm:text-3xl' : 'text-4xl sm:text-5xl'
                 }`}
               >
-                shaadi
+                haldimehendi
               </span>
               
               {/* Interlocking Rings Emblem over 'aa' */}

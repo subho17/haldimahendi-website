@@ -45,7 +45,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_STORAGE_KEY = "shaadi_auth_user";
+const AUTH_STORAGE_KEY = "haldimehendi_auth_user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const mounted = useMounted();
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!storedUser) return null;
       const parsed = JSON.parse(storedUser) as UserProfile;
       // Normalize alias keys
-      const displayName = parsed.display_name || parsed.name || "Shaadi Member";
+      const displayName = parsed.display_name || parsed.name || "Haldimehendi Member";
       const avatar = parsed.avatar_url || parsed.avatarUrl || "/images/default-avatar.png";
       const mobile = parsed.mobile_number || parsed.mobileNumber || "";
       return {
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isLoading = !mounted;
 
   const login = useCallback((userData: Partial<UserProfile>) => {
-    const displayName = userData.display_name || userData.name || "Shaadi Member";
+    const displayName = userData.display_name || userData.name || "Haldimehendi Member";
     const avatar = userData.avatar_url || userData.avatarUrl || "/images/default-avatar.png";
     const mobile = userData.mobile_number || userData.mobileNumber || "";
 
