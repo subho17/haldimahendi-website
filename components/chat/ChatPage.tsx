@@ -42,7 +42,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const deepLinkHandled = useRef<string | null>(null);
 
-  const userId = user?.mobileNumber || user?.email || user?.profileId || "";
+  const userId = user?.profileId || user?.mobileNumber || user?.email || "";
 
   const otherId = searchParams?.get("otherId") || "";
 
@@ -174,7 +174,7 @@ export default function ChatPage() {
 
         {(!mounted || isLoading || !isAuthenticated || loading) ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 text-[#e53238] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[#d97706] animate-spin" />
           </div>
         ) : conversations.length === 0 && !active ? (
           <div className="flex-1 flex items-center justify-center">
@@ -215,9 +215,9 @@ export default function ChatPage() {
                           isActive ? "bg-red-50/60" : "hover:bg-gray-50"
                         }`}
                       >
-                        <div className="w-10 h-10 rounded-full bg-red-100 text-[#e53238] flex items-center justify-center font-extrabold text-sm border-2 border-white shadow-xs shrink-0 overflow-hidden">
+                        <div className="relative w-10 h-10 rounded-full bg-red-100 text-[#d97706] flex items-center justify-center font-extrabold text-sm border-2 border-white shadow-xs shrink-0 overflow-hidden" style={{ position: "relative" }}>
                           {partner?.avatarUrl ? (
-                            <Image src={partner.avatarUrl} alt={partner.name} fill sizes="40px" className="object-cover" />
+                            <Image src={partner.avatarUrl} alt={partner.name} width={40} height={40} className="w-full h-full object-cover" />
                           ) : (
                             partner?.name?.charAt(0) || "?"
                           )}
@@ -238,13 +238,13 @@ export default function ChatPage() {
                             }`}
                           >
                             {c.unread > 0 && (
-                              <span className="mr-1 text-[#e53238]">{otherUid} :</span>
+                              <span className="mr-1 text-[#d97706]">{otherUid} :</span>
                             )}
                             {c.lastMessage || "Say hello!"}
                           </p>
                         </div>
                         {c.unread > 0 && (
-                          <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-[#e53238] text-white text-[10px] font-black flex items-center justify-center">
+                          <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-[#d97706] text-white text-[10px] font-black flex items-center justify-center">
                             {c.unread}
                           </span>
                         )}

@@ -36,7 +36,7 @@ export default function HelpPage() {
       <Navbar />
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-red-50 text-[#e53238] flex items-center justify-center mx-auto mb-4 border border-red-100">
+          <div className="w-16 h-16 rounded-full bg-red-50 text-[#d97706] flex items-center justify-center mx-auto mb-4 border border-red-100">
             <Headphones className="w-8 h-8" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
@@ -72,17 +72,17 @@ export default function HelpPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-2xl border border-gray-100 p-5 text-center shadow-xs">
-            <Phone className="w-6 h-6 text-[#e53238] mx-auto mb-2" />
+            <Phone className="w-6 h-6 text-[#d97706] mx-auto mb-2" />
             <h3 className="font-bold text-gray-900 text-sm">Call Us</h3>
             <p className="text-xs text-gray-500 mt-1">1800-123-4567 (toll free)</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-5 text-center shadow-xs">
-            <Mail className="w-6 h-6 text-[#e53238] mx-auto mb-2" />
+            <Mail className="w-6 h-6 text-[#d97706] mx-auto mb-2" />
             <h3 className="font-bold text-gray-900 text-sm">Email Us</h3>
             <p className="text-xs text-gray-500 mt-1">support@shaadi.com</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-5 text-center shadow-xs">
-            <Headphones className="w-6 h-6 text-[#e53238] mx-auto mb-2" />
+            <Headphones className="w-6 h-6 text-[#d97706] mx-auto mb-2" />
             <h3 className="font-bold text-gray-900 text-sm">Live Chat</h3>
             <p className="text-xs text-gray-500 mt-1">Mon–Sat, 9 AM – 8 PM</p>
           </div>

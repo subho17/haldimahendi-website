@@ -1,12 +1,14 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { Search, Loader2, MapPin, UserX, Crown } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+import { useAuth } from "@/context/AuthContext";
 
 interface SearchProfile {
   id: string;
@@ -28,6 +30,9 @@ interface SearchProfile {
 
 export default function SearchPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const userId = user?.mobileNumber || user?.mobile_number || user?.email || user?.profileId || "";
+
   const [lookingFor, setLookingFor] = useState("Woman");
   const [ageFrom, setAgeFrom] = useState("21");
   const [ageTo, setAgeTo] = useState("35");
@@ -45,6 +50,7 @@ export default function SearchPage() {
     setSearching(true);
     try {
       const params = new URLSearchParams();
+      if (userId) params.set("userId", userId);
       if (lookingFor !== "Any") params.set("gender", lookingFor);
       params.set("minAge", ageFrom);
       params.set("maxAge", ageTo);
@@ -66,9 +72,9 @@ export default function SearchPage() {
   };
 
   const selectCls =
-    "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#e53238] outline-none";
+    "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#d97706] outline-none";
   const inputCls =
-    "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#e53238] outline-none";
+    "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#d97706] outline-none";
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -77,7 +83,7 @@ export default function SearchPage() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-10 shadow-lg mb-8">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#e53238] uppercase tracking-wider mb-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#d97706] uppercase tracking-wider mb-2">
             <Search className="w-4 h-4" />
             <span>Advanced Partner Search</span>
           </div>
@@ -182,7 +188,7 @@ export default function SearchPage() {
               <button
                 type="submit"
                 disabled={searching}
-                className="w-full py-4 bg-[#e53238] hover:bg-[#c92429] text-white font-bold rounded-xl shadow-lg shadow-red-500/20 text-sm transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                className="w-full py-4 bg-[#d97706] hover:bg-[#b45309] text-white font-bold rounded-xl shadow-lg shadow-red-500/20 text-sm transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                 <span>{searching ? "Searching..." : "Search Matches Now"}</span>
@@ -197,7 +203,7 @@ export default function SearchPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-extrabold text-gray-900">
                 {searching ? (
-                  <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-[#e53238]" /> Searching...</span>
+                  <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-[#d97706]" /> Searching...</span>
                 ) : (
                   `${results.length} Result${results.length === 1 ? "" : "s"} Found`
                 )}
@@ -228,13 +234,15 @@ export default function SearchPage() {
                           </span>
                         )}
                         {p.avatarUrl && p.avatarUrl !== "/images/default-avatar.png" ? (
-                          <img
+                          <Image
                             src={p.avatarUrl}
                             alt={p.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#e53238] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">
+                          <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#d97706] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">
                             {p.name.charAt(0)}
                           </div>
                         )}
@@ -242,7 +250,7 @@ export default function SearchPage() {
 
                       <div className="p-4 sm:p-5">
                         <div className="mb-3">
-                          <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors text-base flex items-center gap-1">
+                          <h3 className="font-bold text-gray-900 group-hover:text-[#d97706] transition-colors text-base flex items-center gap-1">
                             <span>{p.name}</span>
                             <span className="text-xs text-emerald-600 font-bold">✓</span>
                           </h3>
@@ -262,7 +270,7 @@ export default function SearchPage() {
                     <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0" onClick={(e) => e.stopPropagation()}>
                       <Link
                         href={`/profile/${encodeURIComponent(p.id)}?back=/search`}
-                        className="block w-full py-2.5 px-3 rounded-xl bg-[#e53238] text-white text-xs font-bold shadow-xs hover:bg-[#c92429] transition-colors text-center cursor-pointer"
+                        className="block w-full py-2.5 px-3 rounded-xl bg-[#d97706] text-white text-xs font-bold shadow-xs hover:bg-[#b45309] transition-colors text-center cursor-pointer"
                       >
                         View Full Profile
                       </Link>

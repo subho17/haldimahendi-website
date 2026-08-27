@@ -44,7 +44,7 @@ export default function PreferencesPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const userId = user?.mobileNumber || user?.email || user?.profileId || "";
+  const userId = user?.profileId || user?.mobileNumber || user?.email || "";
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
@@ -109,9 +109,9 @@ export default function PreferencesPage() {
   const showLoading = !mounted || isLoading || !isAuthenticated || !loaded;
 
   const selectCls =
-    "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#e53238] outline-none";
+    "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#d97706] outline-none";
   const inputCls =
-    "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#e53238] outline-none";
+    "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#d97706] outline-none";
   const fieldLabel = "text-xs font-bold text-gray-700 block uppercase mb-1.5";
 
   return (
@@ -120,7 +120,7 @@ export default function PreferencesPage() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-10 shadow-lg mb-8">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#e53238] uppercase tracking-wider mb-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#d97706] uppercase tracking-wider mb-2">
             <Sliders className="w-4 h-4" />
             <span>Matchmaking Criteria</span>
           </div>
@@ -134,7 +134,7 @@ export default function PreferencesPage() {
 
           {showLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-6 h-6 text-[#e53238] animate-spin" />
+              <Loader2 className="w-6 h-6 text-[#d97706] animate-spin" />
             </div>
           ) : (
             <div className="space-y-6 text-left">
@@ -276,7 +276,7 @@ export default function PreferencesPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-3 bg-[#e53238] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#c92429] flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                className="px-6 py-3 bg-[#d97706] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#b45309] flex items-center gap-2 cursor-pointer disabled:opacity-60"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>{saving ? "Saving..." : "Save Partner Preferences"}</span>

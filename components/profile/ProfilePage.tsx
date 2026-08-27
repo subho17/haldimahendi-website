@@ -132,7 +132,7 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
         <Navbar />
         <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
-          <div className="w-9 h-9 border-3 border-[#e53238] border-t-transparent rounded-full animate-spin" />
+          <div className="w-9 h-9 border-3 border-[#d97706] border-t-transparent rounded-full animate-spin" />
         </main>
         <Footer />
       </div>
@@ -243,7 +243,7 @@ export default function ProfilePage() {
   const formattedProfession = formatCapitalize(profession);
   const userMobile = user?.mobile_number || user?.mobileNumber || "9163399882";
   const userProfileId = user?.profileId || "SH270341";
-  const viewerId = user?.mobile_number || user?.mobileNumber || user?.email || user?.profileId || "";
+  const viewerId = user?.profileId || user?.mobile_number || user?.mobileNumber || user?.email || "";
 
   // Compute profile completeness score dynamically
   const fieldsToCheck = [displayName, avatarUrl, gender, age, height, maritalStatus, religion, motherTongue, education, profession, city, bio, rashi, nakshatra, diet, smoking, drinking, familyType, fatherOccupation];
@@ -279,9 +279,9 @@ export default function ProfilePage() {
               {/* Avatar & Upload Camera Trigger */}
               <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-left">
                 <div className="relative group shrink-0">
-                  <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#e53238] font-black text-4xl ring-2 ring-rose-100">
+                  <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#d97706] font-black text-4xl ring-2 ring-amber-100" style={{ position: "relative" }}>
                     {rawAvatar && rawAvatar !== "/images/default-avatar.png" ? (
-                      <Image src={rawAvatar} alt={formattedDisplayName} fill sizes="144px" className="object-cover" />
+                      <Image src={rawAvatar} alt={formattedDisplayName} width={144} height={144} className="w-full h-full object-cover" />
                     ) : (
                       <span className="uppercase">{formattedDisplayName.charAt(0)}</span>
                     )}
@@ -290,7 +290,7 @@ export default function ProfilePage() {
                   {/* Upload Button overlay */}
                   <label
                     title="Change profile photo"
-                    className={`absolute bottom-0 right-0 p-2 rounded-full bg-[#e53238] text-white cursor-pointer shadow-md hover:bg-[#c92429] hover:scale-105 transition-all ${
+                    className={`absolute bottom-0 right-0 p-2 rounded-full bg-[#d97706] text-white cursor-pointer shadow-md hover:bg-[#b45309] hover:scale-105 transition-all ${
                       isUploading ? "animate-pulse" : ""
                     }`}
                   >
@@ -319,7 +319,7 @@ export default function ProfilePage() {
                       </span>
                     )}
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80 shadow-2xs">
-                      <Award className="w-3.5 h-3.5 text-[#e53238] shrink-0" />
+                      <Award className="w-3.5 h-3.5 text-[#d97706] shrink-0" />
                       <span>Verified Match Profile</span>
                     </span>
                   </div>
@@ -357,7 +357,7 @@ export default function ProfilePage() {
                   className={`w-full sm:w-auto px-6 py-2.5 font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all ${
                     isEditing
                       ? "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
-                      : "bg-[#e53238] text-[#ffffff] hover:bg-[#c92429] shadow-rose-500/20"
+                      : "bg-[#d97706] text-[#ffffff] hover:bg-[#b45309] shadow-rose-500/20"
                   }`}
                 >
                   {isEditing ? (
@@ -384,11 +384,11 @@ export default function ProfilePage() {
               <div className="w-full sm:w-1/2 space-y-1 text-center sm:text-left">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-700">
                   <span>Profile Strength</span>
-                  <span className="text-[#e53238]">{completionPercentage}% Completed</span>
+                  <span className="text-[#d97706]">{completionPercentage}% Completed</span>
                 </div>
                 <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-rose-500 to-[#e53238] rounded-full transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-rose-500 to-[#d97706] rounded-full transition-all duration-500"
                     style={{ width: `${completionPercentage}%` }}
                   />
                 </div>
@@ -405,7 +405,7 @@ export default function ProfilePage() {
             {isEditing ? (
               <form onSubmit={handleSaveProfile} className="space-y-8 pt-2 animate-in fade-in duration-300">
                 <div className="bg-rose-50/70 p-4 sm:p-5 rounded-2xl border border-rose-100/80">
-                  <h3 className="font-bold text-sm text-[#e53238] flex items-center gap-2">
+                  <h3 className="font-bold text-sm text-[#d97706] flex items-center gap-2">
                     <Edit3 className="w-4 h-4" />
                     <span>Edit Profile Details</span>
                   </h3>
@@ -427,11 +427,12 @@ export default function ProfilePage() {
                           key={idx}
                           type="button"
                           onClick={() => setAvatarUrl(av.url)}
+                          style={{ position: "relative" }}
                           className={`relative w-14 h-14 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
-                            isSelected ? "border-[#e53238] ring-2 ring-rose-200 scale-105 shadow-md" : "border-slate-200 opacity-70 hover:opacity-100"
+                            isSelected ? "border-[#d97706] ring-2 ring-amber-200 scale-105 shadow-md" : "border-slate-200 opacity-70 hover:opacity-100"
                           }`}
                         >
-                          <Image src={av.url} alt={av.label} fill sizes="56px" className="object-cover" />
+                          <Image src={av.url} alt={av.label} width={56} height={56} className="w-full h-full object-cover" />
                           {isSelected && (
                             <div className="absolute inset-0 bg-rose-500/20 flex items-center justify-center">
                               <Check className="w-5 h-5 text-white drop-shadow-md" />
@@ -446,7 +447,7 @@ export default function ProfilePage() {
                 {/* Section 2: Basic & Personal Info */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <User className="w-4 h-4 text-[#e53238]" />
+                    <User className="w-4 h-4 text-[#d97706]" />
                     <span>Basic Details</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -530,7 +531,7 @@ export default function ProfilePage() {
                 {/* Section 3: Location & Background */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <MapPin className="w-4 h-4 text-[#e53238]" />
+                    <MapPin className="w-4 h-4 text-[#d97706]" />
                     <span>Location, Religion & Education</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -608,7 +609,7 @@ export default function ProfilePage() {
                 {/* Section 4: Astrology & Horoscope */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <Sparkles className="w-4 h-4 text-[#e53238]" />
+                    <Sparkles className="w-4 h-4 text-[#d97706]" />
                     <span>Astrology & Horoscope (Kundli)</span>
                   </h4>
                   <p className="text-[11px] text-slate-500 -mt-2">
@@ -710,7 +711,7 @@ export default function ProfilePage() {
                 {/* Section 5: Lifestyle */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <Heart className="w-4 h-4 text-[#e53238]" />
+                    <Heart className="w-4 h-4 text-[#d97706]" />
                     <span>Lifestyle</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -783,7 +784,7 @@ export default function ProfilePage() {
                 {/* Section 6: Family Details */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <Users className="w-4 h-4 text-[#e53238]" />
+                    <Users className="w-4 h-4 text-[#d97706]" />
                     <span>Family Details</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -858,7 +859,7 @@ export default function ProfilePage() {
                 {/* Section 7: Bio */}
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-2">
                   <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-[#e53238]" />
+                    <BookOpen className="w-4 h-4 text-[#d97706]" />
                     <span>About Myself (Bio)</span>
                   </label>
                   <textarea
@@ -881,7 +882,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-7 py-2.5 rounded-xl bg-[#e53238] hover:bg-[#c92429] text-white font-bold text-xs shadow-md shadow-rose-500/20 flex items-center gap-2 cursor-pointer transition-all"
+                    className="px-7 py-2.5 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white font-bold text-xs shadow-md shadow-rose-500/20 flex items-center gap-2 cursor-pointer transition-all"
                   >
                     <Save className="w-4 h-4" />
                     <span>Save Changes</span>
@@ -894,9 +895,9 @@ export default function ProfilePage() {
                 
                 {/* About Myself Callout */}
                 <div className="relative bg-gradient-to-br from-rose-50/50 via-slate-50/80 to-white p-6 rounded-2xl border border-rose-100/70 shadow-2xs">
-                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#e53238] rounded-l-2xl" />
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#d97706] rounded-l-2xl" />
                   <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <User className="w-4 h-4 text-[#e53238]" />
+                    <User className="w-4 h-4 text-[#d97706]" />
                     <span>About Myself</span>
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal italic">
@@ -907,7 +908,7 @@ export default function ProfilePage() {
                 {/* Section 1: Basic Details Card Grid */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <Heart className="w-4 h-4 text-[#e53238]" />
+                    <Heart className="w-4 h-4 text-[#d97706]" />
                     <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
                       Basic Details
                     </h3>
@@ -917,7 +918,7 @@ export default function ProfilePage() {
                     
                     {/* Display Name */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <User className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -928,7 +929,7 @@ export default function ProfilePage() {
 
                     {/* Looking For */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <Heart className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -939,7 +940,7 @@ export default function ProfilePage() {
 
                     {/* Age */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <Sparkles className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -950,7 +951,7 @@ export default function ProfilePage() {
 
                     {/* Height */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <Ruler className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -961,7 +962,7 @@ export default function ProfilePage() {
 
                     {/* Marital Status */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3 sm:col-span-2 lg:col-span-2">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <Users className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -976,7 +977,7 @@ export default function ProfilePage() {
                 {/* Section 2: Location & Background Card Grid */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <MapPin className="w-4 h-4 text-[#e53238]" />
+                    <MapPin className="w-4 h-4 text-[#d97706]" />
                     <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
                       Location & Background
                     </h3>
@@ -986,7 +987,7 @@ export default function ProfilePage() {
                     
                     {/* Living City */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <MapPin className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -997,7 +998,7 @@ export default function ProfilePage() {
 
                     {/* Country */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <Globe className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -1008,7 +1009,7 @@ export default function ProfilePage() {
 
                     {/* Religion */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <Sparkles className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -1019,7 +1020,7 @@ export default function ProfilePage() {
 
                     {/* Mother Tongue */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <Languages className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -1030,7 +1031,7 @@ export default function ProfilePage() {
 
                     {/* Education */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <GraduationCap className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -1041,7 +1042,7 @@ export default function ProfilePage() {
 
                     {/* Profession */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <Briefcase className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -1057,7 +1058,7 @@ export default function ProfilePage() {
                 {(rashi || nakshatra || manglik || dob) && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                      <Sparkles className="w-4 h-4 text-[#e53238]" />
+                      <Sparkles className="w-4 h-4 text-[#d97706]" />
                       <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
                         Horoscope & Kundli
                       </h3>
@@ -1065,7 +1066,7 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {dob && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Sparkles className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1076,7 +1077,7 @@ export default function ProfilePage() {
                       )}
                       {birthPlace && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <MapPin className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1087,7 +1088,7 @@ export default function ProfilePage() {
                       )}
                       {rashi && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Sparkles className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1098,7 +1099,7 @@ export default function ProfilePage() {
                       )}
                       {nakshatra && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Sparkles className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1109,7 +1110,7 @@ export default function ProfilePage() {
                       )}
                       {manglik && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Sparkles className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1120,7 +1121,7 @@ export default function ProfilePage() {
                       )}
                       {gotra && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Users className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1137,7 +1138,7 @@ export default function ProfilePage() {
                 {(diet || smoking || drinking || disability) && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                      <Heart className="w-4 h-4 text-[#e53238]" />
+                      <Heart className="w-4 h-4 text-[#d97706]" />
                       <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
                         Lifestyle
                       </h3>
@@ -1145,7 +1146,7 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {diet && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Heart className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1156,7 +1157,7 @@ export default function ProfilePage() {
                       )}
                       {smoking && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Heart className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1167,7 +1168,7 @@ export default function ProfilePage() {
                       )}
                       {drinking && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Heart className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1178,7 +1179,7 @@ export default function ProfilePage() {
                       )}
                       {disability && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Heart className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1195,7 +1196,7 @@ export default function ProfilePage() {
                 {(fatherOccupation || motherOccupation || siblings || familyType || familyValues) && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-                      <Users className="w-4 h-4 text-[#e53238]" />
+                      <Users className="w-4 h-4 text-[#d97706]" />
                       <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
                         Family Details
                       </h3>
@@ -1203,7 +1204,7 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {fatherOccupation && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Users className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1214,7 +1215,7 @@ export default function ProfilePage() {
                       )}
                       {motherOccupation && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Users className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1225,7 +1226,7 @@ export default function ProfilePage() {
                       )}
                       {siblings && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Users className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1236,7 +1237,7 @@ export default function ProfilePage() {
                       )}
                       {familyType && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Users className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -1247,7 +1248,7 @@ export default function ProfilePage() {
                       )}
                       {familyValues && (
                         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#e53238]">
+                          <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                             <Users className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">

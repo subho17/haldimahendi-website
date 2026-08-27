@@ -18,37 +18,37 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5 text-sm text-gray-500">
               <li>
-                <Link href="/auth/login" className="hover:text-[#e53238] transition-colors">
+                <Link href="/auth/login" className="hover:text-[#d97706] transition-colors">
                   Member Login
                 </Link>
               </li>
               <li>
-                <Link href="/auth/signup" className="hover:text-[#e53238] transition-colors">
+                <Link href="/auth/signup" className="hover:text-[#d97706] transition-colors">
                   Sign Up
                 </Link>
               </li>
               <li>
-                <Link href="/search" className="hover:text-[#e53238] transition-colors">
+                <Link href="/search" className="hover:text-[#d97706] transition-colors">
                   Partner Search
                 </Link>
               </li>
               <li>
-                <Link href="/how-to-use" className="hover:text-[#e53238] transition-colors">
+                <Link href="/how-to-use" className="hover:text-[#d97706] transition-colors">
                   How to Use Shaadi.com
                 </Link>
               </li>
               <li>
-                <Link href="/membership" className="hover:text-[#e53238] transition-colors">
+                <Link href="/membership" className="hover:text-[#d97706] transition-colors">
                   Premium Memberships
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="hover:text-[#e53238] transition-colors">
+                <Link href="/help" className="hover:text-[#d97706] transition-colors">
                   Customer Support
                 </Link>
               </li>
               <li>
-                <Link href="/sitemap" className="hover:text-[#e53238] transition-colors">
+                <Link href="/sitemap" className="hover:text-[#d97706] transition-colors">
                   Site Map
                 </Link>
               </li>
@@ -62,32 +62,32 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5 text-sm text-gray-500">
               <li>
-                <Link href="/about" className="hover:text-[#e53238] transition-colors">
+                <Link href="/about" className="hover:text-[#d97706] transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="hover:text-[#e53238] transition-colors">
+                <Link href="/blog" className="hover:text-[#d97706] transition-colors">
                   Shaadi Blog
                 </Link>
               </li>
               <li>
-                <Link href="/careers" className="hover:text-[#e53238] transition-colors">
+                <Link href="/careers" className="hover:text-[#d97706] transition-colors">
                   Careers
                 </Link>
               </li>
               <li>
-                <Link href="/awards" className="hover:text-[#e53238] transition-colors">
+                <Link href="/awards" className="hover:text-[#d97706] transition-colors">
                   Awards & Recognition
                 </Link>
               </li>
               <li>
-                <Link href="/biodata-maker" className="hover:text-[#e53238] transition-colors">
+                <Link href="/biodata-maker" className="hover:text-[#d97706] transition-colors">
                   Marriage Biodata Maker
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-[#e53238] transition-colors">
+                <Link href="/contact" className="hover:text-[#d97706] transition-colors">
                   Contact Us
                 </Link>
               </li>
@@ -101,22 +101,22 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5 text-sm text-gray-500">
               <li>
-                <Link href="/terms" className="hover:text-[#e53238] transition-colors">
+                <Link href="/terms" className="hover:text-[#d97706] transition-colors">
                   Terms of Use
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-[#e53238] transition-colors">
+                <Link href="/privacy" className="hover:text-[#d97706] transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/safe-online" className="hover:text-[#e53238] transition-colors">
+                <Link href="/safe-online" className="hover:text-[#d97706] transition-colors">
                   Be Safe Online
                 </Link>
               </li>
               <li>
-                <Link href="/report-misuse" className="hover:text-[#e53238] transition-colors">
+                <Link href="/report-misuse" className="hover:text-[#d97706] transition-colors">
                   Report Misuse
                 </Link>
               </li>
@@ -130,42 +130,42 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5 text-sm text-gray-500">
               <li>
-                <Link href="/vip-shaadi" className="hover:text-[#e53238] transition-colors">
+                <Link href="/vip-shaadi" className="hover:text-[#d97706] transition-colors">
                   VIP Shaadi
                 </Link>
               </li>
               <li>
-                <Link href="/sangam" className="hover:text-[#e53238] transition-colors">
+                <Link href="/sangam" className="hover:text-[#d97706] transition-colors">
                   Sangam
                 </Link>
               </li>
               <li>
-                <Link href="/centres" className="hover:text-[#e53238] transition-colors">
+                <Link href="/centres" className="hover:text-[#d97706] transition-colors">
                   Shaadi Centres
                 </Link>
               </li>
               <li>
-                <Link href="/success-stories" className="hover:text-[#e53238] transition-colors">
+                <Link href="/success-stories" className="hover:text-[#d97706] transition-colors">
                   Success Stories
                 </Link>
               </li>
               <li>
-                <Link href="/live" className="hover:text-[#e53238] transition-colors">
+                <Link href="/live" className="hover:text-[#d97706] transition-colors">
                   Shaadi Live
                 </Link>
               </li>
               <li>
-                <Link href="/elite" className="hover:text-[#e53238] transition-colors">
+                <Link href="/elite" className="hover:text-[#d97706] transition-colors">
                   Elite Matrimony by Shaadi.com
                 </Link>
               </li>
               <li>
-                <Link href="/astrochat" className="hover:text-[#e53238] transition-colors">
+                <Link href="/astrochat" className="hover:text-[#d97706] transition-colors">
                   Astrochat.com
                 </Link>
               </li>
               <li>
-                <Link href="/astrologers" className="hover:text-[#e53238] transition-colors">
+                <Link href="/astrologers" className="hover:text-[#d97706] transition-colors">
                   Chat with Astrologers
                 </Link>
               </li>
@@ -186,7 +186,7 @@ export default function Footer() {
                   href="https://facebook.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/50 transition-colors"
+                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#d97706] hover:text-[#d97706] hover:bg-red-50/50 transition-colors"
                   aria-label="Facebook"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -199,7 +199,7 @@ export default function Footer() {
                   href="https://instagram.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/50 transition-colors"
+                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#d97706] hover:text-[#d97706] hover:bg-red-50/50 transition-colors"
                   aria-label="Instagram"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -212,7 +212,7 @@ export default function Footer() {
                   href="https://linkedin.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/50 transition-colors"
+                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#d97706] hover:text-[#d97706] hover:bg-red-50/50 transition-colors"
                   aria-label="LinkedIn"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -225,7 +225,7 @@ export default function Footer() {
                   href="https://x.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/50 transition-colors"
+                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#d97706] hover:text-[#d97706] hover:bg-red-50/50 transition-colors"
                   aria-label="X (Twitter)"
                 >
                   <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
@@ -238,7 +238,7 @@ export default function Footer() {
                   href="https://youtube.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/50 transition-colors"
+                  className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:border-[#d97706] hover:text-[#d97706] hover:bg-red-50/50 transition-colors"
                   aria-label="YouTube"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -308,7 +308,7 @@ export default function Footer() {
           </div>
           <div className="flex items-center gap-1 font-medium text-gray-300 hover:text-white transition-colors cursor-pointer">
             <span>Passionately created by People Group</span>
-            <span className="text-[#e53238] font-bold">➤</span>
+            <span className="text-[#d97706] font-bold">➤</span>
           </div>
         </div>
       </div>

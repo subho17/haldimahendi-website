@@ -32,10 +32,17 @@ function ensureFile() {
 function readFile(): VerificationRow[] {
   try {
     ensureFile();
-    const parsed = JSON.parse(fs.readFileSync(VERIFICATIONS_FILE, 'utf-8') || '[]');
+    const data = fs.readFileSync(VERIFICATIONS_FILE, 'utf-8');
+    if (!data.trim()) return [];
+    const parsed = JSON.parse(data);
     return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
-    console.warn('[Verification] Failed to read verifications file:', e);
+    console.warn('[Verification] Failed to read verifications file, resetting:', e);
+    try {
+      fs.writeFileSync(VERIFICATIONS_FILE, JSON.stringify([], null, 2));
+    } catch (e2) {
+      console.error('[Verification] Failed to reset verifications file:', e2);
+    }
     return [];
   }
 }
@@ -43,7 +50,9 @@ function readFile(): VerificationRow[] {
 function writeFile(rows: VerificationRow[]) {
   try {
     ensureFile();
-    fs.writeFileSync(VERIFICATIONS_FILE, JSON.stringify(rows, null, 2));
+    const tempFile = VERIFICATIONS_FILE + '.tmp';
+    fs.writeFileSync(tempFile, JSON.stringify(rows, null, 2));
+    fs.renameSync(tempFile, VERIFICATIONS_FILE);
   } catch (e) {
     console.warn('[Verification] Failed to write verifications file:', e);
   }

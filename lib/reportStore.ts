@@ -40,13 +40,20 @@ function ensureFile() {
 function readFile(): SafetyFile {
   try {
     ensureFile();
-    const parsed = JSON.parse(fs.readFileSync(SAFETY_FILE, 'utf-8') || '{}');
+    const data = fs.readFileSync(SAFETY_FILE, 'utf-8');
+    if (!data.trim()) return { reports: [], blocks: [] };
+    const parsed = JSON.parse(data);
     return {
       reports: Array.isArray(parsed.reports) ? parsed.reports : [],
       blocks: Array.isArray(parsed.blocks) ? parsed.blocks : [],
     };
   } catch (e) {
-    console.warn('[Safety] Failed to read safety file:', e);
+    console.warn('[Safety] Failed to read safety file, resetting:', e);
+    try {
+      fs.writeFileSync(SAFETY_FILE, JSON.stringify({ reports: [], blocks: [] }, null, 2));
+    } catch (e2) {
+      console.error('[Safety] Failed to reset safety file:', e2);
+    }
     return { reports: [], blocks: [] };
   }
 }
@@ -54,7 +61,9 @@ function readFile(): SafetyFile {
 function writeFile(state: SafetyFile) {
   try {
     ensureFile();
-    fs.writeFileSync(SAFETY_FILE, JSON.stringify(state, null, 2));
+    const tempFile = SAFETY_FILE + '.tmp';
+    fs.writeFileSync(tempFile, JSON.stringify(state, null, 2));
+    fs.renameSync(tempFile, SAFETY_FILE);
   } catch (e) {
     console.warn('[Safety] Failed to write safety file:', e);
   }

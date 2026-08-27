@@ -1,12 +1,14 @@
 [
   {
-    "userId": "subhadeepchanda36@gmail.com",
+    "userId": "9163399882",
     "partnerGender": "Woman",
     "ageMin": 21,
     "ageMax": 35,
-    "religion": "Any",
-    "maritalStatus": "Any",
-    "updatedAt": "2026-08-20T07:38:56.362Z",
-    "createdAt": "2026-08-17T08:27:47.673Z"
+    "religion": "Hindu",
+    "motherTongue": "hindi",
+    "maritalStatus": "Never Married",
+    "city": "kolkata",
+    "updatedAt": "2026-08-26T10:48:28.416Z",
+    "createdAt": "2026-08-26T10:48:28.416Z"
   }
 ]

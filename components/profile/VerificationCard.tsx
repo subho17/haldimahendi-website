@@ -130,7 +130,7 @@ export default function VerificationCard({ userId }: VerificationCardProps) {
             <button
               type="button"
               onClick={() => setShowForm(!showForm)}
-              className="px-3.5 py-2 rounded-xl bg-[#e53238] hover:bg-[#c92429] text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+              className="px-3.5 py-2 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
             >
               {showForm ? "Cancel" : "Get Verified"}
             </button>
@@ -165,7 +165,7 @@ export default function VerificationCard({ userId }: VerificationCardProps) {
               <select
                 value={idType}
                 onChange={(e) => setIdType(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-[#e53238] outline-hidden transition-all cursor-pointer"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
               >
                 <option value="">Select ID type...</option>
                 {ID_TYPES.map((t) => (
@@ -181,7 +181,7 @@ export default function VerificationCard({ userId }: VerificationCardProps) {
                 onChange={(e) => setIdNumber(e.target.value)}
                 placeholder="Enter your ID number"
                 maxLength={50}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-[#e53238] outline-hidden transition-all"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-[#d97706] outline-hidden transition-all"
               />
             </div>
           </div>
@@ -189,20 +189,20 @@ export default function VerificationCard({ userId }: VerificationCardProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="space-y-1.5 cursor-pointer">
               <span className="text-xs font-bold text-slate-700 block flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5 text-[#e53238]" /> Clear Selfie *
+                <Camera className="w-3.5 h-3.5 text-[#d97706]" /> Clear Selfie *
               </span>
               <input type="file" accept="image/*" onChange={(e) => setSelfie(e.target.files?.[0] || null)} className="hidden" />
-              <span className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all ${selfie ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-dashed border-slate-300 text-slate-500 hover:border-[#e53238]"}`}>
+              <span className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all ${selfie ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-dashed border-slate-300 text-slate-500 hover:border-[#d97706]"}`}>
                 {selfie ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Upload className="w-4 h-4" />}
                 {selfie ? selfie.name.slice(0, 28) : "Choose selfie image"}
               </span>
             </label>
             <label className="space-y-1.5 cursor-pointer">
               <span className="text-xs font-bold text-slate-700 block flex items-center gap-1.5">
-                <IdCard className="w-3.5 h-3.5 text-[#e53238]" /> ID Document (photo) *
+                <IdCard className="w-3.5 h-3.5 text-[#d97706]" /> ID Document (photo) *
               </span>
               <input type="file" accept="image/*" onChange={(e) => setDocument(e.target.files?.[0] || null)} className="hidden" />
-              <span className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all ${document ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-dashed border-slate-300 text-slate-500 hover:border-[#e53238]"}`}>
+              <span className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all ${document ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-dashed border-slate-300 text-slate-500 hover:border-[#d97706]"}`}>
                 {document ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Upload className="w-4 h-4" />}
                 {document ? document.name.slice(0, 28) : "Choose ID document image"}
               </span>
@@ -216,7 +216,7 @@ export default function VerificationCard({ userId }: VerificationCardProps) {
           <button
             type="submit"
             disabled={busy}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#e53238] hover:bg-[#c92429] text-white text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
             {busy ? "Submitting..." : "Submit for Verification"}

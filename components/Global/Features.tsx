@@ -3,7 +3,7 @@ import React from 'react';
 const featuresList = [
   {
     badge: '100%',
-    badgeBg: 'bg-red-50 text-[#e53238]',
+    badgeBg: 'bg-red-50 text-[#d97706]',
     title: 'Verified Profiles',
     description:
       'Every profile is manually screened and phone-verified to ensure a safe, authentic matchmaking experience.',
@@ -17,7 +17,7 @@ const featuresList = [
   },
   {
     badge: '🔒',
-    badgeBg: 'bg-red-50 text-[#e53238]',
+    badgeBg: 'bg-red-50 text-[#d97706]',
     title: '100% Privacy Control',
     description:
       'Flexible privacy controls let you decide exactly who can view your photo, phone number, and personal contact details.',
@@ -32,7 +32,7 @@ export default function Features() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-            Why Millions Choose Our <span className="text-[#e53238]">Matrimony</span> Platform
+            Why Millions Choose Our <span className="text-[#d97706]">Matrimony</span> Platform
           </h2>
           <p className="mt-4 text-base sm:text-lg text-gray-600">
             Built with trust, safety, and modern matchmaking technology to help you find your life partner smoothly.
@@ -52,7 +52,7 @@ export default function Features() {
                 >
                   {feature.badge}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#e53238] transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#d97706] transition-colors">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">

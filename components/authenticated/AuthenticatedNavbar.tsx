@@ -76,7 +76,7 @@ export default function AuthenticatedNavbar() {
   const userAvatar = user?.avatar_url || user?.avatarUrl;
   const userName = user?.display_name || user?.name || "Shaadi Member";
   const userMobile = user?.mobile_number || user?.mobileNumber || "";
-  const userId = user?.mobile_number || user?.mobileNumber || user?.email || user?.profileId || "";
+  const userId = user?.profileId || user?.mobile_number || user?.mobileNumber || user?.email || "";
 
   // Derive active main tab from the current pathname
   const activeMainTab = pathname.includes("/matches")
@@ -120,6 +120,7 @@ export default function AuthenticatedNavbar() {
     setIsSearching(true);
     try {
       const params = new URLSearchParams();
+      if (userId) params.set("userId", userId);
       if (searchQuery.trim()) params.set("q", searchQuery.trim());
       if (selectedGender) params.set("gender", selectedGender);
       if (selectedReligion && selectedReligion !== "Any") params.set("religion", selectedReligion);
@@ -138,7 +139,7 @@ export default function AuthenticatedNavbar() {
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, selectedGender, selectedReligion]);
+  }, [searchQuery, selectedGender, selectedReligion, userId]);
 
   useEffect(() => {
     if (isSearchOpen) {
@@ -267,31 +268,31 @@ export default function AuthenticatedNavbar() {
   const notifIcon = (n: NavNotification) => {
     if (n.type === "message") return <MessageCircle className="w-4 h-4 text-cyan-500" />;
     if (n.type === "accept") return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-    if (n.type === "interest") return <Heart className="w-4 h-4 text-[#e53238]" />;
+    if (n.type === "interest") return <Heart className="w-4 h-4 text-[#d97706]" />;
     return <Info className="w-4 h-4 text-gray-400" />;
   };
 
   return (
     <header className="w-full sticky top-0 z-50 font-sans shadow-md">
       
-      {/* 1. TOP RED BRAND BAR */}
-      <div className="bg-[#e53238] text-white h-14 sm:h-16 px-4 sm:px-6 lg:px-8">
+      {/* 1. TOP MEHENDI GREEN BRAND BAR */}
+      <div className="bg-[#15803d] text-white h-14 sm:h-16 px-4 sm:px-6 lg:px-8 shadow-sm">
         <div className="max-w-7xl mx-auto h-full flex items-center justify-between gap-3 lg:gap-6">
           
-          {/* Left: Shaadi Logo */}
+          {/* Left: Shaadi Logo with Haldi Accent */}
           <Link href="/dashboard" className="flex items-center group shrink-0">
             <div className="flex items-center gap-1 select-none">
               <span className="relative flex items-center">
-                <span className="font-extrabold text-2xl sm:text-3xl lg:text-4xl tracking-tight font-serif italic text-white">
+                <span className="font-extrabold text-2xl sm:text-3xl lg:text-4xl tracking-tight font-serif italic text-amber-300">
                   shaadi
                 </span>
                 {/* Interlocking Rings Emblem */}
                 <span className="absolute left-5 sm:left-7 -top-1 sm:-top-1.5 flex items-center -space-x-1">
-                  <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border-2 border-white bg-transparent"></span>
-                  <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border-2 border-cyan-300 bg-transparent"></span>
+                  <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border-2 border-amber-300 bg-transparent"></span>
+                  <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border-2 border-amber-400 bg-transparent"></span>
                 </span>
               </span>
-              <span className="font-bold text-xs sm:text-sm text-cyan-200 self-end mb-1">
+              <span className="font-bold text-xs sm:text-sm text-emerald-100 self-end mb-1">
                 .com
               </span>
             </div>
@@ -307,7 +308,7 @@ export default function AuthenticatedNavbar() {
                 className={`whitespace-nowrap flex items-center h-full px-2 lg:px-3 transition-colors ${
                   activeMainTab === "my-shaadi"
                     ? "text-white font-bold"
-                    : "text-red-100 hover:text-white"
+                    : "text-emerald-100 hover:text-white"
                 }`}
               >
                 My Shaadi
@@ -324,12 +325,12 @@ export default function AuthenticatedNavbar() {
                 className={`whitespace-nowrap flex items-center gap-1.5 h-full px-2 lg:px-3 transition-colors ${
                   activeMainTab === "matches"
                     ? "text-white font-bold"
-                    : "text-red-100 hover:text-white"
+                    : "text-emerald-100 hover:text-white"
                 }`}
               >
                 <span>Matches</span>
                 {matchCount !== null && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-white text-[#e53238] font-extrabold text-[11px] leading-none shadow-xs">
+                  <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-amber-950 font-extrabold text-[11px] leading-none shadow-xs">
                     {matchCount}
                   </span>
                 )}
@@ -352,7 +353,7 @@ export default function AuthenticatedNavbar() {
                 className={`whitespace-nowrap flex items-center gap-1.5 h-full px-2 lg:px-3 transition-colors cursor-pointer ${
                   activeMainTab === "search" || isSearchOpen
                     ? "text-white font-bold"
-                    : "text-red-100 hover:text-white"
+                    : "text-emerald-100 hover:text-white"
                 }`}
               >
                 <span>Search</span>
@@ -369,7 +370,7 @@ export default function AuthenticatedNavbar() {
                   
                   {/* Panel Header */}
                   <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-gray-100">
-                    <div className="flex items-center gap-2 text-[#e53238] font-black text-base">
+                    <div className="flex items-center gap-2 text-[#d97706] font-black text-base">
                       <Search className="w-5 h-5" />
                       <span>Quick Member Search</span>
                     </div>
@@ -393,7 +394,7 @@ export default function AuthenticatedNavbar() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search by Name, Profile ID (e.g. SH1001), City (e.g. Mumbai), or Profession..."
-                        className="w-full pl-12 pr-28 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs sm:text-sm font-semibold text-gray-900 focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition shadow-xs placeholder:text-gray-400"
+                        className="w-full pl-12 pr-28 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs sm:text-sm font-semibold text-gray-900 focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-amber-500/10 outline-hidden transition shadow-xs placeholder:text-gray-400"
                       />
                       {searchQuery ? (
                         <button
@@ -406,7 +407,7 @@ export default function AuthenticatedNavbar() {
                       ) : null}
                       <button
                         type="submit"
-                        className="absolute right-2 px-5 py-2.5 bg-[#e53238] hover:bg-[#c92429] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                        className="absolute right-2 px-5 py-2.5 bg-[#d97706] hover:bg-[#b45309] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
                       >
                         <Search className="w-3.5 h-3.5" />
                         <span>Search</span>
@@ -424,9 +425,7 @@ export default function AuthenticatedNavbar() {
                           className={`px-3 py-1 rounded-xl font-bold transition text-xs cursor-pointer ${
                             selectedGender === ""
                               ? "bg-gray-200 text-gray-800"
-                              : selectedGender === "Bride"
-                              ? "bg-[#e53238] text-white shadow-xs"
-                              : "bg-[#e53238] text-white shadow-xs"
+                              : "bg-[#d97706] text-white shadow-xs"
                           }`}
                         >
                           {selectedGender === "" ? "All Profiles" : selectedGender === "Bride" ? "👰 Bride Profiles" : "🤵 Groom Profiles"}
@@ -439,7 +438,7 @@ export default function AuthenticatedNavbar() {
                         <select
                           value={selectedReligion}
                           onChange={(e) => setSelectedReligion(e.target.value)}
-                          className="bg-white border border-gray-200 rounded-xl px-2.5 py-1 text-xs font-bold text-gray-800 outline-hidden focus:border-[#e53238]"
+                          className="bg-white border border-gray-200 rounded-xl px-2.5 py-1 text-xs font-bold text-gray-800 outline-hidden focus:border-[#d97706]"
                         >
                           <option value="Any">All Religions</option>
                           <option value="Hindu">Hindu</option>
@@ -457,7 +456,7 @@ export default function AuthenticatedNavbar() {
                     <div className="flex items-center justify-between text-[11px] font-extrabold text-gray-400 uppercase tracking-wider mb-3">
                       <span>Live Matching Profiles ({searchResults.length})</span>
                       {isSearching && (
-                        <span className="flex items-center gap-1 text-[#e53238] lowercase">
+                        <span className="flex items-center gap-1 text-[#d97706] lowercase">
                           <Loader2 className="w-3.5 h-3.5 animate-spin" /> searching live database...
                         </span>
                       )}
@@ -484,7 +483,7 @@ export default function AuthenticatedNavbar() {
                               />
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5">
-                                  <p className="font-bold text-xs sm:text-sm text-gray-900 truncate group-hover:text-[#e53238]">
+                                  <p className="font-bold text-xs sm:text-sm text-gray-900 truncate group-hover:text-[#d97706]">
                                     {profile.name}
                                   </p>
                                   <span className="text-[10px] text-gray-400 font-mono font-bold">({profile.id})</span>
@@ -499,7 +498,7 @@ export default function AuthenticatedNavbar() {
 
                             <button
                               type="button"
-                              className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 group-hover:bg-[#e53238] group-hover:text-white group-hover:border-[#e53238] rounded-xl font-bold text-xs transition-all shrink-0 flex items-center gap-1 cursor-pointer shadow-2xs"
+                              className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 group-hover:bg-[#d97706] group-hover:text-white group-hover:border-[#d97706] rounded-xl font-bold text-xs transition-all shrink-0 flex items-center gap-1 cursor-pointer shadow-2xs"
                             >
                               <span>View</span>
                               <ChevronRight className="w-3.5 h-3.5" />
@@ -522,7 +521,7 @@ export default function AuthenticatedNavbar() {
                     <Link
                       href="/search"
                       onClick={() => setIsSearchOpen(false)}
-                      className="font-extrabold text-[#e53238] hover:underline flex items-center gap-1 text-xs sm:text-sm"
+                      className="font-extrabold text-[#d97706] hover:underline flex items-center gap-1 text-xs sm:text-sm"
                     >
                       <span>Open Advanced Search Page</span>
                       <ChevronRight className="w-4 h-4" />
@@ -646,7 +645,7 @@ export default function AuthenticatedNavbar() {
                           <span className="min-w-0 flex-1">
                             <span className="flex items-center justify-between gap-2">
                               <span className="font-bold text-gray-900 truncate">{n.title || (n.type === "message" ? "New Message" : n.type === "accept" ? "Interest Accepted" : "Update")}</span>
-                              {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-[#e53238] shrink-0" />}
+                              {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-[#d97706] shrink-0" />}
                             </span>
                             <span className="block text-gray-600 leading-snug mt-0.5">{n.message}</span>
                             <span className="block text-[10px] text-gray-400 font-semibold mt-1">{n.timeLabel}</span>
@@ -660,7 +659,7 @@ export default function AuthenticatedNavbar() {
                     <button
                       type="button"
                       onClick={() => router.push("/inbox")}
-                      className="w-full text-center text-[#e53238] font-bold hover:underline cursor-pointer"
+                      className="w-full text-center text-[#d97706] font-bold hover:underline cursor-pointer"
                     >
                       View All in Inbox
                     </button>
@@ -682,13 +681,13 @@ export default function AuthenticatedNavbar() {
 
               {isHelpMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 text-gray-800 text-xs font-medium animate-in fade-in zoom-in-95">
-                  <Link href="/help" onClick={() => setIsHelpMenuOpen(false)} className="block px-4 py-2 hover:bg-red-50 hover:text-[#e53238]">
+                  <Link href="/help" onClick={() => setIsHelpMenuOpen(false)} className="block px-4 py-2 hover:bg-red-50 hover:text-[#d97706]">
                     Customer Support
                   </Link>
-                  <Link href="/safe-online" onClick={() => setIsHelpMenuOpen(false)} className="block px-4 py-2 hover:bg-red-50 hover:text-[#e53238]">
+                  <Link href="/safe-online" onClick={() => setIsHelpMenuOpen(false)} className="block px-4 py-2 hover:bg-red-50 hover:text-[#d97706]">
                     Be Safe Online
                   </Link>
-                  <Link href="/membership" onClick={() => setIsHelpMenuOpen(false)} className="block px-4 py-2 hover:bg-red-50 hover:text-[#e53238]">
+                  <Link href="/membership" onClick={() => setIsHelpMenuOpen(false)} className="block px-4 py-2 hover:bg-red-50 hover:text-[#d97706]">
                     Premium Plans
                   </Link>
                 </div>
@@ -702,11 +701,11 @@ export default function AuthenticatedNavbar() {
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="whitespace-nowrap flex items-center gap-2 p-1 px-2.5 rounded-full border border-white/40 hover:border-white transition-all cursor-pointer bg-white/10"
               >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-100 border border-white flex items-center justify-center text-red-800 font-bold overflow-hidden shadow-xs shrink-0">
+                <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-100 border border-white flex items-center justify-center text-red-800 font-bold overflow-hidden shadow-xs shrink-0" style={{ position: "relative" }}>
                   {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
-                    <Image src={userAvatar} alt={userName} fill sizes="32px" className="object-cover" />
+                    <Image src={userAvatar} alt={userName} width={32} height={32} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-xs sm:text-sm font-extrabold text-[#e53238] uppercase">
+                    <span className="text-xs sm:text-sm font-extrabold text-[#d97706] uppercase">
                       {userName.charAt(0)}
                     </span>
                   )}
@@ -721,11 +720,11 @@ export default function AuthenticatedNavbar() {
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-50 text-gray-800 text-xs animate-in fade-in zoom-in-95">
                   <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-red-50 flex items-center justify-center font-bold text-red-600 shrink-0">
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-red-50 flex items-center justify-center font-bold text-red-600 shrink-0" style={{ position: "relative" }}>
                       {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
-                        <Image src={userAvatar} alt={userName} fill sizes="40px" className="object-cover" />
+                        <Image src={userAvatar} alt={userName} width={40} height={40} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-sm font-extrabold text-[#e53238] uppercase">{userName.charAt(0)}</span>
+                        <span className="text-sm font-extrabold text-[#d97706] uppercase">{userName.charAt(0)}</span>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -739,7 +738,7 @@ export default function AuthenticatedNavbar() {
                     <Link
                       href="/profile"
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-red-50 hover:text-[#e53238] font-medium transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-red-50 hover:text-[#d97706] font-medium transition-colors"
                     >
                       <User className="w-4 h-4 text-gray-400" />
                       <span>My Profile</span>
@@ -748,7 +747,7 @@ export default function AuthenticatedNavbar() {
                     <Link
                       href="/photos"
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-red-50 hover:text-[#e53238] font-medium transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-red-50 hover:text-[#d97706] font-medium transition-colors"
                     >
                       <Shield className="w-4 h-4 text-gray-400" />
                       <span>Manage Photos</span>
@@ -757,7 +756,7 @@ export default function AuthenticatedNavbar() {
                     <Link
                       href="/settings"
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-red-50 hover:text-[#e53238] font-medium transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-red-50 hover:text-[#d97706] font-medium transition-colors"
                     >
                       <Settings className="w-4 h-4 text-gray-400" />
                       <span>Account Settings</span>
@@ -796,13 +795,13 @@ export default function AuthenticatedNavbar() {
               href="/dashboard"
               className={`relative py-1 transition-colors whitespace-nowrap ${
                 pathname === "/dashboard"
-                  ? "text-[#e53238] font-bold"
-                  : "hover:text-[#e53238]"
+                  ? "text-[#d97706] font-bold"
+                  : "hover:text-[#d97706]"
               }`}
             >
               <span>Dashboard</span>
               {pathname === "/dashboard" && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#e53238] rounded-full"></span>
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d97706] rounded-full"></span>
               )}
             </Link>
 
@@ -810,13 +809,13 @@ export default function AuthenticatedNavbar() {
               href="/profile"
               className={`relative py-1 transition-colors whitespace-nowrap ${
                 pathname === "/profile"
-                  ? "text-[#e53238] font-bold"
-                  : "hover:text-[#e53238]"
+                  ? "text-[#d97706] font-bold"
+                  : "hover:text-[#d97706]"
               }`}
             >
               <span>My Profile</span>
               {pathname === "/profile" && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#e53238] rounded-full"></span>
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d97706] rounded-full"></span>
               )}
             </Link>
 
@@ -824,13 +823,13 @@ export default function AuthenticatedNavbar() {
               href="/photos"
               className={`relative py-1 transition-colors whitespace-nowrap ${
                 pathname === "/photos"
-                  ? "text-[#e53238] font-bold"
-                  : "hover:text-[#e53238]"
+                  ? "text-[#d97706] font-bold"
+                  : "hover:text-[#d97706]"
               }`}
             >
               <span>My Photos</span>
               {pathname === "/photos" && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#e53238] rounded-full"></span>
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d97706] rounded-full"></span>
               )}
             </Link>
 
@@ -838,13 +837,13 @@ export default function AuthenticatedNavbar() {
               href="/preferences"
               className={`relative py-1 transition-colors whitespace-nowrap ${
                 pathname === "/preferences"
-                  ? "text-[#e53238] font-bold"
-                  : "hover:text-[#e53238]"
+                  ? "text-[#d97706] font-bold"
+                  : "hover:text-[#d97706]"
               }`}
             >
               <span>Partner Preferences</span>
               {pathname === "/preferences" && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#e53238] rounded-full"></span>
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d97706] rounded-full"></span>
               )}
             </Link>
 
@@ -852,19 +851,19 @@ export default function AuthenticatedNavbar() {
               href="/settings"
               className={`relative py-1 transition-colors whitespace-nowrap ${
                 pathname === "/settings"
-                  ? "text-[#e53238] font-bold"
-                  : "hover:text-[#e53238]"
+                  ? "text-[#d97706] font-bold"
+                  : "hover:text-[#d97706]"
               }`}
             >
               <span>Settings</span>
               {pathname === "/settings" && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#e53238] rounded-full"></span>
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d97706] rounded-full"></span>
               )}
             </Link>
 
             <Link
               href="/help"
-              className="py-1 hover:text-[#e53238] transition-colors whitespace-nowrap"
+              className="py-1 hover:text-[#d97706] transition-colors whitespace-nowrap"
             >
               <span>More</span>
             </Link>

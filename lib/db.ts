@@ -85,6 +85,7 @@ export function ensureProfilesTable(): Promise<void> {
         user_id          TEXT NOT NULL UNIQUE,
         display_name     TEXT NOT NULL,
         mobile_number    TEXT NOT NULL,
+        email            TEXT,
         avatar_url       TEXT,
         cover_image      TEXT,
         gender           TEXT,
@@ -127,6 +128,7 @@ export function ensureProfilesTable(): Promise<void> {
     await pool!.query(`
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gender TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age INT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS height TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS marital_status TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS religion TEXT;

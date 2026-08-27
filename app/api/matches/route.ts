@@ -102,6 +102,8 @@ export async function GET(req: Request) {
             diet: r.diet,
             smoking: r.smoking,
             drinking: r.drinking,
+            mobileNumber: r.mobile_number,
+            email: r.email,
           };
           candidates.push(rec);
         });
@@ -120,6 +122,7 @@ export async function GET(req: Request) {
           display_name?: string;
           name?: string;
           mobileNumber?: string;
+          mobile_number?: string;
           email?: string;
           gender?: string;
           age?: number;
@@ -145,9 +148,28 @@ export async function GET(req: Request) {
           isSuspended?: boolean;
         }) => {
           const uid = normalizeId(u.profileId || u.mobileNumber || u.email);
-          if (!uid || uid === userId) return;
+          const uMobile = (u.mobileNumber || '').replace(/\D/g, '');
+          const uEmail = (u.email || '').toLowerCase().trim();
+          const uName = (u.display_name || u.name || '').toLowerCase().trim();
+          const cleanViewerId = userId.toLowerCase();
+          const cleanViewerMobile = userId.replace(/\D/g, '');
+
+          // Skip invalid, suspended, or viewer's own profile
+          if (!uid || uid.toLowerCase() === cleanViewerId) return;
+          if (cleanViewerMobile && uMobile && uMobile === cleanViewerMobile) return;
+          if (cleanViewerId && uEmail && uEmail === cleanViewerId) return;
           if (u.isSuspended) return;
-          if (candidates.some((c) => c.id === uid)) return;
+
+          // Skip duplicates already present in candidates
+          const isDuplicate = candidates.some((c) => {
+            if (c.id.toLowerCase() === uid.toLowerCase()) return true;
+            if (uMobile && c.mobileNumber && c.mobileNumber.replace(/\D/g, '') === uMobile) return true;
+            if (uEmail && c.email && c.email.toLowerCase().trim() === uEmail) return true;
+            if (uName && c.name.toLowerCase().trim() === uName && (c.gender || '').toLowerCase() === (u.gender || '').toLowerCase()) return true;
+            return false;
+          });
+          if (isDuplicate) return;
+
           const mem = resolveStatus(u.membershipTier, u.membershipExpiresAt);
           candidates.push({
             id: uid,
@@ -163,6 +185,8 @@ export async function GET(req: Request) {
             maritalStatus: u.maritalStatus,
             gender: u.gender,
             avatarUrl: u.avatar_url || u.avatarUrl,
+            mobileNumber: u.mobileNumber || u.mobile_number,
+            email: u.email,
             createdAt: u.createdAt,
             premium: mem.isPremium,
             tier: mem.tier,

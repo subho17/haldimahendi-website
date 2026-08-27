@@ -18,7 +18,7 @@ export default function SettingsPage() {
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
         <Navbar />
         <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center">
-          <div className="w-8 h-8 border-3 border-[#e53238] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-3 border-[#d97706] border-t-transparent rounded-full animate-spin" />
         </main>
         <Footer />
       </div>
@@ -37,7 +37,7 @@ export default function SettingsPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-10 shadow-lg mb-8">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#e53238] uppercase tracking-wider mb-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#d97706] uppercase tracking-wider mb-2">
             <Settings className="w-4 h-4" />
             <span>Account & Privacy Settings</span>
           </div>

@@ -230,14 +230,14 @@ export default function ChatThread({
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
-          <div className="w-10 h-10 rounded-full bg-red-100 text-[#e53238] flex items-center justify-center font-extrabold text-sm border-2 border-white shadow-xs shrink-0 overflow-hidden">
+          <div className="relative w-10 h-10 rounded-full bg-red-100 text-[#d97706] flex items-center justify-center font-extrabold text-sm border-2 border-white shadow-xs shrink-0 overflow-hidden" style={{ position: "relative" }}>
             {partner?.avatarUrl ? (
               <Image
                 src={partner.avatarUrl}
                 alt={partner.name}
-                fill
-                sizes="40px"
-                className="object-cover"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
               />
             ) : (
               partner?.name?.charAt(0) || "?"
@@ -256,7 +256,7 @@ export default function ChatThread({
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1.5">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-6 h-6 text-[#e53238] animate-spin" />
+            <Loader2 className="w-6 h-6 text-[#d97706] animate-spin" />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
@@ -281,7 +281,7 @@ export default function ChatThread({
                   <div
                     className={`max-w-[75%] sm:max-w-[65%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed shadow-xs whitespace-pre-wrap break-words ${
                       mine
-                        ? "bg-[#e53238] text-white rounded-br-sm"
+                        ? "bg-[#d97706] text-white rounded-br-sm"
                         : "bg-white text-gray-800 border border-gray-100 rounded-bl-sm"
                     }`}
                   >
@@ -310,12 +310,12 @@ export default function ChatThread({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 px-4 py-2.5 rounded-full bg-gray-100 border border-transparent focus:border-[#e53238] focus:outline-none text-sm text-gray-800"
+          className="flex-1 px-4 py-2.5 rounded-full bg-gray-100 border border-transparent focus:border-[#d97706] focus:outline-none text-sm text-gray-800"
         />
         <button
           type="submit"
           disabled={!input.trim() || sending}
-          className="shrink-0 p-2.5 rounded-full bg-[#e53238] text-white hover:bg-[#c92429] disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          className="shrink-0 p-2.5 rounded-full bg-[#d97706] text-white hover:bg-[#b45309] disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed"
           aria-label="Send message"
         >
           <Send className="w-4.5 h-4.5" />

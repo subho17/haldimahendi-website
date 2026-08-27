@@ -1,152 +1,32 @@
 {
   "notifications": [
     {
-      "id": "nt_1787651012827_8e5i",
-      "userId": "9163399882",
-      "actorId": "subhadeepchanda36@gmail.com",
+      "id": "nt_1787746061558_fq9d",
+      "userId": "9641117428",
+      "actorId": "9163399882",
       "type": "message",
       "title": "New Message",
-      "message": "Subhadeep sent you a message: \"conatct\"",
+      "message": "Rahul kumar sent you a message: \"ya\"",
       "data": {
-        "conversationId": "7d851a86-e970-43b0-be2f-4cfe8ebaed00",
-        "profileId": "subhadeepchanda36@gmail.com"
+        "conversationId": "1066a584-cf2f-42aa-bdd2-0fa2921e1ef0",
+        "profileId": "9163399882"
       },
-      "read": false,
-      "createdAt": "2026-08-25T09:43:32.827Z"
+      "read": true,
+      "createdAt": "2026-08-26T12:07:41.558Z"
     },
     {
-      "id": "nt_1787651005292_zt3r",
+      "id": "nt_1787744676885_z6so",
       "userId": "9163399882",
-      "actorId": "subhadeepchanda36@gmail.com",
+      "actorId": "9641117428",
       "type": "message",
       "title": "New Message",
-      "message": "Subhadeep sent you a message: \"hey\"",
+      "message": "shreya kumari sent you a message: \"hello\"",
       "data": {
-        "conversationId": "7d851a86-e970-43b0-be2f-4cfe8ebaed00",
-        "profileId": "subhadeepchanda36@gmail.com"
+        "conversationId": "1066a584-cf2f-42aa-bdd2-0fa2921e1ef0",
+        "profileId": "9641117428"
       },
-      "read": false,
-      "createdAt": "2026-08-25T09:43:25.292Z"
-    },
-    {
-      "id": "nt_1787651003116_mw0c",
-      "userId": "9163399882",
-      "actorId": "subhadeepchanda36@gmail.com",
-      "type": "message",
-      "title": "New Message",
-      "message": "Subhadeep sent you a message: \"hello\"",
-      "data": {
-        "conversationId": "7d851a86-e970-43b0-be2f-4cfe8ebaed00",
-        "profileId": "subhadeepchanda36@gmail.com"
-      },
-      "read": false,
-      "createdAt": "2026-08-25T09:43:23.116Z"
-    },
-    {
-      "id": "nt_1787650998608_vyyp",
-      "userId": "9163399882",
-      "actorId": "subhadeepchanda36@gmail.com",
-      "type": "message",
-      "title": "New Message",
-      "message": "Subhadeep sent you a message: \"hvdsoihvsovnobv\"",
-      "data": {
-        "conversationId": "7d851a86-e970-43b0-be2f-4cfe8ebaed00",
-        "profileId": "subhadeepchanda36@gmail.com"
-      },
-      "read": false,
-      "createdAt": "2026-08-25T09:43:18.608Z"
-    },
-    {
-      "id": "nt_1787650996410_5b0x",
-      "userId": "9163399882",
-      "actorId": "subhadeepchanda36@gmail.com",
-      "type": "message",
-      "title": "New Message",
-      "message": "Subhadeep sent you a message: \"jsdbvosdv\"",
-      "data": {
-        "conversationId": "7d851a86-e970-43b0-be2f-4cfe8ebaed00",
-        "profileId": "subhadeepchanda36@gmail.com"
-      },
-      "read": false,
-      "createdAt": "2026-08-25T09:43:16.410Z"
-    },
-    {
-      "id": "nt_1787211858306_z3nr",
-      "userId": "SH095196",
-      "actorId": "9988221729",
-      "type": "interest",
-      "title": "New Interest",
-      "message": "Gagan kalra sent you an interest.",
-      "data": {
-        "profileId": "9988221729"
-      },
-      "read": false,
-      "createdAt": "2026-08-20T07:44:18.306Z"
-    },
-    {
-      "id": "nt_1787211792040_0dc5",
-      "userId": "SH095196",
-      "actorId": "9988221729",
-      "type": "interest",
-      "title": "New Interest",
-      "message": "Gagan kalra sent you an interest.",
-      "data": {
-        "profileId": "9988221729"
-      },
-      "read": false,
-      "createdAt": "2026-08-20T07:43:12.040Z"
-    },
-    {
-      "id": "nt_1787211651754_r19j",
-      "userId": "SH095196",
-      "actorId": "subhadeepchanda36@gmail.com",
-      "type": "interest",
-      "title": "New Interest",
-      "message": "Subh sent you an interest.",
-      "data": {
-        "profileId": "subhadeepchanda36@gmail.com"
-      },
-      "read": false,
-      "createdAt": "2026-08-20T07:40:51.754Z"
-    },
-    {
-      "id": "nt_1787211299857_e4ay",
-      "userId": "SH095196",
-      "actorId": "9988221729",
-      "type": "interest",
-      "title": "New Interest",
-      "message": "Gagan kalra sent you an interest.",
-      "data": {
-        "profileId": "9988221729"
-      },
-      "read": false,
-      "createdAt": "2026-08-20T07:34:59.857Z"
-    },
-    {
-      "id": "nt_1787133418400_yrr9",
-      "userId": "SH095196",
-      "actorId": "subhadeepchanda36@gmail.com",
-      "type": "interest",
-      "title": "New Interest",
-      "message": "Subhadeep sent you an interest.",
-      "data": {
-        "profileId": "subhadeepchanda36@gmail.com"
-      },
-      "read": false,
-      "createdAt": "2026-08-19T09:56:58.400Z"
-    },
-    {
-      "id": "nt_1787051173678_7uc0",
-      "userId": "SH095196",
-      "actorId": "subhadeepchanda36@gmail.com",
-      "type": "interest",
-      "title": "New Interest",
-      "message": "Subhadeep sent you an interest.",
-      "data": {
-        "profileId": "subhadeepchanda36@gmail.com"
-      },
-      "read": false,
-      "createdAt": "2026-08-18T11:06:13.678Z"
+      "read": true,
+      "createdAt": "2026-08-26T11:44:36.884Z"
     }
   ]
 }

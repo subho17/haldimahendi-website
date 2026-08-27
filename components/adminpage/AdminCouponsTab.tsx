@@ -174,7 +174,7 @@ export default function AdminCouponsTab({
         <button
           type="button"
           onClick={openCreate}
-          className="px-4 py-2 rounded-xl bg-[#e53238] text-white text-sm font-bold hover:bg-[#c92429] transition-colors cursor-pointer flex items-center gap-1.5"
+          className="px-4 py-2 rounded-xl bg-[#d97706] text-white text-sm font-bold hover:bg-[#b45309] transition-colors cursor-pointer flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" /> Create Coupon
         </button>
@@ -266,7 +266,7 @@ export default function AdminCouponsTab({
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
                   placeholder="SUMMER20"
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                 />
               </div>
 
@@ -276,7 +276,7 @@ export default function AdminCouponsTab({
                   <select
                     value={form.discountType}
                     onChange={(e) => setForm({ ...form, discountType: e.target.value as "percent" | "flat" })}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                   >
                     <option value="percent">Percent (%)</option>
                     <option value="flat">Flat (₹)</option>
@@ -291,7 +291,7 @@ export default function AdminCouponsTab({
                     placeholder={form.discountType === "percent" ? "10" : "100"}
                     min={1}
                     max={form.discountType === "percent" ? 100 : 999999}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                   />
                 </div>
               </div>
@@ -312,7 +312,7 @@ export default function AdminCouponsTab({
                               : form.applicablePlans.filter((x) => x !== p.id),
                           })
                         }
-                        className="rounded border-slate-300 text-[#e53238] focus:ring-[#e53238]"
+                        className="rounded border-slate-300 text-[#d97706] focus:ring-[#d97706]"
                       />
                       <span className="text-xs text-slate-600">{p.label}</span>
                     </label>
@@ -329,7 +329,7 @@ export default function AdminCouponsTab({
                     value={form.maxUses}
                     onChange={(e) => setForm({ ...form, maxUses: Math.max(1, Number(e.target.value) || 1) })}
                     min={1}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                   />
                 </div>
                 <div>
@@ -339,7 +339,7 @@ export default function AdminCouponsTab({
                     value={form.perUserLimit}
                     onChange={(e) => setForm({ ...form, perUserLimit: Math.max(1, Number(e.target.value) || 1) })}
                     min={1}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                   />
                 </div>
               </div>
@@ -351,7 +351,7 @@ export default function AdminCouponsTab({
                     type="datetime-local"
                     value={form.startsAt}
                     onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                   />
                 </div>
                 <div>
@@ -360,7 +360,7 @@ export default function AdminCouponsTab({
                     type="datetime-local"
                     value={form.expiresAt}
                     onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                   />
                 </div>
               </div>
@@ -371,7 +371,7 @@ export default function AdminCouponsTab({
                   id="isActive"
                   checked={form.isActive}
                   onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                  className="rounded border-slate-300 text-[#e53238] focus:ring-[#e53238]"
+                  className="rounded border-slate-300 text-[#d97706] focus:ring-[#d97706]"
                 />
                 <label htmlFor="isActive" className="text-sm font-bold text-slate-700 cursor-pointer">
                   Active
@@ -385,7 +385,7 @@ export default function AdminCouponsTab({
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   rows={2}
                   placeholder="Internal notes..."
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                 />
               </div>
 
@@ -405,7 +405,7 @@ export default function AdminCouponsTab({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-3 rounded-xl bg-[#e53238] text-white text-sm font-bold shadow-md hover:bg-[#c92429] transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 rounded-xl bg-[#d97706] text-white text-sm font-bold shadow-md hover:bg-[#b45309] transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-1.5"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   {editing ? "Save" : "Create"}

@@ -257,7 +257,7 @@ export default function MembershipPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-3 border-[#e53238] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-3 border-[#d97706] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <>
@@ -289,7 +289,7 @@ export default function MembershipPage() {
                   <button
                     type="button"
                     onClick={switchToFree}
-                    className="text-xs font-bold text-gray-500 hover:text-[#e53238] underline underline-offset-2 cursor-pointer"
+                    className="text-xs font-bold text-gray-500 hover:text-[#d97706] underline underline-offset-2 cursor-pointer"
                   >
                     Switch to Free
                   </button>
@@ -310,11 +310,11 @@ export default function MembershipPage() {
                   <div
                     key={plan.id}
                     className={`bg-white rounded-3xl border p-6 flex flex-col shadow-lg ${
-                      plan.highlight ? "border-[#e53238] ring-2 ring-[#e53238]/20" : "border-gray-100"
+                      plan.highlight ? "border-[#d97706] ring-2 ring-[#d97706]/20" : "border-gray-100"
                     }`}
                   >
                     {plan.highlight && (
-                      <span className="self-start px-2.5 py-1 rounded-full bg-[#e53238] text-white text-[10px] font-black uppercase tracking-wider mb-3">
+                      <span className="self-start px-2.5 py-1 rounded-full bg-[#d97706] text-white text-[10px] font-black uppercase tracking-wider mb-3">
                         Most Popular
                       </span>
                     )}
@@ -340,7 +340,7 @@ export default function MembershipPage() {
                       disabled={isCurrent || !isAuthenticated}
                       className={`w-full py-3 rounded-xl text-sm font-bold transition-colors cursor-pointer disabled:opacity-60 ${
                         plan.highlight
-                          ? "bg-[#e53238] text-white shadow-md hover:bg-[#c92429]"
+                          ? "bg-[#d97706] text-white shadow-md hover:bg-[#b45309]"
                           : plan.tier === "free"
                           ? "bg-gray-100 text-gray-600"
                           : "border border-gray-200 text-gray-800 hover:bg-gray-50"
@@ -406,7 +406,7 @@ export default function MembershipPage() {
                     value={cardName}
                     onChange={(e) => setCardName(e.target.value)}
                     placeholder="Full name"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                   />
                 </div>
                 <div>
@@ -418,7 +418,7 @@ export default function MembershipPage() {
                     onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                     placeholder="4242 4242 4242 4242"
                     inputMode="numeric"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -431,7 +431,7 @@ export default function MembershipPage() {
                       onChange={(e) => setCardExpiry(formatExpiryInput(e.target.value))}
                       placeholder="MM/YY"
                       inputMode="numeric"
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                     />
                   </div>
                   <div>
@@ -444,7 +444,7 @@ export default function MembershipPage() {
                       placeholder="•••"
                       type="password"
                       inputMode="numeric"
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                     />
                   </div>
                 </div>
@@ -474,13 +474,13 @@ export default function MembershipPage() {
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                         placeholder="Enter coupon code"
-                        className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e53238]/40"
+                        className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
                       />
                       <button
                         type="button"
                         onClick={applyCoupon}
                         disabled={validatingCoupon || !couponCode.trim()}
-                        className="px-4 py-2.5 rounded-xl bg-[#e53238] text-white text-sm font-bold disabled:opacity-60 cursor-pointer transition-colors whitespace-nowrap"
+                        className="px-4 py-2.5 rounded-xl bg-[#d97706] text-white text-sm font-bold disabled:opacity-60 cursor-pointer transition-colors whitespace-nowrap"
                       >
                         {validatingCoupon ? "Validating..." : "Apply"}
                       </button>
@@ -497,7 +497,7 @@ export default function MembershipPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-[#e53238] text-white text-sm font-bold shadow-md hover:bg-[#c92429] transition-colors cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-[#d97706] text-white text-sm font-bold shadow-md hover:bg-[#b45309] transition-colors cursor-pointer"
                 >
                   Pay {selectedPlan.price}
                 </button>
@@ -507,7 +507,7 @@ export default function MembershipPage() {
               </form>
             ) : (
               <div className="py-8 flex flex-col items-center gap-3">
-                <div className="w-10 h-10 border-3 border-[#e53238] border-t-transparent rounded-full animate-spin" />
+                <div className="w-10 h-10 border-3 border-[#d97706] border-t-transparent rounded-full animate-spin" />
                 <p className="text-sm font-bold text-gray-700">Authorizing payment…</p>
               </div>
             )}
@@ -535,7 +535,7 @@ export default function MembershipPage() {
             <button
               type="button"
               onClick={() => setSelectedPlan(null)}
-              className="mt-6 w-full py-3 rounded-xl bg-[#e53238] text-white text-sm font-bold shadow-md hover:bg-[#c92429] transition-colors cursor-pointer"
+              className="mt-6 w-full py-3 rounded-xl bg-[#d97706] text-white text-sm font-bold shadow-md hover:bg-[#b45309] transition-colors cursor-pointer"
             >
               Done
             </button>

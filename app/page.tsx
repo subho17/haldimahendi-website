@@ -23,7 +23,7 @@ export default function Home() {
       <div className="min-h-screen bg-white flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-3 border-[#e53238] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-3 border-[#d97706] border-t-transparent rounded-full animate-spin" />
         </div>
         <Footer />
       </div>

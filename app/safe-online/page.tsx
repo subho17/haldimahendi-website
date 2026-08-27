@@ -62,7 +62,7 @@ export default function SafeOnlinePage() {
               key={title}
               className="bg-white rounded-2xl border border-gray-100 p-6 shadow-xs flex gap-4"
             >
-              <div className="w-11 h-11 rounded-xl bg-red-50 text-[#e53238] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-red-50 text-[#d97706] flex items-center justify-center shrink-0">
                 <Icon className="w-5 h-5" />
               </div>
               <div>
@@ -76,7 +76,7 @@ export default function SafeOnlinePage() {
         <div className="mt-8 bg-red-50/70 border border-red-100 rounded-2xl p-6 text-center">
           <p className="text-xs text-gray-700 font-semibold">
             Facing any issue or suspecting fraud? Contact us at{" "}
-            <a href="mailto:help@shaadi.com" className="text-[#e53238] font-bold underline">
+            <a href="mailto:help@shaadi.com" className="text-[#d97706] font-bold underline">
               help@shaadi.com
             </a>{" "}
             or call 1800-123-4567.

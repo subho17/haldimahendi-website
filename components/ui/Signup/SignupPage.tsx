@@ -8,6 +8,7 @@ import {
   KeyRound,
   ArrowRight,
   ShieldCheck,
+  CheckCircle2,
   AlertCircle,
   ArrowLeft,
   User,
@@ -22,6 +23,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useGoogleLogin, GoogleLogin } from "@react-oauth/google";
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
@@ -57,6 +59,7 @@ const parseGoogleCredential = (credentialToken: string) => {
 
 export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: SignupPageProps) {
   const { login } = useAuth();
+  const router = useRouter();
 
   // Wizard Steps: 1 = Registration Choice / Mobile Check, 2 = OTP Verification, 3 = Matrimonial Profile Completion
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -273,7 +276,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
       onSuccess();
     }
 
-    window.location.href = "/dashboard";
+    router.push("/dashboard");
   };
 
   // Photo Upload Handler (Direct to Supabase Storage)
@@ -352,12 +355,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
 
   return (
     <div className={`w-full font-sans ${isModal ? "p-2 sm:p-4" : "p-4 sm:p-8"}`}>
-      <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/70 border border-gray-100 p-6 sm:p-8 max-w-lg w-full mx-auto text-left relative overflow-hidden transition-all duration-300">
+      <div className="bg-[#ffffff] rounded-3xl shadow-2xl shadow-black/10 border border-[#e2e8f0] p-6 sm:p-8 max-w-lg w-full mx-auto text-left relative overflow-hidden transition-all duration-300">
         
         {/* Top Trust Badge */}
         <div className="flex items-center justify-between mb-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-[#e53238] font-bold text-xs">
-            <Heart className="w-3.5 h-3.5 fill-[#e53238]" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-[#d97706] font-bold text-xs">
+            <Heart className="w-3.5 h-3.5 fill-[#d97706]" />
             <span>Step {step} of 3 • 100% Verified Registration</span>
           </div>
         </div>
@@ -398,7 +401,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                       <button
                         type="button"
                         onClick={onOpenLogin}
-                        className="px-4 py-2 bg-[#e53238] hover:bg-[#c92429] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 bg-[#d97706] hover:bg-[#b45309] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
                       >
                         <LogIn className="w-4 h-4" />
                         <span>Sign In to Your Account Now</span>
@@ -406,7 +409,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                     ) : (
                       <Link
                         href="/auth/login"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#e53238] hover:bg-[#c92429] text-white font-bold text-xs rounded-xl shadow-md"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#d97706] hover:bg-[#b45309] text-white font-bold text-xs rounded-xl shadow-md"
                       >
                         <LogIn className="w-4 h-4" />
                         <span>Sign In to Your Account Now</span>
@@ -424,7 +427,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
-                Mobile Number <span className="text-[#e53238]">*</span>
+                Mobile Number <span className="text-[#d97706]">*</span>
               </label>
               <div className="relative">
                 <Smartphone className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -434,7 +437,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   onChange={(e) => setMobileNumber(e.target.value)}
                   placeholder="+91 98765 43210"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                  className="w-full pl-10 pr-4 py-3 bg-[#f8fafc] border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
                 />
               </div>
             </div>
@@ -442,7 +445,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+              className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -460,12 +463,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
         {step === 2 && (
           <form onSubmit={handleVerifyOtp} className="space-y-5 animate-in fade-in">
             <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-2 border border-red-100">
-              <KeyRound className="w-8 h-8 text-[#e53238]" />
+              <KeyRound className="w-8 h-8 text-[#d97706]" />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider text-center">
-                Enter 4-Digit OTP <span className="text-[#e53238]">*</span>
+                Enter 4-Digit OTP <span className="text-[#d97706]">*</span>
               </label>
               <input
                 type="text"
@@ -474,7 +477,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder="1 2 3 4"
                 required
-                className="w-full text-center tracking-widest text-2xl py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 font-extrabold focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden"
+                className="w-full text-center tracking-widest text-2xl py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 font-extrabold focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-red-500/10 outline-hidden"
               />
             </div>
 
@@ -483,7 +486,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 type="button"
                 onClick={handleResendOtp}
                 disabled={isLoading}
-                className="font-bold text-[#e53238] hover:underline cursor-pointer"
+                className="font-bold text-[#d97706] hover:underline cursor-pointer"
               >
                 Resend OTP Code
               </button>
@@ -515,7 +518,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-2/3 bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+                className="w-2/3 bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -544,7 +547,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   height={80}
                   className="rounded-full object-cover border-4 border-red-100 shadow-md"
                 />
-                <label className="absolute bottom-0 right-0 p-1.5 rounded-full bg-[#e53238] text-white cursor-pointer shadow-md hover:scale-105 transition">
+                <label className="absolute bottom-0 right-0 p-1.5 rounded-full bg-[#d97706] text-white cursor-pointer shadow-md hover:scale-105 transition">
                   <Camera className="w-3.5 h-3.5" />
                   <input
                     type="file"
@@ -561,11 +564,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                     key={idx}
                     type="button"
                     onClick={() => setAvatarUrl(av.url)}
-                    className={`w-8 h-8 rounded-full overflow-hidden border-2 transition ${
-                      avatarUrl === av.url ? "border-[#e53238] scale-110" : "border-gray-200 opacity-70"
+                    style={{ position: "relative" }}
+                    className={`relative w-8 h-8 rounded-full overflow-hidden border-2 transition ${
+                      avatarUrl === av.url ? "border-[#d97706] scale-110" : "border-gray-200 opacity-70"
                     }`}
                   >
-                    <Image src={av.url} alt={av.label} fill sizes="32px" className="object-cover" />
+                    <Image src={av.url} alt={av.label} width={32} height={32} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -585,7 +589,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="e.g. Rahul Sharma"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-xs font-semibold focus:bg-white focus:border-[#e53238] outline-hidden"
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-xl text-gray-900 text-xs font-semibold focus:bg-white focus:border-[#d97706] outline-hidden"
                 />
               </div>
             </div>
@@ -601,7 +605,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   onClick={() => setGender("Groom")}
                   className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     gender === "Groom"
-                      ? "bg-red-50 border-[#e53238] text-[#e53238]"
+                      ? "bg-red-50 border-[#d97706] text-[#d97706]"
                       : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
                   }`}
                 >
@@ -613,7 +617,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   onClick={() => setGender("Bride")}
                   className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     gender === "Bride"
-                      ? "bg-red-50 border-[#e53238] text-[#e53238]"
+                      ? "bg-red-50 border-[#d97706] text-[#d97706]"
                       : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
                   }`}
                 >
@@ -630,7 +634,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   type="number"
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                  className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                 />
               </div>
 
@@ -640,7 +644,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 <select
                   value={height}
                   onChange={(e) => setHeight(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                  className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                 >
                   <option value="5'2&quot;">5&apos;2&quot;</option>
                   <option value="5'4&quot;">5&apos;4&quot;</option>
@@ -659,7 +663,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 <select
                   value={religion}
                   onChange={(e) => setReligion(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                  className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                 >
                   <option value="Hindu">Hindu</option>
                   <option value="Muslim">Muslim</option>
@@ -675,7 +679,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 <select
                   value={maritalStatus}
                   onChange={(e) => setMaritalStatus(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                  className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                 >
                   <option value="Never Married">Never Married</option>
                   <option value="Divorced">Divorced</option>
@@ -695,7 +699,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                     value={education}
                     onChange={(e) => setEducation(e.target.value)}
                     placeholder="e.g. B.Tech"
-                    className="w-full pl-8 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                    className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                   />
                 </div>
               </div>
@@ -710,7 +714,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                     value={profession}
                     onChange={(e) => setProfession(e.target.value)}
                     placeholder="e.g. Engineer"
-                    className="w-full pl-8 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                    className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                   />
                 </div>
               </div>
@@ -726,7 +730,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="e.g. Mumbai, Delhi"
-                  className="w-full pl-8 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                  className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                 />
               </div>
             </div>
@@ -744,7 +748,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a password (min 6 characters)"
-                    className="w-full pl-8 pr-10 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                    className="w-full pl-8 pr-10 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                   />
                   <button
                     type="button"
@@ -761,7 +765,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm password"
-                    className="w-full pl-8 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#e53238]"
+                    className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                   />
                 </div>
               </div>
@@ -770,7 +774,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-3"
+              className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-3"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -783,6 +787,18 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
             </button>
           </form>
         )}
+
+        {/* Social Proof */}
+        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-center gap-6 text-[11px] text-gray-500 font-medium">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>100% Privacy Control</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#d97706]" />
+            <span>Government ID Verified</span>
+          </div>
+        </div>
 
         {/* Social Login Options */}
         {step === 1 && (
@@ -852,14 +868,14 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
               <button
                 type="button"
                 onClick={onOpenLogin}
-                className="w-full py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] transition-all cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#d97706] hover:text-[#d97706] transition-all cursor-pointer"
               >
                 Sign In to Your Account
               </button>
             ) : (
               <Link
                 href="/auth/login"
-                className="w-full inline-block py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] transition-all text-center"
+                className="w-full inline-block py-3 px-4 rounded-xl border border-[#e2e8f0] text-[#1e293b] font-bold text-sm hover:border-[#d97706] hover:text-[#d97706] transition-all text-center"
               >
                 Sign In to Your Account
               </Link>

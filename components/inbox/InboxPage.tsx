@@ -53,7 +53,7 @@ export default function InboxPage() {
   const [tab, setTab] = useState<TabKey>("received");
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
-  const userId = user?.mobileNumber || user?.email || user?.profileId || "";
+  const userId = user?.profileId || user?.mobileNumber || user?.email || "";
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
@@ -132,7 +132,7 @@ export default function InboxPage() {
 
         {(!mounted || isLoading || !isAuthenticated || loading) ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 text-[#e53238] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[#d97706] animate-spin" />
           </div>
         ) : (
           <>
@@ -144,7 +144,7 @@ export default function InboxPage() {
                   onClick={() => setTab(key)}
                   className={`py-3 px-4 text-xs sm:text-sm font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
                     tab === key
-                      ? "border-[#e53238] text-[#e53238]"
+                      ? "border-[#d97706] text-[#d97706]"
                       : "border-transparent text-gray-500 hover:text-gray-900"
                   }`}
                 >
@@ -153,7 +153,7 @@ export default function InboxPage() {
                   {count > 0 && (
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
-                        tab === key ? "bg-red-100 text-[#e53238]" : "bg-gray-100 text-gray-500"
+                        tab === key ? "bg-red-100 text-[#d97706]" : "bg-gray-100 text-gray-500"
                       }`}
                     >
                       {count}
@@ -186,7 +186,7 @@ export default function InboxPage() {
                       className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4"
                     >
                       <div className="flex items-center gap-4 w-full">
-                        <div className="w-12 h-12 rounded-full bg-red-100 text-[#e53238] flex items-center justify-center font-extrabold border-2 border-white shadow-xs shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-red-100 text-[#d97706] flex items-center justify-center font-extrabold border-2 border-white shadow-xs shrink-0">
                           {inv.partner?.name?.charAt(0) || "?"}
                         </div>
                         <div>
@@ -220,7 +220,7 @@ export default function InboxPage() {
                             <button
                               onClick={() => runAction(inv.senderId, "accept")}
                               disabled={busy}
-                              className="flex-1 sm:flex-none px-4 py-2 bg-[#e53238] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#c92429] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+                              className="flex-1 sm:flex-none px-4 py-2 bg-[#d97706] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#b45309] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
                             >
                               <Check className="w-4 h-4" />
                               <span>Accept</span>
@@ -250,7 +250,7 @@ export default function InboxPage() {
                               router.push(`/chat?otherId=${encodeURIComponent(inv.senderId)}`)
                             }
                             disabled={busy}
-                            className="flex-1 sm:flex-none px-4 py-2 bg-[#e53238] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#c92429] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+                            className="flex-1 sm:flex-none px-4 py-2 bg-[#d97706] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#b45309] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
                           >
                             <MessageCircle className="w-4 h-4" />
                             <span>Message</span>

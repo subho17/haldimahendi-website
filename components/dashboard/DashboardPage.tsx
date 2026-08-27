@@ -60,7 +60,7 @@ export default function DashboardPage() {
   const userAvatar = user?.avatar_url || user?.avatarUrl;
   const displayName = user?.display_name || user?.name || "Shaadi Member";
   const userMobile = user?.mobile_number || user?.mobileNumber || "";
-  const userId = user?.mobileNumber || user?.email || user?.profileId || "";
+  const userId = user?.profileId || user?.mobileNumber || user?.email || "";
 
   React.useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
@@ -141,7 +141,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
         <Navbar />
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-[#e53238] animate-spin" />
+          <Loader2 className="w-8 h-8 text-[#d97706] animate-spin" />
         </main>
         <Footer />
       </div>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
   }
 
   const statCards = [
-    { label: "New Matches", value: String(stats.newMatches), sub: `${stats.newCount} new this week`, Icon: Heart, color: "text-[#e53238]" },
+    { label: "New Matches", value: String(stats.newMatches), sub: `${stats.newCount} new this week`, Icon: Heart, color: "text-[#d97706]" },
     { label: "Profile Views", value: "48", sub: "↑ 12 this week", Icon: Eye, color: "text-cyan-600" },
     { label: "Interests Sent", value: String(stats.interestsSent), sub: `${stats.interestsAccepted} accepted`, Icon: UserCheck, color: "text-emerald-600" },
     { label: "Shortlisted", value: String(stats.shortlisted), sub: "Saved profiles", Icon: Sparkles, color: "text-amber-500" },
@@ -162,19 +162,19 @@ export default function DashboardPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Welcome Header */}
-        <div className="bg-gradient-to-r from-red-600 via-[#e53238] to-orange-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-red-600 via-[#d97706] to-orange-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
 
             <div className="flex items-center gap-5">
               {/* Profile Avatar Badge */}
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white/40 bg-white/20 backdrop-blur-md overflow-hidden flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shrink-0">
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white/40 bg-white/20 backdrop-blur-md overflow-hidden flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shrink-0" style={{ position: "relative" }}>
                 {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
                   <Image
                     src={userAvatar}
                     alt={displayName}
-                    fill
-                    sizes="80px"
-                    className="object-cover"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <span className="uppercase">{displayName.charAt(0)}</span>
@@ -198,7 +198,7 @@ export default function DashboardPage() {
             <div className="flex flex-wrap gap-2.5 shrink-0">
               <Link
                 href="/matches"
-                className="px-5 py-2.5 rounded-xl bg-white text-[#e53238] font-bold text-xs sm:text-sm shadow-md hover:bg-red-50 transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-white text-[#d97706] font-bold text-xs sm:text-sm shadow-md hover:bg-red-50 transition-colors"
               >
                 {stats.newMatches > 0 ? `View ${stats.newMatches} New Matches` : "Find Matches"}
               </Link>
@@ -235,7 +235,7 @@ export default function DashboardPage() {
               <p className="text-xs text-gray-500">Based on your cultural, age, and location preferences.</p>
             </div>
             {stats.newMatches > 0 && (
-              <Link href="/matches" className="text-xs font-bold text-[#e53238] hover:underline">
+              <Link href="/matches" className="text-xs font-bold text-[#d97706] hover:underline">
                 View All ({stats.newMatches}) →
               </Link>
             )}
@@ -243,13 +243,13 @@ export default function DashboardPage() {
 
           {loading && recommended.length === 0 ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-6 h-6 text-[#e53238] animate-spin" />
+              <Loader2 className="w-6 h-6 text-[#d97706] animate-spin" />
             </div>
           ) : recommended.length === 0 ? (
             <div className="text-center py-10">
-              <Heart className="w-10 h-10 text-[#e53238] mx-auto mb-3" />
+              <Heart className="w-10 h-10 text-[#d97706] mx-auto mb-3" />
               <p className="text-sm text-gray-500">
-                Head to your <Link href="/preferences" className="font-bold text-[#e53238] hover:underline">preferences</Link> to start finding matches.
+                Head to your <Link href="/preferences" className="font-bold text-[#d97706] hover:underline">preferences</Link> to start finding matches.
               </p>
             </div>
           ) : (
@@ -261,7 +261,7 @@ export default function DashboardPage() {
                   className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer"
                 >
                   <div>
-                    <div className="relative w-full h-48 bg-slate-100 overflow-hidden flex items-center justify-center">
+                    <div className="relative w-full h-48 bg-slate-100 overflow-hidden flex items-center justify-center" style={{ position: "relative" }}>
                       {m.profile.avatarUrl && m.profile.avatarUrl !== "/images/default-avatar.png" ? (
                         <Image
                           src={m.profile.avatarUrl}
@@ -271,7 +271,7 @@ export default function DashboardPage() {
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#e53238] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">
+                        <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#d97706] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">
                           {m.profile.name[0]}
                         </div>
                       )}
@@ -283,7 +283,7 @@ export default function DashboardPage() {
 
                     <div className="p-4 sm:p-5">
                       <div className="mb-3">
-                        <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors text-base">
+                        <h3 className="font-bold text-gray-900 group-hover:text-[#d97706] transition-colors text-base">
                           {m.profile.name}
                         </h3>
                         <p className="text-xs text-gray-400 font-semibold">{m.profile.id}</p>
@@ -324,7 +324,7 @@ export default function DashboardPage() {
                           runAction(m.profile.id, "interest");
                         }}
                         disabled={busyId === m.profile.id}
-                        className="flex-1 py-2 px-3 rounded-xl bg-[#e53238] text-white text-xs font-bold shadow-xs hover:bg-[#c92429] transition-colors cursor-pointer disabled:opacity-60"
+                        className="flex-1 py-2 px-3 rounded-xl bg-[#d97706] text-white text-xs font-bold shadow-xs hover:bg-[#b45309] transition-colors cursor-pointer disabled:opacity-60"
                       >
                         {busyId === m.profile.id ? "..." : "Connect Now"}
                       </button>

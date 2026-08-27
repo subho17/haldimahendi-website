@@ -306,8 +306,8 @@ export default function LoginPage({
         
         {/* Top Header Badge */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-50 text-[#e53238] text-xs font-bold border border-red-100">
-            <ShieldCheck className="w-4 h-4 text-[#e53238]" />
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-50 text-[#d97706] text-xs font-bold border border-red-100">
+            <ShieldCheck className="w-4 h-4 text-[#d97706]" />
             <span>100% Safe & Secure Login</span>
           </div>
           <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
@@ -333,7 +333,7 @@ export default function LoginPage({
             }}
             className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               mode === "otp"
-                ? "bg-white text-[#e53238] shadow-sm"
+                ? "bg-white text-[#d97706] shadow-sm"
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -348,7 +348,7 @@ export default function LoginPage({
             }}
             className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               mode === "password"
-                ? "bg-white text-[#e53238] shadow-sm"
+                ? "bg-white text-[#d97706] shadow-sm"
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -372,7 +372,7 @@ export default function LoginPage({
               <form onSubmit={handleSendOtp} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
-                    Mobile Number <span className="text-[#e53238]">*</span>
+                    Mobile Number <span className="text-[#d97706]">*</span>
                   </label>
                   <div className="relative">
                     <Smartphone className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -384,7 +384,7 @@ export default function LoginPage({
                       onChange={(e) => setOtpMobile(e.target.value.replace(/\D/g, ""))}
                       placeholder="Enter 10-digit mobile number"
                       required
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -392,7 +392,7 @@ export default function LoginPage({
                 <button
                   type="submit"
                   disabled={otpSending || cleanMobile(otpMobile).length < 10}
-                  className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+                  className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
                 >
                   {otpSending ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -421,7 +421,7 @@ export default function LoginPage({
                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                       placeholder="Enter the 4-digit OTP"
                       required
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
                     />
                   </div>
                   <p className="text-[11px] text-gray-400 font-medium">
@@ -432,7 +432,7 @@ export default function LoginPage({
                 <button
                   type="submit"
                   disabled={otpVerifying || otp.trim().length === 0}
-                  className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+                  className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
                 >
                   {otpVerifying ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -456,7 +456,7 @@ export default function LoginPage({
                     type="button"
                     onClick={() => handleSendOtp()}
                     disabled={cooldown > 0}
-                    className="font-bold text-[#e53238] hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="font-bold text-[#d97706] hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {cooldown > 0 ? (
                       <span className="flex items-center gap-1">
@@ -477,7 +477,7 @@ export default function LoginPage({
           <form onSubmit={handlePasswordLogin} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
-                Email / Mobile / Profile ID <span className="text-[#e53238]">*</span>
+                Email / Mobile / Profile ID <span className="text-[#d97706]">*</span>
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -487,7 +487,7 @@ export default function LoginPage({
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="e.g. SH1234567 or user@mail.com"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
                 />
               </div>
             </div>
@@ -495,20 +495,20 @@ export default function LoginPage({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Password <span className="text-[#e53238]">*</span>
+                  Password <span className="text-[#d97706]">*</span>
                 </label>
                 {onOpenForgotPassword ? (
                   <button
                     type="button"
                     onClick={onOpenForgotPassword}
-                    className="text-xs font-semibold text-[#e53238] hover:underline cursor-pointer"
+                    className="text-xs font-semibold text-[#d97706] hover:underline cursor-pointer"
                   >
                     Forgot?
                   </button>
                 ) : (
                   <Link
                     href="/auth/forgetpassowrd"
-                    className="text-xs font-semibold text-[#e53238] hover:underline"
+                    className="text-xs font-semibold text-[#d97706] hover:underline"
                   >
                     Forgot?
                   </Link>
@@ -522,7 +522,7 @@ export default function LoginPage({
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="w-full pl-10 pr-11 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
+                  className="w-full pl-10 pr-11 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
                 />
                 <button
                   type="button"
@@ -537,7 +537,7 @@ export default function LoginPage({
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+              className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -632,14 +632,14 @@ export default function LoginPage({
             <button
               type="button"
               onClick={onOpenSignup}
-              className="w-full py-3 px-4 rounded-xl border border-gray-200 text-gray-800 font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl border border-gray-200 text-gray-800 font-bold text-sm hover:border-[#d97706] hover:text-[#d97706] hover:bg-red-50/30 transition-all cursor-pointer"
             >
               Create New Profile - Free
             </button>
           ) : (
             <Link
               href="/auth/signup"
-              className="w-full inline-block py-3 px-4 rounded-xl border border-gray-200 text-gray-800 font-bold text-sm hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/30 transition-all text-center"
+              className="w-full inline-block py-3 px-4 rounded-xl border border-gray-200 text-gray-800 font-bold text-sm hover:border-[#d97706] hover:text-[#d97706] hover:bg-red-50/30 transition-all text-center"
             >
               Create New Profile - Free
             </Link>

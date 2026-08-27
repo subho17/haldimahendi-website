@@ -49,6 +49,8 @@ export interface MatchCandidate {
   diet?: string | null;
   smoking?: string | null;
   drinking?: string | null;
+  mobileNumber?: string;
+  email?: string;
 }
 
 export interface MatchResult {

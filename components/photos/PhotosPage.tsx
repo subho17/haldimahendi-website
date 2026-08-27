@@ -29,7 +29,7 @@ export default function PhotosPage() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const userId = user?.mobileNumber || user?.email || user?.profileId || "";
+  const userId = user?.profileId || user?.mobileNumber || user?.email || "";
 
   const loadPhotos = async () => {
     try {
@@ -137,7 +137,7 @@ export default function PhotosPage() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-10 shadow-lg mb-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-50 text-[#e53238] flex items-center justify-center mx-auto mb-4 border border-red-100">
+          <div className="w-16 h-16 rounded-full bg-red-50 text-[#d97706] flex items-center justify-center mx-auto mb-4 border border-red-100">
             <Camera className="w-8 h-8" />
           </div>
 
@@ -150,7 +150,7 @@ export default function PhotosPage() {
 
           {(!mounted || isLoading || !isAuthenticated) ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 text-[#e53238] animate-spin" />
+              <Loader2 className="w-8 h-8 text-[#d97706] animate-spin" />
             </div>
           ) : (
             <>
@@ -179,11 +179,11 @@ export default function PhotosPage() {
                   if (e.dataTransfer.files) uploadFiles(e.dataTransfer.files);
                 }}
                 className={`mt-8 p-8 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                  dragOver ? "border-[#e53238] bg-red-50/40" : "border-gray-200 bg-gray-50/50"
+                  dragOver ? "border-[#d97706] bg-red-50/40" : "border-gray-200 bg-gray-50/50"
                 }`}
               >
                 {uploading ? (
-                  <Loader2 className="w-10 h-10 text-[#e53238] animate-spin mb-3" />
+                  <Loader2 className="w-10 h-10 text-[#d97706] animate-spin mb-3" />
                 ) : (
                   <Upload className="w-10 h-10 text-gray-400 mb-3" />
                 )}
@@ -197,7 +197,7 @@ export default function PhotosPage() {
                     e.stopPropagation();
                     fileInputRef.current?.click();
                   }}
-                  className="px-6 py-3 bg-[#e53238] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#c92429] cursor-pointer"
+                  className="px-6 py-3 bg-[#d97706] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#b45309] cursor-pointer"
                 >
                   Browse Photo Files
                 </button>
@@ -205,7 +205,7 @@ export default function PhotosPage() {
 
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 text-[#e53238] animate-spin" />
+                  <Loader2 className="w-6 h-6 text-[#d97706] animate-spin" />
                 </div>
               ) : photos.length > 0 ? (
                 <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4 text-left">

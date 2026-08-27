@@ -61,7 +61,7 @@ export default function Navbar() {
           <div className="flex items-center gap-1 select-none">
             <span className="relative flex items-center">
               <span
-                className={`font-extrabold text-[#e53238] tracking-tight font-serif italic transition-all duration-300 ${
+                className={`font-extrabold text-[#d97706] tracking-tight font-serif italic transition-all duration-300 ${
                   isScrolled ? 'text-2xl sm:text-3xl' : 'text-4xl sm:text-5xl'
                 }`}
               >
@@ -75,12 +75,12 @@ export default function Navbar() {
                 }`}
               >
                 <span
-                  className={`rounded-full border-2 border-[#e53238] bg-transparent transition-all duration-300 ${
+                  className={`rounded-full border-2 border-[#d97706] bg-transparent transition-all duration-300 ${
                     isScrolled ? 'w-2.5 h-2.5 border-2' : 'w-3.5 h-3.5 border-2'
                   }`}
                 ></span>
                 <span
-                  className={`rounded-full border-2 border-[#00aed6] bg-transparent transition-all duration-300 ${
+                  className={`rounded-full border-2 border-[#15803d] bg-transparent transition-all duration-300 ${
                     isScrolled ? 'w-2.5 h-2.5 border-2' : 'w-3.5 h-3.5 border-2'
                   }`}
                 ></span>
@@ -89,7 +89,7 @@ export default function Navbar() {
 
             {/* .com Tag */}
             <span
-              className={`font-bold text-[#00aed6] self-end transition-all duration-300 ${
+              className={`font-bold text-[#15803d] self-end transition-all duration-300 ${
                 isScrolled ? 'text-xs sm:text-sm mb-1 ml-0.5' : 'text-base sm:text-lg mb-2 ml-1'
               }`}
             >
@@ -102,22 +102,22 @@ export default function Navbar() {
         <div className="hidden md:flex items-center transition-all duration-300 space-x-8 lg:space-x-12">
           <Link
             href="/about"
-            className={`relative font-semibold text-gray-700 hover:text-[#e53238] transition-all duration-300 group py-1 ${
+            className={`relative font-semibold text-gray-700 hover:text-[#d97706] transition-all duration-300 group py-1 ${
               isScrolled ? 'text-sm' : 'text-lg lg:text-xl'
             }`}
           >
             <span>About us</span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#e53238] transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#d97706] transition-all duration-300 group-hover:w-full"></span>
           </Link>
 
           <Link
             href="/help"
-            className={`relative font-semibold text-gray-700 hover:text-[#e53238] transition-all duration-300 group py-1 ${
+            className={`relative font-semibold text-gray-700 hover:text-[#d97706] transition-all duration-300 group py-1 ${
               isScrolled ? 'text-sm' : 'text-lg lg:text-xl'
             }`}
           >
             <span>Help</span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#e53238] transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#d97706] transition-all duration-300 group-hover:w-full"></span>
           </Link>
 
           {/* Login Pill Button & Dropdown */}
@@ -130,8 +130,8 @@ export default function Navbar() {
                   : 'px-6 py-2.5 text-base sm:text-lg shadow-sm hover:shadow-md'
               } ${
                 isDropdownOpen
-                  ? 'border-[#e53238] text-[#e53238] bg-red-50/50 shadow-inner'
-                  : 'border-gray-300 text-gray-700 hover:border-[#e53238] hover:text-[#e53238] hover:bg-red-50/20'
+                  ? 'border-[#d97706] text-[#d97706] bg-amber-50/50 shadow-inner'
+                  : 'border-gray-300 text-gray-700 hover:border-[#d97706] hover:text-[#d97706] hover:bg-amber-50/20'
               }`}
               aria-expanded={isDropdownOpen}
               aria-haspopup="true"
@@ -140,7 +140,7 @@ export default function Navbar() {
               <svg
                 className={`transition-transform duration-300 ${
                   isScrolled ? 'w-3.5 h-3.5' : 'w-4 h-4'
-                } ${isDropdownOpen ? 'rotate-180 text-[#e53238]' : 'text-gray-500'}`}
+                } ${isDropdownOpen ? 'rotate-180 text-[#d97706]' : 'text-gray-500'}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -165,9 +165,9 @@ export default function Navbar() {
                     setIsDropdownOpen(false);
                     setIsLoginModalOpen(true);
                   }}
-                  className="w-full text-left flex items-center gap-3.5 px-5 py-3 text-sm text-gray-700 hover:bg-red-50/80 hover:text-[#e53238] transition-colors group cursor-pointer"
+                  className="w-full text-left flex items-center gap-3.5 px-5 py-3 text-sm text-gray-700 hover:bg-amber-50/80 hover:text-[#d97706] transition-colors group cursor-pointer"
                 >
-                  <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-red-100/60 text-gray-500 group-hover:text-[#e53238] transition-colors">
+                  <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-amber-100/60 text-gray-500 group-hover:text-[#d97706] transition-colors">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -184,9 +184,9 @@ export default function Navbar() {
                     setIsDropdownOpen(false);
                     setIsSignupModalOpen(true);
                   }}
-                  className="w-full text-left flex items-center gap-3.5 px-5 py-3 text-sm text-gray-700 hover:bg-red-50/80 hover:text-[#e53238] transition-colors group cursor-pointer"
+                  className="w-full text-left flex items-center gap-3.5 px-5 py-3 text-sm text-gray-700 hover:bg-amber-50/80 hover:text-[#d97706] transition-colors group cursor-pointer"
                 >
-                  <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-red-100/60 text-gray-500 group-hover:text-[#e53238] transition-colors">
+                  <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-amber-100/60 text-gray-500 group-hover:text-[#d97706] transition-colors">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
@@ -261,7 +261,7 @@ export default function Navbar() {
           <Link
             href="/about"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-lg font-semibold text-gray-800 hover:bg-red-50 hover:text-[#e53238] transition-colors"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-lg font-semibold text-gray-800 hover:bg-amber-50 hover:text-[#d97706] transition-colors"
           >
             About us
           </Link>
@@ -269,7 +269,7 @@ export default function Navbar() {
           <Link
             href="/help"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-lg font-semibold text-gray-800 hover:bg-red-50 hover:text-[#e53238] transition-colors"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-lg font-semibold text-gray-800 hover:bg-amber-50 hover:text-[#d97706] transition-colors"
           >
             Help
           </Link>
@@ -280,7 +280,7 @@ export default function Navbar() {
                 setIsMobileMenuOpen(false);
                 setIsLoginModalOpen(true);
               }}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#e53238] text-white font-semibold text-base shadow-md hover:bg-[#c92429] active:scale-98 transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#d97706] text-white font-semibold text-base shadow-md hover:bg-[#b45309] active:scale-98 transition-all cursor-pointer"
             >
               Member Login
             </button>
@@ -289,7 +289,7 @@ export default function Navbar() {
                 setIsMobileMenuOpen(false);
                 setIsSignupModalOpen(true);
               }}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-[#e53238] text-[#e53238] font-semibold text-base shadow-sm hover:bg-red-50 active:scale-98 transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-[#d97706] text-[#d97706] font-semibold text-base shadow-sm hover:bg-amber-50 active:scale-98 transition-all cursor-pointer"
             >
               Create New Profile
             </button>

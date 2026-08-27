@@ -96,7 +96,7 @@ export default function ForgetPasswordPage() {
         {step === "mobile" && (
           <form onSubmit={handleSendOtp} className="space-y-6">
             <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5 border border-red-100">
-              <KeyRound className="w-6 h-6 text-[#e53238]" />
+              <KeyRound className="w-6 h-6 text-[#d97706]" />
             </div>
 
             <div className="space-y-1 text-center">
@@ -115,7 +115,7 @@ export default function ForgetPasswordPage() {
 
             <div className="text-left space-y-1.5">
               <label htmlFor="mobile" className="text-xs font-semibold text-gray-700 block">
-                Mobile Number <span className="text-[#e53238]">*</span>
+                Mobile Number <span className="text-[#d97706]">*</span>
               </label>
               <div className="relative">
                 <Smartphone className="w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -127,7 +127,7 @@ export default function ForgetPasswordPage() {
                   onChange={(e) => setMobileNumber(e.target.value.replace(/[^\d]/g, "").slice(0, 10))}
                   placeholder="Enter 10-digit mobile number"
                   required
-                  className="w-full pl-11 pr-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-xl focus:border-[#e53238] focus:ring-4 focus:ring-red-500/10 outline-hidden transition text-sm placeholder:text-gray-400 font-normal shadow-sm"
+                  className="w-full pl-11 pr-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-xl focus:border-[#d97706] focus:ring-4 focus:ring-red-500/10 outline-hidden transition text-sm placeholder:text-gray-400 font-normal shadow-sm"
                 />
               </div>
             </div>
@@ -135,7 +135,7 @@ export default function ForgetPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-[0.99] text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+              className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-[0.99] text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -157,7 +157,7 @@ export default function ForgetPasswordPage() {
           <form onSubmit={handleResetPassword} className="space-y-5 text-left">
             <div className="text-center">
               <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3 border border-red-100">
-                <KeyRound className="w-6 h-6 text-[#e53238]" />
+                <KeyRound className="w-6 h-6 text-[#d97706]" />
               </div>
               <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Set new password</h2>
               <p className="text-gray-500 text-xs mt-1">
@@ -183,7 +183,7 @@ export default function ForgetPasswordPage() {
                 onChange={(e) => setOtp(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
                 placeholder="6-digit OTP"
                 required
-                className="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#e53238] outline-hidden font-medium"
+                className="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#d97706] outline-hidden font-medium"
               />
               <div className="flex items-center justify-between pt-1">
                 {cooldown > 0 ? (
@@ -192,7 +192,7 @@ export default function ForgetPasswordPage() {
                   <button
                     type="button"
                     onClick={handleSendOtp}
-                    className="text-[11px] font-semibold text-[#e53238] hover:text-[#c92429] cursor-pointer"
+                    className="text-[11px] font-semibold text-[#d97706] hover:text-[#b45309] cursor-pointer"
                   >
                     Resend OTP
                   </button>
@@ -216,7 +216,7 @@ export default function ForgetPasswordPage() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="At least 6 characters"
                   required
-                  className="w-full pl-4 pr-10 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#e53238] outline-hidden font-medium"
+                  className="w-full pl-4 pr-10 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#d97706] outline-hidden font-medium"
                 />
                 <button
                   type="button"
@@ -236,14 +236,14 @@ export default function ForgetPasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter password"
                 required
-                className="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#e53238] outline-hidden font-medium"
+                className="w-full px-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#d97706] outline-hidden font-medium"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+              className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -269,7 +269,7 @@ export default function ForgetPasswordPage() {
             <div className="pt-4">
               <Link
                 href="/auth/login"
-                className="w-full bg-[#e53238] hover:bg-[#c92429] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 transition-all text-sm inline-block text-center"
+                className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 transition-all text-sm inline-block text-center"
               >
                 Back to Login
               </Link>

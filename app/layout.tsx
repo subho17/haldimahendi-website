@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     google: "google-site-verification-code",
   },
   other: {
-    "theme-color": "#e53238",
+    "theme-color": "#166534",
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "default",
     "apple-mobile-web-app-title": "Shaadi",
@@ -87,7 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <meta name="theme-color" content="#e53238" />
+        <meta name="theme-color" content="#166534" />
       </head>
       <body className="min-h-screen flex flex-col bg-white text-[#111827] m-0 p-0">
         <GoogleAuthWrapper>

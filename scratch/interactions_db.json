@@ -1,68 +1,26 @@
 {
   "interests": [
     {
-      "id": "in_1787211857613_o7w6",
-      "senderId": "9988221729",
-      "recipientId": "SH095196",
-      "status": "pending",
-      "createdAt": "2026-08-20T07:44:17.612Z"
-    },
-    {
-      "id": "in_1787038249730_6yvx",
-      "senderId": "subhadeepchanda36@gmail.com",
+      "id": "in_1787737070056_s9s7",
+      "senderId": "9641117428",
       "recipientId": "9163399882",
       "status": "accepted",
-      "createdAt": "2026-08-18T07:30:49.729Z"
+      "createdAt": "2026-08-26T09:37:50.055Z"
+    },
+    {
+      "id": "in_1787736943073_qbv5",
+      "senderId": "9163399882",
+      "recipientId": "9641117428",
+      "status": "accepted",
+      "createdAt": "2026-08-26T09:35:43.072Z"
     }
   ],
   "shortlists": [
     {
-      "id": "sh_1787211793187_5lcf",
-      "userId": "9988221729",
-      "profileId": "SH095196",
-      "createdAt": "2026-08-20T07:43:13.187Z"
-    },
-    {
-      "id": "sh_1787118193875_i2sn",
-      "userId": "subhadeepchanda36@gmail.com",
-      "profileId": "SH095196",
-      "createdAt": "2026-08-19T05:43:13.875Z"
-    },
-    {
-      "id": "sh_1787038279263_kzb1",
-      "userId": "subhadeepchanda36@gmail.com",
-      "profileId": "SH963815",
-      "createdAt": "2026-08-18T07:31:19.263Z"
-    },
-    {
-      "id": "sh_1787038277175_2ike",
-      "userId": "subhadeepchanda36@gmail.com",
-      "profileId": "SH615005",
-      "createdAt": "2026-08-18T07:31:17.176Z"
-    },
-    {
-      "id": "sh_1787038230382_1e4k",
-      "userId": "subhadeepchanda36@gmail.com",
-      "profileId": "9163399882",
-      "createdAt": "2026-08-18T07:30:30.382Z"
-    },
-    {
-      "id": "sh_1786965899971_squr",
-      "userId": "subhadeepchanda36@gmail.com",
-      "profileId": "SH998877",
-      "createdAt": "2026-08-17T11:24:59.971Z"
-    },
-    {
-      "id": "sh_1786965894939_v0j6",
-      "userId": "subhadeepchanda36@gmail.com",
-      "profileId": "SH218322",
-      "createdAt": "2026-08-17T11:24:54.939Z"
-    },
-    {
-      "id": "sh_1786965183134_860z",
-      "userId": "subhadeepchanda36@gmail.com",
-      "profileId": "SH397555",
-      "createdAt": "2026-08-17T11:13:03.134Z"
+      "id": "sh_1787734528464_fues",
+      "userId": "9163399882",
+      "profileId": "SH651428",
+      "createdAt": "2026-08-26T08:55:28.464Z"
     }
   ]
 }

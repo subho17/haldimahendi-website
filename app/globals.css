@@ -3,9 +3,18 @@
 :root {
   --background: #ffffff;
   --foreground: #111827;
+
+  /* Haldi & Mehendi Wedding Palette */
+  --haldi-gold: #d97706;
+  --haldi-hover: #b45309;
+  --haldi-light: #fef3c7;
+  
+  --mehendi-green: #15803d;
+  --mehendi-dark: #166534;
+  --mehendi-light: #f0fdf4;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);

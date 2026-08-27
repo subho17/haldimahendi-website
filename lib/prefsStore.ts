@@ -20,11 +20,18 @@ function readFilePrefs(userId: string): MatchPreferences | null {
   try {
     ensurePrefsFile();
     const data = fs.readFileSync(PREFS_FILE, 'utf-8');
-    const records = JSON.parse(data || '[]') as (MatchPreferences & { userId: string })[];
+    if (!data.trim()) return null;
+    const records = JSON.parse(data) as (MatchPreferences & { userId: string })[];
     const found = records.find((r) => r.userId === userId);
     return found || null;
   } catch (e) {
-    console.warn('[Prefs] Failed to read preferences file:', e);
+    console.warn('[Prefs] Failed to read preferences file, resetting:', e);
+    // Reset corrupted file
+    try {
+      fs.writeFileSync(PREFS_FILE, JSON.stringify([], null, 2));
+    } catch (e2) {
+      console.error('[Prefs] Failed to reset preferences file:', e2);
+    }
     return null;
   }
 }
@@ -38,7 +45,10 @@ function writeFilePrefs(prefs: MatchPreferences): void {
     const record = { ...prefs, updatedAt: new Date().toISOString() } as MatchPreferences & { userId: string; createdAt?: string; updatedAt?: string };
     if (idx >= 0) records[idx] = { ...records[idx], ...record };
     else records.push({ ...record, createdAt: new Date().toISOString() });
-    fs.writeFileSync(PREFS_FILE, JSON.stringify(records, null, 2));
+    // Atomic write: write to temp file then rename
+    const tempFile = PREFS_FILE + '.tmp';
+    fs.writeFileSync(tempFile, JSON.stringify(records, null, 2));
+    fs.renameSync(tempFile, PREFS_FILE);
   } catch (e) {
     console.warn('[Prefs] Failed to write preferences file:', e);
   }

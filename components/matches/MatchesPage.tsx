@@ -45,7 +45,7 @@ export default function MatchesPage() {
   const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const userId = user?.mobileNumber || user?.email || user?.profileId || "";
+  const userId = user?.profileId || user?.mobileNumber || user?.email || "";
 
   const loadInteractions = (data: { sentIds?: string[]; shortlistedIds?: string[] }) => {
     setSentIds(new Set(data.sentIds || []));
@@ -111,7 +111,7 @@ export default function MatchesPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
               My Matches{" "}
               {eligible.length > 0 && (
-                <span className="text-xs px-2.5 py-1 rounded-full bg-red-100 text-[#e53238] font-bold ml-1 align-middle">
+                <span className="text-xs px-2.5 py-1 rounded-full bg-red-100 text-[#d97706] font-bold ml-1 align-middle">
                   {newCount > 0 ? `${newCount} New` : `${eligible.length} Profiles`}
                 </span>
               )}
@@ -125,25 +125,25 @@ export default function MatchesPage() {
             href="/preferences"
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:border-gray-300 shadow-xs cursor-pointer"
           >
-            <Filter className="w-4 h-4 text-[#e53238]" />
+            <Filter className="w-4 h-4 text-[#d97706]" />
             <span>Refine Preferences</span>
           </a>
         </div>
 
         {showLoading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 text-[#e53238] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[#d97706] animate-spin" />
           </div>
         ) : eligible.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-xs">
-            <Heart className="w-10 h-10 text-[#e53238] mx-auto mb-4" />
+            <Heart className="w-10 h-10 text-[#d97706] mx-auto mb-4" />
             <h3 className="font-bold text-gray-900 text-lg mb-1">No matches found yet</h3>
             <p className="text-sm text-gray-500 mb-5">
               Widen your partner preferences or add more profile details to unlock matches.
             </p>
             <a
               href="/preferences"
-              className="inline-block px-6 py-3 bg-[#e53238] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#c92429] cursor-pointer"
+              className="inline-block px-6 py-3 bg-[#d97706] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#b45309] cursor-pointer"
             >
               Adjust Preferences
             </a>
@@ -170,13 +170,13 @@ export default function MatchesPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#e53238] to-amber-500 flex items-center justify-center text-white font-black text-5xl shadow-inner group-hover:scale-105 transition-transform duration-300">
+                      <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#d97706] to-amber-500 flex items-center justify-center text-white font-black text-5xl shadow-inner group-hover:scale-105 transition-transform duration-300">
                         {m.profile.name[0]}
                       </div>
                     )}
 
                     {m.isNew && (
-                      <span className="absolute top-3 left-3 text-[10px] font-black text-white bg-[#e53238] px-2.5 py-0.5 rounded-full shadow-md uppercase">
+                      <span className="absolute top-3 left-3 text-[10px] font-black text-white bg-[#d97706] px-2.5 py-0.5 rounded-full shadow-md uppercase">
                         NEW
                       </span>
                     )}
@@ -188,7 +188,7 @@ export default function MatchesPage() {
 
                   <div className="p-4 sm:p-5">
                     <div className="mb-3">
-                      <h3 className="font-bold text-gray-900 group-hover:text-[#e53238] transition-colors text-base">
+                      <h3 className="font-bold text-gray-900 group-hover:text-[#d97706] transition-colors text-base">
                         {m.profile.name}
                       </h3>
                       <p className="text-xs text-gray-400 font-semibold">{m.profile.id}</p>
@@ -238,7 +238,7 @@ export default function MatchesPage() {
                         runAction(m.profile.id, "interest");
                       }}
                       disabled={busyId === m.profile.id}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-[#e53238] text-white text-xs font-bold shadow-xs hover:bg-[#c92429] transition-colors cursor-pointer disabled:opacity-60"
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-[#d97706] text-white text-xs font-bold shadow-xs hover:bg-[#b45309] transition-colors cursor-pointer disabled:opacity-60"
                     >
                       {busyId === m.profile.id ? "..." : "Send Interest"}
                     </button>

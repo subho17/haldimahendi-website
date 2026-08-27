@@ -51,96 +51,6 @@ export interface PublicProfile {
   mobile?: string | null;
 }
 
-// Sample profiles shown in live search (mirror of /api/search) so that
-// browsing sample results also opens a viewable profile.
-const SAMPLE_PROFILES: PublicProfile[] = [
-  {
-    id: 'SH1001',
-    name: 'Ananya Sharma',
-    age: 26,
-    height: "5'4\"",
-    religion: 'Hindu',
-    motherTongue: 'Hindi',
-    education: 'B.Tech - Computer Science',
-    profession: 'Senior Software Engineer',
-    city: 'Mumbai',
-    country: 'India',
-    maritalStatus: 'Never Married',
-    gender: 'Bride',
-    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=350',
-    bio: 'Warm, career-oriented professional looking for a life partner with mutual respect.',
-    verified: true,
-    membership: { tier: 'premium', isPremium: true, label: 'Premium' },
-    rashi: 'Taurus (Vrishabha)',
-    nakshatra: 'Rohini',
-    manglik: 'No',
-    diet: 'Vegetarian',
-    smoking: 'No',
-    drinking: 'No',
-    fatherOccupation: 'Business Owner',
-    motherOccupation: 'Homemaker',
-    siblings: '1 brother, 1 sister',
-    familyType: 'Nuclear Family',
-    familyValues: 'Moderate',
-  },
-  {
-    id: 'SH1002',
-    name: 'Rohan Mehta',
-    age: 28,
-    height: "5'10\"",
-    religion: 'Hindu',
-    motherTongue: 'Gujarati',
-    education: 'MBA - Finance',
-    profession: 'Investment Analyst',
-    city: 'Ahmedabad',
-    country: 'India',
-    maritalStatus: 'Never Married',
-    gender: 'Groom',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=350',
-    bio: 'Family-centered finance professional passionate about fitness and travelling.',
-    verified: true,
-    rashi: 'Leo (Simha)',
-    nakshatra: 'Magha',
-    manglik: 'Yes',
-    diet: 'Non-Vegetarian',
-    smoking: 'No',
-    drinking: 'Socially',
-    fatherOccupation: 'Retired Bank Officer',
-    motherOccupation: 'Teacher',
-    siblings: '1 brother',
-    familyType: 'Joint Family',
-    familyValues: 'Traditional',
-  },
-  {
-    id: 'SH1003',
-    name: 'Priya Nair',
-    age: 25,
-    height: "5'5\"",
-    religion: 'Hindu',
-    motherTongue: 'Malayalam',
-    education: 'M.Sc - Biotechnology',
-    profession: 'Research Scientist',
-    city: 'Bengaluru',
-    country: 'India',
-    maritalStatus: 'Never Married',
-    gender: 'Bride',
-    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=350',
-    bio: 'Simple and progressive individual seeking a caring and understanding partner.',
-    verified: true,
-    rashi: 'Virgo (Kanya)',
-    nakshatra: 'Uttara Phalguni',
-    manglik: 'No',
-    diet: 'Eggetarian',
-    smoking: 'No',
-    drinking: 'No',
-    fatherOccupation: 'Government Officer',
-    motherOccupation: 'Homemaker',
-    siblings: '1 sister',
-    familyType: 'Nuclear Family',
-    familyValues: 'Moderate',
-  },
-];
-
 // GET /api/profile?id=...
 export async function GET(req: Request) {
   try {
@@ -294,13 +204,6 @@ export async function GET(req: Request) {
       }
     } catch (e) {
       console.warn('Error reading scratch profile:', e);
-    }
-
-    // 3. Sample profiles
-    const sample = SAMPLE_PROFILES.find((p) => p.id === id);
-    if (sample) {
-      const withMobile = revealContact ? { ...sample, mobile: '98765 43210' } : sample;
-      return NextResponse.json({ success: true, profile: withMobile });
     }
 
     return NextResponse.json({ success: false, message: 'Profile not found' }, { status: 404 });

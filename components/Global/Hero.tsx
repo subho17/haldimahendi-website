@@ -30,32 +30,41 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden py-16 lg:py-24">
-      {/* Hero Background Slideshow with Gradient Overlay */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          key={HERO_IMAGES[activeIndex]}
-          src={HERO_IMAGES[activeIndex]}
-          alt={`Matrimonial couples background ${activeIndex + 1}`}
-          fill
-          sizes="100vw"
-          priority={activeIndex === 0}
-          className="object-cover object-center"
-        />
-        {/* Dark Romantic Gradient Overlay for Perfect Contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/75 backdrop-blur-[1px]"></div>
+      {/* Hero Background Image Slideshow */}
+      <div className="absolute inset-0 z-0 overflow-hidden bg-[#1a0f14]">
+        {HERO_IMAGES.map((imgSrc, index) => (
+          <div
+            key={imgSrc}
+            style={{ position: "absolute" }}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === activeIndex ? "opacity-100 scale-105" : "opacity-0 scale-100"
+            } transition-transform duration-10000`}
+          >
+            <Image
+              src={imgSrc}
+              alt="Matrimonial couples background"
+              fill
+              priority={index === 0}
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+        ))}
+        {/* Dark Gradient & Vignette Overlay for Readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/60 backdrop-blur-[1px]"></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full translate-y-6">
 
         {/* Trust Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white font-medium text-xs sm:text-sm mb-6 shadow-lg animate-pulse -translate-y-4">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#ff4d52]"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span>
           <span>#1 Most Trusted Matrimonial & Matchmaking Service</span>
         </div>
 
         {/* Main Heading */}
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight max-w-5xl mx-auto drop-shadow-md">
-          Find Your <span className="text-[#ff4d52] underline decoration-red-400 decoration-wavy">Perfect Match</span> With Trust & Joy
+          Find Your <span className="text-[#f59e0b] underline decoration-amber-400 decoration-wavy">Perfect Match</span> With Trust & Joy
         </h1>
 
         {/* Subtitle */}
@@ -75,7 +84,7 @@ export default function Hero() {
               <select
                 value={lookingFor}
                 onChange={(e) => setLookingFor(e.target.value)}
-                className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#e53238] focus:border-transparent outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
+                className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#d97706] focus:border-transparent outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
               >
                 <option value="Woman">Woman</option>
                 <option value="Man">Man</option>
@@ -91,7 +100,7 @@ export default function Hero() {
                 <select
                   value={ageFrom}
                   onChange={(e) => setAgeFrom(e.target.value)}
-                  className="w-full px-2 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#e53238] outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
+                  className="w-full px-2 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#d97706] outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
                 >
                   {Array.from({ length: 50 }, (_, i) => 18 + i).map((a) => (
                     <option key={a} value={a}>{a}</option>
@@ -101,7 +110,7 @@ export default function Hero() {
                 <select
                   value={ageTo}
                   onChange={(e) => setAgeTo(e.target.value)}
-                  className="w-full px-2 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#e53238] outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
+                  className="w-full px-2 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#d97706] outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
                 >
                   {Array.from({ length: 50 }, (_, i) => 21 + i).map((a) => (
                     <option key={a} value={a}>{a}</option>
@@ -118,7 +127,7 @@ export default function Hero() {
               <select
                 value={religion}
                 onChange={(e) => setReligion(e.target.value)}
-                className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#e53238] outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
+                className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#d97706] outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
               >
                 <option value="Hindu">Hindu</option>
                 <option value="Muslim">Muslim</option>
@@ -139,7 +148,7 @@ export default function Hero() {
               <select
                 value={motherTongue}
                 onChange={(e) => setMotherTongue(e.target.value)}
-                className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#e53238] outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
+                className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:ring-2 focus:ring-[#d97706] outline-hidden cursor-pointer hover:bg-gray-100/80 transition-colors"
               >
                 <option value="Hindi">Hindi</option>
                 <option value="Bengali">Bengali</option>
@@ -158,7 +167,7 @@ export default function Hero() {
             <div>
               <Link
                 href={`/auth/signup?lookingFor=${lookingFor}&religion=${religion}&motherTongue=${motherTongue}`}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#e53238] text-white font-bold text-sm shadow-lg hover:bg-[#c92429] active:scale-98 transition-all cursor-pointer hover:shadow-red-500/25"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#d97706] text-white font-bold text-sm shadow-lg hover:bg-[#b45309] active:scale-98 transition-all cursor-pointer hover:shadow-amber-500/25"
               >
                 <span>Let&apos;s Begin</span>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -177,7 +186,7 @@ export default function Hero() {
               type="button"
               aria-label={`Go to slide ${i + 1}`}
               onClick={() => setActiveIndex(i)}
-              className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${i === activeIndex ? 'w-8 bg-[#ff4d52]' : 'w-2.5 bg-white/40 hover:bg-white/70'
+              className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${i === activeIndex ? 'w-8 bg-[#f59e0b]' : 'w-2.5 bg-white/40 hover:bg-white/70'
                 }`}
             />
           ))}
