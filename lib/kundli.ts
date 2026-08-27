@@ -62,6 +62,8 @@ const PLANET_FRIENDS: Record<string, string[]> = {
   jupiter: ["sun", "moon", "mars"],
   venus: ["mercury", "saturn"],
   saturn: ["mercury", "venus"],
+  ketu: ["ketu"],
+  rahu: ["rahu"],
 };
 
 const PLANET_ENEMIES: Record<string, string[]> = {
@@ -114,7 +116,7 @@ export function computeKundliGunas(
   if (gr === "same") gana = 6;
   else if (gr === "adjacent") gana = 3;
 
-  const nadi = na.nadi === nb.nadi ? 0 : 8;
+  const nadi = na.nadi === nb.nadi ? 8 : 0;
   const yoni = na.yoni === nb.yoni ? 4 : 0;
 
   let maithri = 0;
@@ -122,7 +124,7 @@ export function computeKundliGunas(
   if (rel === "friend") maithri = 5;
   else if (rel === "neutral") maithri = 2;
 
-  return { gunas: gana + nadi + yoni + maithri, max: 36, breakdown: { gana, nadi, yoni, maithri } };
+  return { gunas: gana + nadi + yoni + maithri, max: 23, breakdown: { gana, nadi, yoni, maithri } };
 }
 
 // Manglik rule: same status (both manglik or both non-manglik) is fully

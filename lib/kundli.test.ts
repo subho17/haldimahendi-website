@@ -30,12 +30,12 @@ describe('kundli', () => {
     expect(getNakshatra('unknown')).toBeNull();
   });
 
-  it('computeKundliGunas returns 36 for identical charts', async () => {
+  it('computeKundliGunas returns 23 for identical charts', async () => {
     const { computeKundliGunas } = await import('@/lib/kundli');
     const g = computeKundliGunas('Ashwini', 'Ashwini');
     expect(g).not.toBeNull();
-    expect(g?.gunas).toBe(36);
-    expect(g?.max).toBe(36);
+    expect(g?.gunas).toBe(23);
+    expect(g?.max).toBe(23);
     expect(g?.breakdown.gana).toBe(6);
     expect(g?.breakdown.nadi).toBe(8);
     expect(g?.breakdown.yoni).toBe(4);

@@ -1,6 +1,13 @@
 {
   "interests": [
     {
+      "id": "in_1787817290205_9db6",
+      "senderId": "9876543210",
+      "recipientId": "9641117428",
+      "status": "accepted",
+      "createdAt": "2026-08-27T07:54:50.204Z"
+    },
+    {
       "id": "in_1787737070056_s9s7",
       "senderId": "9641117428",
       "recipientId": "9163399882",

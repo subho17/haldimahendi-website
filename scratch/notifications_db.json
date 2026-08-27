@@ -1,6 +1,60 @@
 {
   "notifications": [
     {
+      "id": "nt_1787819575719_rroe",
+      "userId": "9163399882",
+      "actorId": "9641117428",
+      "type": "message",
+      "title": "New Message",
+      "message": "shreya kumari sent you a message: \"hello rahul\"",
+      "data": {
+        "conversationId": "1066a584-cf2f-42aa-bdd2-0fa2921e1ef0",
+        "profileId": "9641117428"
+      },
+      "read": false,
+      "createdAt": "2026-08-27T08:32:55.719Z"
+    },
+    {
+      "id": "nt_1787817365282_nyfm",
+      "userId": "9876543210",
+      "actorId": "9641117428",
+      "type": "message",
+      "title": "New Message",
+      "message": "shreya kumari sent you a message: \"hi rohit\"",
+      "data": {
+        "conversationId": "94de4998-4d76-4415-bfbd-620aa769f201",
+        "profileId": "9641117428"
+      },
+      "read": false,
+      "createdAt": "2026-08-27T07:56:05.282Z"
+    },
+    {
+      "id": "nt_1787817347654_z3hd",
+      "userId": "9876543210",
+      "actorId": "9641117428",
+      "type": "accept",
+      "title": "Interest Accepted",
+      "message": "shreya kumari accepted your interest. You can now chat!",
+      "data": {
+        "profileId": "9641117428"
+      },
+      "read": false,
+      "createdAt": "2026-08-27T07:55:47.654Z"
+    },
+    {
+      "id": "nt_1787817290536_z00p",
+      "userId": "9641117428",
+      "actorId": "9876543210",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "rohit singh sent you an interest.",
+      "data": {
+        "profileId": "9876543210"
+      },
+      "read": true,
+      "createdAt": "2026-08-27T07:54:50.536Z"
+    },
+    {
       "id": "nt_1787813659534_hwok",
       "userId": "9641117428",
       "actorId": "9163399882",
