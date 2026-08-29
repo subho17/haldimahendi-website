@@ -7,77 +7,193 @@ import { Crown, Check, X, Lock, ShieldCheck, Tag } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useMounted } from "@/hooks/useMounted";
 
-interface Plan {
+interface MembershipPlan {
   id: string;
   tier: string;
   name: string;
   price: string;
+  priceLabel: string;
+  periodDays: number;
   periodLabel: string;
   features: string[];
   highlight: boolean;
   badgeLabel: string;
+  contactCredits: number;
+  interestsPerMonth: number;
+  shortlistLimit: number;
+  profilePhotos: number;
+  profileBoostsPerMonth: number;
+  featuredProfile: boolean;
+  horoscopeMatching: boolean;
+  compatibilityScore: boolean;
+  profileVerification: boolean;
+  incognitoBrowsing: boolean;
+  aiMatchRecommendations: boolean;
+  dailyMatchSuggestions: number;
+  whatsappEmailAlerts: boolean;
+  prioritySupport: boolean;
+  dedicatedMatchmaking: boolean;
 }
 
-const PLANS: Plan[] = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const MEMBERSHIP_PLANS: MembershipPlan[] = [
   {
     id: "free",
     tier: "free",
     name: "Free",
     price: "₹0",
+    priceLabel: "₹0",
+    periodDays: 0,
     periodLabel: "forever",
     features: [
-      "Unlimited matching",
-      "Send & accept interests",
-      "Real-time chat with connections",
-      "Personal profile & photo upload",
-      "Basic search",
+      "Create matrimonial profile",
+      "Upload up to 3 photos",
+      "Browse profiles",
+      "Receive interests",
+      "Send 5 interests/month",
+      "Shortlist up to 10 profiles",
+      "Basic privacy controls",
+      "5 daily match suggestions",
     ],
     highlight: false,
     badgeLabel: "",
+    contactCredits: 0,
+    interestsPerMonth: 5,
+    shortlistLimit: 10,
+    profilePhotos: 3,
+    profileBoostsPerMonth: 0,
+    featuredProfile: false,
+    horoscopeMatching: false,
+    compatibilityScore: false,
+    profileVerification: false,
+    incognitoBrowsing: false,
+    aiMatchRecommendations: false,
+    dailyMatchSuggestions: 5,
+    whatsappEmailAlerts: false,
+    prioritySupport: false,
+    dedicatedMatchmaking: false,
   },
   {
-    id: "premium",
-    tier: "premium",
-    name: "Premium",
-    price: "₹999",
-    periodLabel: "/ 3 months",
+    id: "silver",
+    tier: "silver",
+    name: "Silver",
+    price: "₹499",
+    priceLabel: "₹499",
+    periodDays: 30,
+    periodLabel: "/ month",
     features: [
       "Everything in Free",
-      "View member contact details",
-      "See who viewed your profile",
-      "Chat priority support",
-      "Profile highlighted in search",
-      "Ad-free experience",
-    ],
-    highlight: true,
-    badgeLabel: "Premium",
-  },
-  {
-    id: "premium_plus",
-    tier: "premium_plus",
-    name: "Premium Plus",
-    price: "₹2,499",
-    periodLabel: "/ 12 months",
-    features: [
-      "Everything in Premium",
-      "Personal matchmaking manager",
-      "Advanced astro & kundli matching",
-      "Profile boost twice a month",
-      "Dedicated support line",
+      "Profile verification",
+      "Advanced search filters",
+      "50 interests/month",
+      "View contact details (10/month)",
+      "Messaging with matches",
+      "See who viewed you",
+      "See who shortlisted you",
+      "Private photos",
+      "20 daily match suggestions",
+      "1 profile boost/month",
+      "Email/WhatsApp alerts",
     ],
     highlight: false,
-    badgeLabel: "Premium Plus",
+    badgeLabel: "Silver",
+    contactCredits: 10,
+    interestsPerMonth: 50,
+    shortlistLimit: 50,
+    profilePhotos: 10,
+    profileBoostsPerMonth: 1,
+    featuredProfile: false,
+    horoscopeMatching: false,
+    compatibilityScore: false,
+    profileVerification: true,
+    incognitoBrowsing: false,
+    aiMatchRecommendations: false,
+    dailyMatchSuggestions: 20,
+    whatsappEmailAlerts: true,
+    prioritySupport: false,
+    dedicatedMatchmaking: false,
+  },
+  {
+    id: "gold",
+    tier: "gold",
+    name: "Gold",
+    price: "₹999",
+    priceLabel: "₹999",
+    periodDays: 30,
+    periodLabel: "/ month",
+    features: [
+      "Everything in Silver",
+      "Unlimited interests",
+      "View contact details (50/month)",
+      "Horoscope matching",
+      "Compatibility score",
+      "AI-powered match recommendations",
+      "50 daily match suggestions",
+      "3 profile boosts/month",
+      "Featured profile",
+      "Incognito browsing",
+      "Advanced privacy controls",
+      "Unlimited shortlisting",
+      "Priority support",
+    ],
+    highlight: true,
+    badgeLabel: "Gold ⭐",
+    contactCredits: 50,
+    interestsPerMonth: -1,
+    shortlistLimit: -1,
+    profilePhotos: 20,
+    profileBoostsPerMonth: 3,
+    featuredProfile: true,
+    horoscopeMatching: true,
+    compatibilityScore: true,
+    profileVerification: true,
+    incognitoBrowsing: true,
+    aiMatchRecommendations: true,
+    dailyMatchSuggestions: 50,
+    whatsappEmailAlerts: true,
+    prioritySupport: true,
+    dedicatedMatchmaking: false,
+  },
+  {
+    id: "platinum",
+    tier: "platinum",
+    name: "Platinum",
+    price: "₹1,999",
+    priceLabel: "₹1,999",
+    periodDays: 30,
+    periodLabel: "/ month",
+    features: [
+      "Everything in Gold",
+      "Unlimited contact views",
+      "Unlimited match suggestions",
+      "10 profile boosts/month",
+      "Top placement in searches",
+      "Premium/featured badge",
+      "Priority profile verification",
+      "Dedicated matchmaking assistance",
+      "Personalized match recommendations",
+      "Advanced compatibility analysis",
+      "Priority customer support",
+    ],
+    highlight: false,
+    badgeLabel: "Platinum 👑",
+    contactCredits: -1,
+    interestsPerMonth: -1,
+    shortlistLimit: -1,
+    profilePhotos: -1,
+    profileBoostsPerMonth: 10,
+    featuredProfile: true,
+    horoscopeMatching: true,
+    compatibilityScore: true,
+    profileVerification: true,
+    incognitoBrowsing: true,
+    aiMatchRecommendations: true,
+    dailyMatchSuggestions: -1,
+    whatsappEmailAlerts: true,
+    prioritySupport: true,
+    dedicatedMatchmaking: true,
   },
 ];
-
-interface MembershipStatus {
-  tier: string;
-  expiresAt: string | null;
-  isPremium: boolean;
-  plan: Plan | null;
-}
-
-const FREE_MEMBERSHIP: MembershipStatus = { tier: "free", expiresAt: null, isPremium: false, plan: null };
 
 function formatExpiry(iso?: string | null): string {
   if (!iso) return "";
@@ -90,9 +206,15 @@ export default function MembershipPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const mounted = useMounted();
 
-  const [status, setStatus] = useState<MembershipStatus>(FREE_MEMBERSHIP);
+  const [status, setStatus] = useState<{
+    tier: string;
+    expiresAt: string | null;
+    isPremium: boolean;
+    plan: typeof MEMBERSHIP_PLANS[number] | null;
+  }>({ tier: "free", expiresAt: null, isPremium: false, plan: null });
   const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [plans, setPlans] = useState<typeof MEMBERSHIP_PLANS>([]);
+  const [selectedPlan, setSelectedPlan] = useState<typeof MEMBERSHIP_PLANS[number] | null>(null);
   const [step, setStep] = useState<"form" | "processing" | "success">("form");
   const [cardName, setCardName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
@@ -116,10 +238,14 @@ export default function MembershipPage() {
     if (!mounted || isLoading || !isAuthenticated || !userId) return;
     const timer = setTimeout(() => {
       setLoading(true);
-      fetch(`/api/membership?userId=${encodeURIComponent(userId)}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data?.success && data.membership) setStatus(data.membership);
+      Promise.all([
+        fetch(`/api/membership?userId=${encodeURIComponent(userId)}`),
+        fetch("/api/membership/plans"),
+      ])
+        .then(([statusRes, plansRes]) => Promise.all([statusRes.json(), plansRes.json()]))
+        .then(([statusData, plansData]) => {
+          if (statusData?.success && statusData.membership) setStatus(statusData.membership);
+          if (plansData?.success && plansData.plans) setPlans(plansData.plans);
         })
         .catch(() => {})
         .finally(() => setLoading(false));
@@ -127,7 +253,7 @@ export default function MembershipPage() {
     return () => clearTimeout(timer);
   }, [mounted, isLoading, isAuthenticated, userId]);
 
-  const openCheckout = (plan: Plan) => {
+  const openCheckout = (plan: typeof MEMBERSHIP_PLANS[number]) => {
     setFormError("");
     setMessage("");
     setCardName("");
@@ -189,7 +315,6 @@ export default function MembershipPage() {
     if (cardCvv.length < 3) return setFormError("Please enter a valid CVV.");
 
     setStep("processing");
-    // Simulated payment gateway: authorize + process.
     await new Promise((r) => setTimeout(r, 1800));
 
     try {
@@ -225,7 +350,7 @@ export default function MembershipPage() {
       });
       const data = await res.json();
       if (data?.success) {
-        setStatus(FREE_MEMBERSHIP);
+        setStatus({ tier: "free", expiresAt: null, isPremium: false, plan: null });
         setMessage("You are now on the Free plan.");
       }
     } catch {
@@ -236,13 +361,13 @@ export default function MembershipPage() {
   };
 
   const currentPlanName = status.isPremium
-    ? status.plan?.badgeLabel || (status.tier === "premium" ? "Premium" : status.tier)
+    ? status.plan?.badgeLabel || (status.tier === "gold" ? "Gold" : status.tier === "silver" ? "Silver" : status.tier)
     : "Free";
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Navbar />
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-100">
             <Crown className="w-8 h-8" />
@@ -303,8 +428,8 @@ export default function MembershipPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              {PLANS.map((plan) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {plans.map((plan) => {
                 const isCurrent = status.tier === plan.tier;
                 return (
                   <div
@@ -318,7 +443,14 @@ export default function MembershipPage() {
                         Most Popular
                       </span>
                     )}
-                    <h3 className="font-extrabold text-gray-900 text-lg">{plan.name}</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-extrabold text-gray-900 text-lg">{plan.name}</h3>
+                      {plan.badgeLabel && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-700">
+                          {plan.badgeLabel}
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-2 mb-4">
                       <span className="text-2xl font-black text-gray-900">{plan.price}</span>{" "}
                       <span className="text-xs text-gray-400 font-semibold">{plan.periodLabel}</span>
@@ -390,8 +522,19 @@ export default function MembershipPage() {
                   <p className="text-xs text-gray-500">{selectedPlan.periodLabel}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-black text-gray-900">{selectedPlan.price}</p>
-                  <p className="text-[10px] text-gray-400 font-semibold">incl. of all taxes</p>
+                  {appliedCoupon ? (
+                    <>
+                      <p className="text-xl font-black text-emerald-600">₹{selectedPlan.price}</p>
+                      <p className="text-[10px] text-emerald-600 font-semibold">−₹{appliedCoupon.discountAmount.toLocaleString()} with {appliedCoupon.code}</p>
+                      <p className="text-xl font-black text-gray-900">₹{appliedCoupon.finalPrice.toLocaleString()}</p>
+                      <p className="text-[10px] text-gray-400 font-semibold">incl. of all taxes</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xl font-black text-gray-900">{selectedPlan.price}</p>
+                      <p className="text-[10px] text-gray-400 font-semibold">incl. of all taxes</p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -499,7 +642,7 @@ export default function MembershipPage() {
                   type="submit"
                   className="w-full py-3 rounded-xl bg-[#d97706] text-white text-sm font-bold shadow-md hover:bg-[#b45309] transition-colors cursor-pointer"
                 >
-                  Pay {selectedPlan.price}
+                  {appliedCoupon ? `Pay ₹{selectedPlan.price} (₹{appliedCoupon.finalPrice.toLocaleString()} after discount)` : `Pay {selectedPlan.price}`}
                 </button>
                 <p className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400 font-semibold">
                   <Lock className="w-3 h-3" /> This is a demo checkout — no real payment is taken.

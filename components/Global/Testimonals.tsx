@@ -250,7 +250,7 @@ export default function Testimonals() {
                     <div className="absolute -bottom-16 left-4 flex gap-2">
                       {item.avatars.map((av, idx) => (
                         <div key={idx} className={`relative rounded-full p-1 bg-[#eef0f4] ${idx === 1 ? 'w-16 h-16' : 'w-12 h-12 mt-2'}`}>
-                          <Image src={av} alt="Avatar" fill className="rounded-full object-cover" />
+                          <Image src={av} alt="Avatar" fill sizes="64px" className="rounded-full object-cover" />
                         </div>
                       ))}
                     </div>

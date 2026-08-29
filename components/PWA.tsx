@@ -4,36 +4,57 @@ import { useEffect } from "react";
 
 export default function PWA() {
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then((registration) => {
-            console.log("SW registered: ", registration);
+    if (!("serviceWorker" in navigator)) return;
 
-            // Check for updates periodically
-            setInterval(() => {
-              registration.update();
-            }, 60 * 60 * 1000); // Every hour
+    let registration: ServiceWorkerRegistration | null = null;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
-            // Listen for updates
-            registration.addEventListener("updatefound", () => {
-              const newWorker = registration.installing;
-              if (newWorker) {
-                newWorker.addEventListener("statechange", () => {
-                  if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                    // New version available - could show notification
-                    console.log("New version available, refresh to update");
-                  }
-                });
-              }
-            });
-          })
-          .catch((error) => {
-            console.log("SW registration failed: ", error);
+    const handleLoad = () => {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => {
+          registration = reg;
+          console.log("SW registered: ", registration);
+
+          // Check for updates periodically
+          intervalId = setInterval(() => {
+            const reg = registration;
+            if (reg && reg.active) {
+              reg.update().catch((err) => {
+                console.warn("SW update check failed:", err);
+              });
+            }
+          }, 60 * 60 * 1000); // Every hour
+
+          // Listen for updates
+          registration.addEventListener("updatefound", () => {
+            const reg = registration;
+            if (!reg) return;
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener("statechange", () => {
+                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                  console.log("New version available, refresh to update");
+                }
+              });
+            }
           });
-      });
+        })
+        .catch((error) => {
+          console.log("SW registration failed: ", error);
+        });
+    };
+
+    if (document.readyState === "complete") {
+      handleLoad();
+    } else {
+      window.addEventListener("load", handleLoad);
     }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      window.removeEventListener("load", handleLoad);
+    };
   }, []);
 
   return null;

@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { pool, hasPool, ensureProfilesTable } from "@/lib/db";
 
-export type MembershipTier = "free" | "premium" | "premium_plus";
+export type MembershipTier = "free" | "silver" | "gold" | "platinum";
 
 export interface MembershipPlan {
   id: string;
@@ -15,6 +15,21 @@ export interface MembershipPlan {
   features: string[];
   highlight: boolean;
   badgeLabel: string;
+  contactCredits: number;
+  interestsPerMonth: number;
+  shortlistLimit: number;
+  profilePhotos: number;
+  profileBoostsPerMonth: number;
+  featuredProfile: boolean;
+  horoscopeMatching: boolean;
+  compatibilityScore: boolean;
+  profileVerification: boolean;
+  incognitoBrowsing: boolean;
+  aiMatchRecommendations: boolean;
+  dailyMatchSuggestions: number;
+  whatsappEmailAlerts: boolean;
+  prioritySupport: boolean;
+  dedicatedMatchmaking: boolean;
 }
 
 export const MEMBERSHIP_PLANS: MembershipPlan[] = [
@@ -27,51 +42,152 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     periodDays: 0,
     periodLabel: "forever",
     features: [
-      "Unlimited matching",
-      "Send & accept interests",
-      "Real-time chat with connections",
-      "Personal profile & photo upload",
-      "Basic search",
+      "Create matrimonial profile",
+      "Upload up to 3 photos",
+      "Browse profiles",
+      "Receive interests",
+      "Send 5 interests/month",
+      "Shortlist up to 10 profiles",
+      "Basic privacy controls",
+      "5 daily match suggestions",
     ],
     highlight: false,
     badgeLabel: "",
+    contactCredits: 0,
+    interestsPerMonth: 5,
+    shortlistLimit: 10,
+    profilePhotos: 3,
+    profileBoostsPerMonth: 0,
+    featuredProfile: false,
+    horoscopeMatching: false,
+    compatibilityScore: false,
+    profileVerification: false,
+    incognitoBrowsing: false,
+    aiMatchRecommendations: false,
+    dailyMatchSuggestions: 5,
+    whatsappEmailAlerts: false,
+    prioritySupport: false,
+    dedicatedMatchmaking: false,
   },
   {
-    id: "premium",
-    tier: "premium",
-    name: "Premium",
-    price: "₹999",
-    priceLabel: "₹999",
-    periodDays: 90,
-    periodLabel: "/ 3 months",
+    id: "silver",
+    tier: "silver",
+    name: "Silver",
+    price: "₹499",
+    priceLabel: "₹499",
+    periodDays: 30,
+    periodLabel: "/ month",
     features: [
       "Everything in Free",
-      "View member contact details",
-      "See who viewed your profile",
-      "Chat priority support",
-      "Profile highlighted in search",
-      "Ad-free experience",
-    ],
-    highlight: true,
-    badgeLabel: "Premium",
-  },
-  {
-    id: "premium_plus",
-    tier: "premium_plus",
-    name: "Premium Plus",
-    price: "₹2,499",
-    priceLabel: "₹2,499",
-    periodDays: 365,
-    periodLabel: "/ 12 months",
-    features: [
-      "Everything in Premium",
-      "Personal matchmaking manager",
-      "Advanced astro & kundli matching",
-      "Profile boost twice a month",
-      "Dedicated support line",
+      "Profile verification",
+      "Advanced search filters",
+      "50 interests/month",
+      "View contact details (10/month)",
+      "Messaging with matches",
+      "See who viewed you",
+      "See who shortlisted you",
+      "Private photos",
+      "20 daily match suggestions",
+      "1 profile boost/month",
+      "Email/WhatsApp alerts",
     ],
     highlight: false,
-    badgeLabel: "Premium Plus",
+    badgeLabel: "Silver",
+    contactCredits: 10,
+    interestsPerMonth: 50,
+    shortlistLimit: 50,
+    profilePhotos: 10,
+    profileBoostsPerMonth: 1,
+    featuredProfile: false,
+    horoscopeMatching: false,
+    compatibilityScore: false,
+    profileVerification: true,
+    incognitoBrowsing: false,
+    aiMatchRecommendations: false,
+    dailyMatchSuggestions: 20,
+    whatsappEmailAlerts: true,
+    prioritySupport: false,
+    dedicatedMatchmaking: false,
+  },
+  {
+    id: "gold",
+    tier: "gold",
+    name: "Gold",
+    price: "₹999",
+    priceLabel: "₹999",
+    periodDays: 30,
+    periodLabel: "/ month",
+    features: [
+      "Everything in Silver",
+      "Unlimited interests",
+      "View contact details (50/month)",
+      "Horoscope matching",
+      "Compatibility score",
+      "AI-powered match recommendations",
+      "50 daily match suggestions",
+      "3 profile boosts/month",
+      "Featured profile",
+      "Incognito browsing",
+      "Advanced privacy controls",
+      "Unlimited shortlisting",
+      "Priority support",
+    ],
+    highlight: true,
+    badgeLabel: "Gold ⭐",
+    contactCredits: 50,
+    interestsPerMonth: -1,
+    shortlistLimit: -1,
+    profilePhotos: 20,
+    profileBoostsPerMonth: 3,
+    featuredProfile: true,
+    horoscopeMatching: true,
+    compatibilityScore: true,
+    profileVerification: true,
+    incognitoBrowsing: true,
+    aiMatchRecommendations: true,
+    dailyMatchSuggestions: 50,
+    whatsappEmailAlerts: true,
+    prioritySupport: true,
+    dedicatedMatchmaking: false,
+  },
+  {
+    id: "platinum",
+    tier: "platinum",
+    name: "Platinum",
+    price: "₹1,999",
+    priceLabel: "₹1,999",
+    periodDays: 30,
+    periodLabel: "/ month",
+    features: [
+      "Everything in Gold",
+      "Unlimited contact views",
+      "Unlimited match suggestions",
+      "10 profile boosts/month",
+      "Top placement in searches",
+      "Premium/featured badge",
+      "Priority profile verification",
+      "Dedicated matchmaking assistance",
+      "Personalized match recommendations",
+      "Advanced compatibility analysis",
+      "Priority customer support",
+    ],
+    highlight: false,
+    badgeLabel: "Platinum 👑",
+    contactCredits: -1,
+    interestsPerMonth: -1,
+    shortlistLimit: -1,
+    profilePhotos: -1,
+    profileBoostsPerMonth: 10,
+    featuredProfile: true,
+    horoscopeMatching: true,
+    compatibilityScore: true,
+    profileVerification: true,
+    incognitoBrowsing: true,
+    aiMatchRecommendations: true,
+    dailyMatchSuggestions: -1,
+    whatsappEmailAlerts: true,
+    prioritySupport: true,
+    dedicatedMatchmaking: true,
   },
 ];
 
@@ -85,13 +201,13 @@ export interface MembershipStatus {
 const USERS_FILE = path.join(process.cwd(), "scratch", "users_db.json");
 
 function isTier(value: unknown): value is MembershipTier {
-  return value === "free" || value === "premium" || value === "premium_plus";
+  return value === "free" || value === "silver" || value === "gold" || value === "platinum";
 }
 
 function badgeLabelFor(tier: MembershipTier): string {
   if (tier === "free") return "";
   const plan = MEMBERSHIP_PLANS.find((p) => p.tier === tier);
-  return plan?.badgeLabel || tier.replace("_", " ");
+  return plan?.badgeLabel || tier;
 }
 
 function normalizeTier(value: unknown): MembershipTier {
@@ -177,7 +293,7 @@ export async function upgradeMembership(
           `UPDATE profiles
            SET membership_tier = 'free', membership_expires_at = NULL
            WHERE user_id = $1 OR mobile_number = $1`,
-          [id]
+        [id]
         );
       } catch (e) {
         console.warn("Error downgrading membership in Postgres:", e);
@@ -215,7 +331,7 @@ export async function upgradeMembership(
         `UPDATE profiles
          SET membership_tier = $2, membership_expires_at = $3
          WHERE user_id = $1 OR mobile_number = $1`,
-        [id, tier, expiresAt]
+      [id, tier, expiresAt]
       );
     } catch (e) {
       console.warn("Error upgrading membership in Postgres:", e);
