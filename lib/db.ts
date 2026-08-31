@@ -120,6 +120,43 @@ export function ensureProfilesTable(): Promise<void> {
         diet           TEXT,
         smoking        TEXT,
         drinking       TEXT,
+        disability     TEXT,
+        -- Verification badges
+        mobile_verified     BOOLEAN DEFAULT FALSE,
+        email_verified      BOOLEAN DEFAULT FALSE,
+        id_verified         BOOLEAN DEFAULT FALSE,
+        photo_verified      BOOLEAN DEFAULT FALSE,
+        verification_badge  TEXT,
+        -- Profile boost
+        profile_boost_expires_at TIMESTAMPTZ,
+        profile_boost_type TEXT,
+        -- Featured profile
+        featured_profile      BOOLEAN DEFAULT FALSE,
+        featured_profile_until TIMESTAMPTZ,
+        -- Contact credits
+        contact_credits       INT DEFAULT 0,
+        -- Privacy controls
+        hide_phone          BOOLEAN DEFAULT FALSE,
+        hide_email          BOOLEAN DEFAULT FALSE,
+        hide_surname        BOOLEAN DEFAULT FALSE,
+        hide_photos         BOOLEAN DEFAULT FALSE,
+        photo_privacy       TEXT DEFAULT 'public', -- 'public', 'contacts_only', 'private'
+        -- Existing columns
+        dob            DATE,
+        birth_time     TEXT,
+        birth_place    TEXT,
+        rashi          TEXT,
+        nakshatra      TEXT,
+        manglik        TEXT,
+        gotra          TEXT,
+        father_occupation TEXT,
+        mother_occupation TEXT,
+        siblings       TEXT,
+        family_type    TEXT,
+        family_values  TEXT,
+        diet           TEXT,
+        smoking        TEXT,
+        drinking       TEXT,
         disability     TEXT
       )
     `);
@@ -160,6 +197,21 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS disability TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT FALSE;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mobile_verified BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS id_verified BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_verified BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS verification_badge TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profile_boost_expires_at TIMESTAMPTZ;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profile_boost_type TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS featured_profile BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS featured_profile_until TIMESTAMPTZ;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS contact_credits INT DEFAULT 0;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_phone BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_email BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_surname BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_photos BOOLEAN DEFAULT FALSE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_privacy TEXT DEFAULT 'public';
       CREATE TABLE IF NOT EXISTS coupons (
         id TEXT PRIMARY KEY,
         code TEXT UNIQUE NOT NULL,
@@ -175,6 +227,41 @@ export function ensureProfilesTable(): Promise<void> {
         description TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+      
+      -- Profile boosts table
+      CREATE TABLE IF NOT EXISTS profile_boosts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id TEXT NOT NULL,
+        boost_type TEXT NOT NULL CHECK (boost_type IN ('24h', '3d', '7d')),
+        expires_at TIMESTAMPTZ NOT NULL,
+        purchased_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        is_active BOOLEAN DEFAULT TRUE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_profile_boosts_user ON profile_boosts (user_id, is_active);
+      CREATE INDEX IF NOT EXISTS idx_profile_boosts_expires ON profile_boosts (expires_at);
+
+      -- Contact credits table
+      CREATE TABLE IF NOT EXISTS contact_credits (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id TEXT NOT NULL,
+        credits INT NOT NULL DEFAULT 0,
+        expires_at TIMESTAMPTZ,
+        purchased_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        source TEXT, -- 'membership', 'purchase', 'promo'
+        UNIQUE (user_id)
+      );
+
+      -- Featured profiles
+      CREATE TABLE IF NOT EXISTS featured_profiles (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id TEXT NOT NULL UNIQUE,
+        featured_until TIMESTAMPTZ NOT NULL,
+        set_by_admin BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_featured_profiles_expires ON featured_profiles (featured_until);
     `);
 
     // Step 3: Create function & trigger

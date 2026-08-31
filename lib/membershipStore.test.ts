@@ -39,13 +39,14 @@ describe('membershipStore', () => {
     mockFs.writeFileSync.mockImplementation(() => {});
   });
 
-  it('defines three plans: free, premium, premium_plus', async () => {
+  it('defines four plans: free, silver, gold, platinum', async () => {
     const { MEMBERSHIP_PLANS } = await import('@/lib/membershipStore');
-    expect(MEMBERSHIP_PLANS).toHaveLength(3);
+    expect(MEMBERSHIP_PLANS).toHaveLength(4);
     const ids = MEMBERSHIP_PLANS.map((p: { id: string }) => p.id);
-    expect(ids).toEqual(['free', 'premium', 'premium_plus']);
-    expect(MEMBERSHIP_PLANS.find((p: { id: string; price: string }) => p.id === 'premium')?.price).toBe('₹999');
-    expect(MEMBERSHIP_PLANS.find((p: { id: string; price: string }) => p.id === 'premium_plus')?.price).toBe('₹2,499');
+    expect(ids).toEqual(['free', 'silver', 'gold', 'platinum']);
+    expect(MEMBERSHIP_PLANS.find((p: { id: string; price: string }) => p.id === 'silver')?.price).toBe('₹499');
+    expect(MEMBERSHIP_PLANS.find((p: { id: string; price: string }) => p.id === 'gold')?.price).toBe('₹999');
+    expect(MEMBERSHIP_PLANS.find((p: { id: string; price: string }) => p.id === 'platinum')?.price).toBe('₹1,999');
   });
 
   it('resolveStatus returns free for unknown tier', async () => {
@@ -58,7 +59,7 @@ describe('membershipStore', () => {
   it('resolveStatus returns free when expired', async () => {
     const { resolveStatus } = await import('@/lib/membershipStore');
     const past = new Date(Date.now() - 1000).toISOString();
-    const s = resolveStatus('premium', past);
+    const s = resolveStatus('gold', past);
     expect(s.tier).toBe('free');
     expect(s.isPremium).toBe(false);
   });
@@ -66,8 +67,8 @@ describe('membershipStore', () => {
   it('resolveStatus returns premium when active', async () => {
     const { resolveStatus } = await import('@/lib/membershipStore');
     const future = new Date(Date.now() + 86400000).toISOString();
-    const s = resolveStatus('premium', future);
-    expect(s.tier).toBe('premium');
+    const s = resolveStatus('gold', future);
+    expect(s.tier).toBe('gold');
     expect(s.isPremium).toBe(true);
   });
 
@@ -78,28 +79,28 @@ describe('membershipStore', () => {
     expect(m.isPremium).toBe(false);
   });
 
-  it('upgradeMembership creates free membership then upgrades to premium', async () => {
+  it('upgradeMembership creates free membership then upgrades to gold', async () => {
     const { upgradeMembership } = await import('@/lib/membershipStore');
-    const result = await upgradeMembership('user1', 'premium');
+    const result = await upgradeMembership('user1', 'gold');
     expect(result.success).toBe(true);
-    expect(result.membership.tier).toBe('premium');
+    expect(result.membership.tier).toBe('gold');
     expect(result.membership.isPremium).toBe(true);
     expect(result.membership.expiresAt).toBeDefined();
   });
 
   it('upgradeMembership extends from current expiry when already premium', async () => {
     const { upgradeMembership, getMembership } = await import('@/lib/membershipStore');
-    await upgradeMembership('user2', 'premium');
+    await upgradeMembership('user2', 'gold');
     const before = await getMembership('user2');
     await new Promise((r) => setTimeout(r, 10));
-    await upgradeMembership('user2', 'premium');
+    await upgradeMembership('user2', 'gold');
     const after = await getMembership('user2');
     expect((after.expiresAt || '') >= (before.expiresAt || '')).toBe(true);
   });
 
   it('downgrade to free sets isPremium false', async () => {
     const { upgradeMembership } = await import('@/lib/membershipStore');
-    await upgradeMembership('user3', 'premium_plus');
+    await upgradeMembership('user3', 'platinum');
     const result = await upgradeMembership('user3', 'free');
     expect(result.success).toBe(true);
     expect(result.membership.tier).toBe('free');

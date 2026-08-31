@@ -4,7 +4,7 @@ import { Apple, Play, QrCode } from 'lucide-react';
 
 export default function Downloadapp() {
   return (
-    <section className="bg-[#fdecec] py-16 px-4 md:px-8 lg:px-16 overflow-hidden">
+    <section className="bg-white py-16 px-4 md:px-8 lg:px-16 overflow-hidden">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         {/* Left Content */}
         <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-6">
@@ -24,14 +24,14 @@ export default function Downloadapp() {
                 <QrCode size={90} className="text-gray-800" strokeWidth={1.5} />
               </div>
               <div className="flex flex-col gap-3 w-full sm:w-auto">
-                <button className="flex items-center justify-center gap-3 bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition w-full">
+                <button className="flex items-center justify-center gap-3 bg-black text-white px-5 py-3 rounded-xl hover:bg-green-700 transition w-full">
                   <Play size={24} fill="currentColor" />
                   <div className="text-left">
                     <div className="text-[10px] uppercase tracking-wider text-gray-300">GET IT ON</div>
                     <div className="text-sm font-semibold leading-none mt-1">Google Play</div>
                   </div>
                 </button>
-                <button className="flex items-center justify-center gap-3 bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition w-full">
+                <button className="flex items-center justify-center gap-3 bg-black text-white px-5 py-3 rounded-xl hover:bg-green-700 transition w-full">
                   <Apple size={24} fill="currentColor" />
                   <div className="text-left">
                     <div className="text-[10px] uppercase tracking-wider text-gray-300">Download on the</div>
@@ -86,7 +86,7 @@ export default function Downloadapp() {
                 {/* Overlay text */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 text-white pb-6">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="bg-red-500 text-[10px] px-2 py-0.5 rounded-full font-semibold">Pro Lite</span>
+                    <span className="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-semibold">Pro Lite</span>
                     <span className="text-[10px] text-gray-200">Last seen at 11:30 am</span>
                   </div>
                   <div className="font-bold text-xl mt-1">Ayushi Gupta, 27</div>
@@ -118,18 +118,18 @@ export default function Downloadapp() {
 
             {/* Pill 1 */}
             <div className="absolute top-1/4 -left-8 sm:-left-12 bg-white rounded-full py-2.5 px-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center gap-2 z-20 transform hover:scale-105 transition-transform duration-300">
-              <span className="text-sm font-semibold text-gray-800">Easy Verification</span>
+              <span className="text-sm font-semibold text-amber-600">Easy Verification</span>
             </div>
             
             {/* Pill 2 */}
             <div className="absolute top-1/2 -right-8 sm:-right-12 bg-white rounded-full py-2.5 px-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center gap-2 z-20 transform hover:scale-105 transition-transform duration-300">
-              <span className="text-sm font-semibold text-gray-800">Voice & Video Calls</span>
+              <span className="text-sm font-semibold text-green-600">Voice & Video Calls</span>
             </div>
           </div>
 
           {/* Pill 3 */}
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-1/3 bg-white rounded-full py-2.5 px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center gap-2 z-20 transform hover:scale-105 transition-transform duration-300">
-            <span className="text-sm font-bold text-gray-800">10M+ downloads</span>
+            <span className="text-sm font-bold text-amber-600">10M+ downloads</span>
           </div>
 
         </div>

@@ -9,12 +9,18 @@ interface SignupModalProps {
   open: boolean;
   onClose: () => void;
   onOpenLogin?: () => void;
+  initialData?: {
+    lookingFor?: string;
+    religion?: string;
+    motherTongue?: string;
+  };
 }
 
 export default function SignupModal({
   open,
   onClose,
   onOpenLogin,
+  initialData,
 }: SignupModalProps) {
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -50,6 +56,7 @@ export default function SignupModal({
             onClose();
             if (onOpenLogin) onOpenLogin();
           }}
+          initialData={initialData}
         />
       </div>
     </div>,

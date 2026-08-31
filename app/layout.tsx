@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
-import GoogleAuthWrapper from "@/context/GoogleAuthWrapper";
 import PWA from "@/components/PWA";
 
 const geistSans = Geist({
@@ -90,12 +89,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#166534" />
       </head>
       <body className="min-h-screen flex flex-col bg-white text-[#111827] m-0 p-0">
-        <GoogleAuthWrapper>
-          <AuthProvider>
-            <main className="flex-1 flex flex-col">{children}</main>
-            <PWA />
-          </AuthProvider>
-        </GoogleAuthWrapper>
+        <AuthProvider>
+          <main className="flex-1 flex flex-col">{children}</main>
+          <PWA />
+        </AuthProvider>
       </body>
     </html>
   );

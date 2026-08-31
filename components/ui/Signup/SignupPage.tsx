@@ -23,15 +23,19 @@ import {
   EyeOff,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useGoogleLogin, GoogleLogin } from "@react-oauth/google";
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
 
 interface SignupPageProps {
   onOpenLogin?: () => void;
   onSuccess?: () => void;
   isModal?: boolean;
+  initialData?: {
+    lookingFor?: string;
+    religion?: string;
+    motherTongue?: string;
+  };
 }
 
 const DEFAULT_AVATARS = [
@@ -41,25 +45,14 @@ const DEFAULT_AVATARS = [
   { label: "Male Avatar 2", url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250" },
 ];
 
-const parseGoogleCredential = (credentialToken: string) => {
-  try {
-    const base64Url = credentialToken.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-};
-
-export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: SignupPageProps) {
+export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, initialData }: SignupPageProps) {
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const initLookingFor = initialData?.lookingFor || searchParams?.get("lookingFor") || "Woman";
+  const initReligion = initialData?.religion || searchParams?.get("religion") || "Hindu";
+  const initMotherTongue = initialData?.motherTongue || searchParams?.get("motherTongue") || "Hindi";
 
   // Wizard Steps: 1 = Registration Choice / Mobile Check, 2 = OTP Verification, 3 = Matrimonial Profile Completion
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -70,12 +63,13 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
   // Profile completion fields
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATARS[0].url);
-  const [gender, setGender] = useState<"Groom" | "Bride">("Groom");
+  const [gender, setGender] = useState<"Bride" | "Groom" | "Other">(initLookingFor === "Woman" ? "Bride" : "Groom");
+  const [companyName, setCompanyName] = useState("");
   const [age, setAge] = useState("25");
   const [height, setHeight] = useState("5'8\"");
   const [maritalStatus, setMaritalStatus] = useState("Never Married");
-  const [religion, setReligion] = useState("Hindu");
-  const [motherTongue] = useState("Hindi");
+  const [religion, setReligion] = useState(initReligion);
+  const [motherTongue, setMotherTongue] = useState(initMotherTongue);
   const [education, setEducation] = useState("B.Tech / Graduate");
   const [profession, setProfession] = useState("Software Engineer");
   const [city, setCity] = useState("Mumbai");
@@ -90,12 +84,6 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
   const [error, setError] = useState("");
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [infoMessage, setInfoMessage] = useState("");
-
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-  const isRealClient =
-    clientId &&
-    !clientId.includes("YOUR_GOOGLE_CLIENT_ID") &&
-    clientId.endsWith(".apps.googleusercontent.com");
 
   // Step 1: Check existing user & Send Real OTP via /api/otp/send
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -183,42 +171,6 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
     }
   };
 
-  // Google Registration Check & Handler
-  const handleGoogleAuth = async (userEmail: string, userName: string, pictureUrl?: string) => {
-    setIsLoading(true);
-    setError("");
-    setIsExistingUser(false);
-
-    try {
-      // Check if Google user already exists
-      const checkRes = await fetch("/api/auth/check-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail }),
-      });
-      const checkData = await checkRes.json();
-
-      if (checkData.exists) {
-        setIsLoading(false);
-        setIsExistingUser(true);
-        setError(`Already registered! An account with ${userEmail} already exists. Please sign in.`);
-        return;
-      }
-
-      setEmail(userEmail);
-      if (userName) setDisplayName(userName);
-      if (pictureUrl) setAvatarUrl(pictureUrl);
-
-      // New Google user -> move to Matrimonial Profile Completion!
-      setIsLoading(false);
-      setStep(3);
-      setInfoMessage("Google Account verified! Please complete your matrimonial details below.");
-    } catch {
-      setIsLoading(false);
-      setError("Failed to verify Google account. Please try again.");
-    }
-  };
-
   // Step 3: Save Matrimonial Profile Data & Redirect to /dashboard
   const handleCompleteProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -254,9 +206,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
       motherTongue,
       education,
       profession,
+      companyName,
       city,
       bio,
-      provider: (email ? "google" : "otp") as "otp" | "google" | "facebook",
+      provider: "otp" as const,
     };
 
     login(profileData);
@@ -316,40 +269,6 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
     } catch {
       setIsLoading(false);
       setError("Failed to resend OTP.");
-    }
-  };
-
-  // Google OAuth Login Hook
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
-        const googleUser = await res.json();
-        handleGoogleAuth(googleUser.email || "user@gmail.com", googleUser.name || "Member", googleUser.picture);
-      } catch {
-        handleGoogleAuth("googleuser@gmail.com", "Google Member");
-      }
-    },
-    onError: () => {
-      handleGoogleAuth("googleuser@gmail.com", "Google Member");
-    },
-  });
-
-  const handleSocialLogin = (provider: "google" | "facebook") => {
-    if (provider === "google") {
-      if (isRealClient) {
-        try {
-          googleLogin();
-          return;
-        } catch {
-          // fallback
-        }
-      }
-      handleGoogleAuth("googleuser@gmail.com", "Google Member");
-    } else {
-      handleGoogleAuth("facebookuser@gmail.com", "Facebook Member");
     }
   };
 
@@ -599,19 +518,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
               <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
                 Looking For
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setGender("Groom")}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                    gender === "Groom"
-                      ? "bg-red-50 border-[#d97706] text-[#d97706]"
-                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <span>🤵 Bride (Groom Profile)</span>
-                </button>
-
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setGender("Bride")}
@@ -621,7 +528,31 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                       : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <span>👰 Groom (Bride Profile)</span>
+                  <span>👰 Bride</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setGender("Groom")}
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    gender === "Groom"
+                      ? "bg-red-50 border-[#d97706] text-[#d97706]"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <span>🤵 Groom</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setGender("Other")}
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    gender === "Other"
+                      ? "bg-red-50 border-[#d97706] text-[#d97706]"
+                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <span>✨ Other</span>
                 </button>
               </div>
             </div>
@@ -709,15 +640,35 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Profession</label>
                 <div className="relative">
                   <Briefcase className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
+                  <select
                     value={profession}
                     onChange={(e) => setProfession(e.target.value)}
-                    placeholder="e.g. Engineer"
                     className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                  />
+                  >
+                    <option value="">Select Profession</option>
+                    <option value="Govt">Govt</option>
+                    <option value="Private">Private</option>
+                    <option value="Own Business">Own Business</option>
+                  </select>
                 </div>
               </div>
+
+              {/* Company Name (shown for Own Business) */}
+              {profession === "Own Business" && (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Company Name</label>
+                  <div className="relative">
+                    <Briefcase className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="e.g. My Company Pvt Ltd"
+                      className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* City */}
@@ -799,67 +750,6 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: 
             <span>Government ID Verified</span>
           </div>
         </div>
-
-        {/* Social Login Options */}
-        {step === 1 && (
-          <>
-            <div className="relative my-5 text-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-100"></div>
-              </div>
-              <span className="relative bg-white px-3 text-xs text-gray-400 uppercase font-semibold">
-                Or Register With Gmail
-              </span>
-            </div>
-
-            {isRealClient && (
-              <div className="mb-3 flex justify-center w-full">
-                <GoogleLogin
-                  onSuccess={(credentialResponse) => {
-                    const googleUser = parseGoogleCredential(credentialResponse.credential || "");
-                    if (googleUser?.email) {
-                      handleGoogleAuth(googleUser.email, googleUser.name || "Member", googleUser.picture);
-                    }
-                  }}
-                  onError={() => {
-                    handleSocialLogin("google");
-                  }}
-                  theme="outline"
-                  shape="pill"
-                  size="large"
-                  text="signup_with"
-                />
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3 mb-2">
-              <button
-                type="button"
-                onClick={() => handleSocialLogin("google")}
-                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-xs hover:bg-gray-50 transition-all cursor-pointer shadow-xs"
-              >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.28v3.15C3.26 21.3 7.31 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.28C.46 8.21 0 10.05 0 12s.46 3.79 1.28 5.42l4-3.15z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.28 6.58l4 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                </svg>
-                <span>Gmail</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSocialLogin("facebook")}
-                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-xs hover:bg-gray-50 transition-all cursor-pointer shadow-xs"
-              >
-                <svg className="w-4 h-4 fill-[#1877F2] shrink-0" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                <span>Facebook</span>
-              </button>
-            </div>
-          </>
-        )}
 
         {/* Switch to Login */}
         {step === 1 && (

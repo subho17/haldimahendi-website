@@ -1,6 +1,7 @@
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import SignupPageView from "@/components/ui/Signup/SignupPage";
+import { Suspense } from "react";
 
 export default function SignupPage() {
   return (
@@ -13,7 +14,9 @@ export default function SignupPage() {
         <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-100/40 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative w-full max-w-xl">
-          <SignupPageView />
+          <Suspense fallback={<div className="flex h-64 items-center justify-center">Loading...</div>}>
+            <SignupPageView />
+          </Suspense>
         </div>
       </main>
 

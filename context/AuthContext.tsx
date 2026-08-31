@@ -12,7 +12,7 @@ export interface UserProfile {
   display_name?: string;
   avatarUrl?: string;
   avatar_url?: string;
-  provider?: "google" | "facebook" | "otp" | "password";
+  provider?: "otp" | "password";
   gender?: string;
   maritalStatus?: string;
   city?: string;
