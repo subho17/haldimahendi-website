@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isVerified, setIsVerified] = useState(() => !!(user?.isVerified || (user as any)?.verified));
 
   const userAvatar = user?.avatar_url || user?.avatarUrl;
   const displayName = user?.display_name || user?.name || "Shaadi Member";
@@ -78,8 +79,12 @@ export default function DashboardPage() {
       Promise.all([
         fetch(`/api/matches?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
         fetch(`/api/interests?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
+        fetch(`/api/verification?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
       ])
-        .then(([matchData, interestData]) => {
+        .then(([matchData, interestData, verData]) => {
+          if (verData?.success && verData.verified) {
+            setIsVerified(true);
+          }
           if (matchData.success) {
             const eligible = (matchData.matches || []).filter((m: MatchResult) => m.isEligible);
             setRecommended(eligible.slice(0, 3));
@@ -184,13 +189,13 @@ export default function DashboardPage() {
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-bold mb-1.5 border border-white/30">
                   <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>Verified Member ID: {user?.profileId}</span>
+                  <span>{isVerified ? "Verified Member" : "Registered Member"} · ID: {user?.profileId}</span>
                 </div>
                 <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
                   Welcome back, {displayName} 👋
                 </h1>
                 <p className="mt-1 text-red-100 text-xs sm:text-sm font-light">
-                  {userMobile ? `+91 ${userMobile}` : "Verified Account"} {user?.city ? `• ${user.city}` : ""} {user?.gender ? `• Looking for ${user.gender}` : ""}
+                  {userMobile ? `+91 ${userMobile}` : ""} {user?.city ? `• ${user.city}` : ""} {user?.gender ? `• Looking for ${user.gender}` : ""} {isVerified ? "• Verified Account" : "• Unverified"}
                 </p>
               </div>
             </div>

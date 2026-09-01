@@ -7,6 +7,7 @@ type VerStatus = "none" | "pending" | "approved" | "rejected";
 
 interface VerificationCardProps {
   userId: string;
+  onStatusChange?: (status: VerStatus) => void;
 }
 
 const ID_TYPES = [
@@ -17,7 +18,7 @@ const ID_TYPES = [
   { value: "voter_id", label: "Voter ID" },
 ];
 
-export default function VerificationCard({ userId }: VerificationCardProps) {
+export default function VerificationCard({ userId, onStatusChange }: VerificationCardProps) {
   const [status, setStatus] = useState<VerStatus>("none");
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -37,9 +38,9 @@ export default function VerificationCard({ userId }: VerificationCardProps) {
         const res = await fetch(`/api/verification?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
         if (!cancelled && data.success) {
-          setStatus(
-            data.verified ? "approved" : data.submission ? (data.submission.status as VerStatus) : "none"
-          );
+          const nextStatus = data.verified ? "approved" : data.submission ? (data.submission.status as VerStatus) : "none";
+          setStatus(nextStatus);
+          onStatusChange?.(nextStatus);
         }
       } catch (e) {
         console.error("Failed to load verification status:", e);
@@ -71,6 +72,7 @@ export default function VerificationCard({ userId }: VerificationCardProps) {
       const data = await res.json();
       if (data.success) {
         setStatus("pending");
+        onStatusChange?.("pending");
         setShowForm(false);
         setDone(true);
       } else {

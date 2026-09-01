@@ -50,12 +50,16 @@ interface UserRecord {
 }
 
 function ensureDbFile() {
-  const dir = path.dirname(USERS_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(USERS_FILE)) {
-    fs.writeFileSync(USERS_FILE, JSON.stringify([], null, 2));
+  try {
+    const dir = path.dirname(USERS_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    if (!fs.existsSync(USERS_FILE)) {
+      fs.writeFileSync(USERS_FILE, JSON.stringify([], null, 2));
+    }
+  } catch {
+    // Read-only filesystem in serverless environments
   }
 }
 
@@ -125,7 +129,11 @@ export async function POST(req: Request) {
       users.push(storedRecord);
     }
 
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    try {
+      fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    } catch (e) {
+      console.warn("Could not write users file (read-only filesystem):", e);
+    }
 
     // ✅ Also save to Supabase Postgres (profile + matrimonial details)
     try {

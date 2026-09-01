@@ -14,8 +14,20 @@ export interface UserProfile {
   avatar_url?: string;
   provider?: "otp" | "password";
   gender?: string;
+  age?: string | number;
+  height?: string;
   maritalStatus?: string;
+  religion?: string;
+  motherTongue?: string;
+  mother_tongue?: string;
+  education?: string;
+  profession?: string;
   city?: string;
+  country?: string;
+  bio?: string;
+  verificationStatus?: string;
+  verification_status?: string;
+  isVerified?: boolean;
   createdAt?: string;
   dob?: string;
   birthTime?: string;
@@ -84,35 +96,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const mobile = userData.mobile_number || userData.mobileNumber || "";
 
     const newUser: UserProfile = {
-      profileId: userData.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
+      ...(user || {}),
+      ...userData,
+      profileId: userData.profileId || user?.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
       mobileNumber: mobile,
       mobile_number: mobile,
-      email: userData.email || "",
+      email: userData.email ?? user?.email ?? "",
       name: displayName,
       display_name: displayName,
       avatarUrl: avatar,
       avatar_url: avatar,
-      provider: userData.provider || "otp",
-      gender: userData.gender,
-      maritalStatus: userData.maritalStatus,
-      city: userData.city,
-      createdAt: userData.createdAt || new Date().toISOString(),
-      dob: userData.dob,
-      birthTime: userData.birthTime,
-      birthPlace: userData.birthPlace,
-      rashi: userData.rashi,
-      nakshatra: userData.nakshatra,
-      manglik: userData.manglik,
-      gotra: userData.gotra,
-      fatherOccupation: userData.fatherOccupation,
-      motherOccupation: userData.motherOccupation,
-      siblings: userData.siblings,
-      familyType: userData.familyType,
-      familyValues: userData.familyValues,
-      diet: userData.diet,
-      smoking: userData.smoking,
-      drinking: userData.drinking,
-      disability: userData.disability,
+      provider: userData.provider || user?.provider || "otp",
+      gender: userData.gender ?? user?.gender,
+      age: userData.age ?? user?.age,
+      height: userData.height ?? user?.height,
+      maritalStatus: userData.maritalStatus ?? user?.maritalStatus,
+      religion: userData.religion ?? user?.religion,
+      motherTongue: userData.motherTongue ?? (userData as any)?.mother_tongue ?? user?.motherTongue,
+      education: userData.education ?? user?.education,
+      profession: userData.profession ?? user?.profession,
+      city: userData.city ?? user?.city,
+      country: userData.country ?? user?.country ?? "India",
+      bio: userData.bio ?? user?.bio,
+      verificationStatus: userData.verificationStatus ?? (userData as any)?.verification_status ?? user?.verificationStatus,
+      isVerified: userData.isVerified ?? user?.isVerified,
+      createdAt: userData.createdAt || user?.createdAt || new Date().toISOString(),
+      dob: userData.dob ?? user?.dob,
+      birthTime: userData.birthTime ?? user?.birthTime,
+      birthPlace: userData.birthPlace ?? user?.birthPlace,
+      rashi: userData.rashi ?? user?.rashi,
+      nakshatra: userData.nakshatra ?? user?.nakshatra,
+      manglik: userData.manglik ?? user?.manglik,
+      gotra: userData.gotra ?? user?.gotra,
+      fatherOccupation: userData.fatherOccupation ?? user?.fatherOccupation,
+      motherOccupation: userData.motherOccupation ?? user?.motherOccupation,
+      siblings: userData.siblings ?? user?.siblings,
+      familyType: userData.familyType ?? user?.familyType,
+      familyValues: userData.familyValues ?? user?.familyValues,
+      diet: userData.diet ?? user?.diet,
+      smoking: userData.smoking ?? user?.smoking,
+      drinking: userData.drinking ?? user?.drinking,
+      disability: userData.disability ?? user?.disability,
     };
 
     // 1. ALWAYS update React state first so user is immediately authenticated in memory

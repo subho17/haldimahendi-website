@@ -31,8 +31,8 @@ export default function AdminFeaturedProfiles() {
         setFeatured(data.featured || []);
         setTotal(data.total || 0);
       }
-    } catch (e) {
-      console.error('Failed to load featured profiles:', e);
+    } catch {
+      console.error('Failed to load featured profiles');
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ if (data.success) {
       } else {
         setError(data.message || 'Failed to add featured profile');
       }
-    } catch (e) {
+    } catch {
       setError('Failed to add featured profile');
     } finally {
       setBusyId(null);
@@ -81,8 +81,8 @@ if (data.success) {
       } else {
         alert(data.message || 'Failed to remove');
       }
-    } catch (e) {
-      console.error('Failed to remove:', e);
+    } catch {
+      console.error('Failed to remove');
     } finally {
       setBusyId(null);
     }
@@ -94,11 +94,6 @@ if (data.success) {
     } catch {
       return '—';
     }
-  };
-
-  const isExpiringSoon = (dateStr: string) => {
-    const diff = new Date(dateStr).getTime() - Date.now();
-    return diff < 3 * 24 * 60 * 60 * 1000; // 3 days
   };
 
   return (

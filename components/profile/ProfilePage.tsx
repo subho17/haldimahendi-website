@@ -8,6 +8,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
+  ShieldAlert,
+  Clock,
   Edit3,
   Camera,
   Save,
@@ -66,19 +68,25 @@ export default function ProfilePage() {
   });
 
   // Editable Form Fields initialized lazily from user context
-  const [displayName, setDisplayName] = useState(() => user?.display_name || user?.name || "Shaadi Member");
-  const [avatarUrl, setAvatarUrl] = useState(() => user?.avatar_url || user?.avatarUrl || DEFAULT_AVATARS[0].url);
-  const [gender, setGender] = useState(() => user?.gender || "Groom");
-  const [age, setAge] = useState("26");
-  const [height, setHeight] = useState("5'8\"");
-  const [maritalStatus, setMaritalStatus] = useState(() => user?.maritalStatus || "Never Married");
-  const [religion, setReligion] = useState("Hindu");
-  const [motherTongue, setMotherTongue] = useState("Hindi");
-  const [education, setEducation] = useState("B.Tech / B.E");
-  const [profession, setProfession] = useState("Software Engineer");
-  const [city, setCity] = useState(() => user?.city || "Kolkata");
-  const [country] = useState("India");
-  const [bio, setBio] = useState("Looking for a caring, family-oriented partner with good moral values.");
+  const [displayName, setDisplayName] = useState(() => user?.display_name || user?.name || "");
+  const [avatarUrl, setAvatarUrl] = useState(() => user?.avatar_url || user?.avatarUrl || "");
+  const [gender, setGender] = useState(() => user?.gender || "");
+  const [age, setAge] = useState(() => (user?.age !== undefined && user?.age !== null ? String(user.age) : ""));
+  const [height, setHeight] = useState(() => user?.height || "");
+  const [maritalStatus, setMaritalStatus] = useState(() => user?.maritalStatus || "");
+  const [religion, setReligion] = useState(() => user?.religion || "");
+  const [motherTongue, setMotherTongue] = useState(() => user?.motherTongue || (user as any)?.mother_tongue || "");
+  const [education, setEducation] = useState(() => user?.education || "");
+  const [profession, setProfession] = useState(() => user?.profession || "");
+  const [city, setCity] = useState(() => user?.city || "");
+  const [country, setCountry] = useState(() => (user as any)?.country || "India");
+  const [bio, setBio] = useState(() => user?.bio || "");
+  const [verificationStatus, setVerificationStatus] = useState<"none" | "pending" | "approved" | "rejected">(() => {
+    if (user?.isVerified || (user as any)?.verified || user?.verification_status === "approved" || user?.verificationStatus === "approved") return "approved";
+    if (user?.verification_status === "pending" || user?.verificationStatus === "pending") return "pending";
+    if (user?.verification_status === "rejected" || user?.verificationStatus === "rejected") return "rejected";
+    return "none";
+  });
 
   // Phase 5: Extended profile fields (astrology, lifestyle, family)
   const [dob, setDob] = useState(() => user?.dob || "");
@@ -113,6 +121,7 @@ export default function ProfilePage() {
       user?.email ||
       "";
     if (!id) return;
+
     fetch(`/api/membership?userId=${encodeURIComponent(id)}`)
       .then((r) => r.json())
       .then((data) => {
@@ -122,6 +131,59 @@ export default function ProfilePage() {
             label: data.membership.plan?.badgeLabel || data.membership.tier || "",
             expiresAt: data.membership.expiresAt || null,
           });
+        }
+      })
+      .catch(() => {});
+
+    // Fetch live verification status from DB
+    fetch(`/api/verification?userId=${encodeURIComponent(id)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success) {
+          const st = data.verified ? "approved" : data.submission ? (data.submission.status as "pending" | "approved" | "rejected") : "none";
+          setVerificationStatus(st);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch full profile details to populate any existing DB saved fields
+    fetch(`/api/profile?id=${encodeURIComponent(id)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success && data.profile) {
+          const p = data.profile;
+          if (p.name) setDisplayName(p.name);
+          if (p.avatarUrl) setAvatarUrl(p.avatarUrl);
+          if (p.gender) setGender(p.gender);
+          if (p.age !== undefined && p.age !== null) setAge(String(p.age));
+          if (p.height) setHeight(p.height);
+          if (p.maritalStatus) setMaritalStatus(p.maritalStatus);
+          if (p.religion) setReligion(p.religion);
+          if (p.motherTongue) setMotherTongue(p.motherTongue);
+          if (p.education) setEducation(p.education);
+          if (p.profession) setProfession(p.profession);
+          if (p.city) setCity(p.city);
+          if (p.country) setCountry(p.country);
+          if (p.bio) setBio(p.bio);
+          if (p.dob) setDob(p.dob);
+          if (p.birthTime) setBirthTime(p.birthTime);
+          if (p.birthPlace) setBirthPlace(p.birthPlace);
+          if (p.rashi) setRashi(p.rashi);
+          if (p.nakshatra) setNakshatra(p.nakshatra);
+          if (p.manglik) setManglik(p.manglik);
+          if (p.gotra) setGotra(p.gotra);
+          if (p.fatherOccupation) setFatherOccupation(p.fatherOccupation);
+          if (p.motherOccupation) setMotherOccupation(p.motherOccupation);
+          if (p.siblings) setSiblings(p.siblings);
+          if (p.familyType) setFamilyType(p.familyType);
+          if (p.familyValues) setFamilyValues(p.familyValues);
+          if (p.diet) setDiet(p.diet);
+          if (p.smoking) setSmoking(p.smoking);
+          if (p.drinking) setDrinking(p.drinking);
+          if (p.disability) setDisability(p.disability);
+          if (p.verified !== undefined) {
+            setVerificationStatus(p.verified ? "approved" : "none");
+          }
         }
       })
       .catch(() => {});
@@ -245,9 +307,30 @@ export default function ProfilePage() {
   const userProfileId = user?.profileId || "SH270341";
   const viewerId = user?.profileId || user?.mobile_number || user?.mobileNumber || user?.email || "";
 
-  // Compute profile completeness score dynamically
-  const fieldsToCheck = [displayName, avatarUrl, gender, age, height, maritalStatus, religion, motherTongue, education, profession, city, bio, rashi, nakshatra, diet, smoking, drinking, familyType, fatherOccupation];
-  const filledCount = fieldsToCheck.filter((f) => f && f.trim() !== "").length;
+  // Compute profile completeness score dynamically based on user's actual filled fields
+  const fieldsToCheck = [
+    displayName,
+    avatarUrl && !avatarUrl.includes("default-avatar") ? avatarUrl : "",
+    gender,
+    age,
+    height,
+    maritalStatus,
+    religion,
+    motherTongue,
+    education,
+    profession,
+    city,
+    bio,
+    rashi,
+    nakshatra,
+    diet,
+    smoking,
+    drinking,
+    familyType,
+    fatherOccupation,
+    verificationStatus === "approved" ? "verified" : "",
+  ];
+  const filledCount = fieldsToCheck.filter((f) => f && String(f).trim() !== "").length;
   const completionPercentage = Math.round((filledCount / fieldsToCheck.length) * 100);
 
   return (
@@ -263,28 +346,36 @@ export default function ProfilePage() {
               <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
               <span>{successMessage}</span>
             </div>
-            <button onClick={() => setSuccessMessage("")} className="text-emerald-700 hover:text-emerald-900 p-1 cursor-pointer">
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-emerald-600 hover:text-emerald-900 cursor-pointer"
+            >
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* Outer Profile Container */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden transition-all duration-300">
+        {/* Main Content Card Container */}
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
 
-          {/* Profile Header Content (Clean Header, No Banner) */}
-          <div className="p-6 sm:p-8 border-b border-slate-100">
-            <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-6">
-              
-              {/* Avatar & Upload Camera Trigger */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-left">
+          {/* Profile Header Block */}
+          <div className="relative bg-gradient-to-r from-amber-500/10 via-rose-500/5 to-slate-50 border-b border-slate-100 p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
+
+              {/* Avatar + Main Details */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+                
+                {/* Avatar with Ring */}
                 <div className="relative group shrink-0">
-                  <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#d97706] font-black text-4xl ring-2 ring-amber-100" style={{ position: "relative" }}>
-                    {rawAvatar && rawAvatar !== "/images/default-avatar.png" ? (
-                      <Image src={rawAvatar} alt={formattedDisplayName} width={144} height={144} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="uppercase">{formattedDisplayName.charAt(0)}</span>
-                    )}
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full ring-4 ring-white shadow-lg overflow-hidden bg-slate-100 relative">
+                    <Image
+                      src={rawAvatar}
+                      alt={formattedDisplayName}
+                      fill
+                      sizes="112px"
+                      priority
+                      className="object-cover"
+                    />
                   </div>
 
                   {/* Upload Button overlay */}
@@ -308,42 +399,66 @@ export default function ProfilePage() {
                 {/* Name & Quick Metadata */}
                 <div className="space-y-1.5">
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80 shadow-2xs">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>100% Verified Member</span>
-                    </span>
+                    {verificationStatus === "approved" ? (
+                      <>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80 shadow-2xs">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>100% Verified Member</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80 shadow-2xs">
+                          <Award className="w-3.5 h-3.5 text-[#d97706] shrink-0" />
+                          <span>Verified Match Profile</span>
+                        </span>
+                      </>
+                    ) : verificationStatus === "pending" ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 font-bold text-xs border border-amber-200 shadow-2xs">
+                        <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0 animate-pulse" />
+                        <span>Verification Under Review</span>
+                      </span>
+                    ) : verificationStatus === "rejected" ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200 shadow-2xs">
+                        <ShieldAlert className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                        <span>Verification Rejected</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 font-bold text-xs border border-slate-200 shadow-2xs">
+                        <ShieldAlert className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span>Unverified Profile</span>
+                      </span>
+                    )}
+
                     {membership.isPremium && (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 font-bold text-xs border border-amber-300 shadow-2xs">
                         <Crown className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span>{membership.label || "Premium"} Member</span>
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80 shadow-2xs">
-                      <Award className="w-3.5 h-3.5 text-[#d97706] shrink-0" />
-                      <span>Verified Match Profile</span>
-                    </span>
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
-                    {formattedDisplayName}
+                    {formattedDisplayName || "Member Profile"}
                   </h1>
 
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs text-slate-500 font-semibold">
                     <span>ID: <strong className="text-slate-800 font-bold">{userProfileId}</strong></span>
-                    <span>•</span>
-                    <span>Mobile: <strong className="text-slate-800 font-bold">+91 {userMobile}</strong></span>
+                    {userMobile && (
+                      <>
+                        <span>•</span>
+                        <span>Mobile: <strong className="text-slate-800 font-bold">+91 {userMobile}</strong></span>
+                      </>
+                    )}
                   </div>
 
                   {/* Key Info Pills */}
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
                     <span className="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-bold">
-                      {age} Yrs
+                      {age ? `${age} Yrs` : "Age not set"}
                     </span>
                     <span className="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-bold">
-                      {height}
+                      {height || "Height not set"}
                     </span>
                     <span className="px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-700 text-xs font-bold border border-rose-100">
-                      {formattedCity}, {country}
+                      {formattedCity ? `${formattedCity}, ${country}` : country}
                     </span>
                   </div>
                 </div>
@@ -392,6 +507,13 @@ export default function ProfilePage() {
                     style={{ width: `${completionPercentage}%` }}
                   />
                 </div>
+                <p className="text-[10px] text-slate-500 pt-0.5">
+                  {completionPercentage === 100
+                    ? "🎉 Perfect! Your profile is 100% complete and fully verified."
+                    : verificationStatus !== "approved"
+                    ? "💡 Tip: Verify your ID below to boost your profile strength and trust."
+                    : "💡 Tip: Fill in the remaining profile fields to reach 100% profile strength."}
+                </p>
               </div>
               <p className="text-[11px] text-slate-500 font-medium text-center sm:text-right">
                 ✨ A 100% complete profile gets up to <strong className="text-slate-800">3x more interest requests</strong>.
@@ -399,7 +521,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Trust & Verification */}
-            {viewerId && <VerificationCard userId={viewerId} />}
+            {viewerId && <VerificationCard userId={viewerId} onStatusChange={setVerificationStatus} />}
 
             {/* EDIT MODE FORM */}
             {isEditing ? (
@@ -473,6 +595,7 @@ export default function ProfilePage() {
                         onChange={(e) => setGender(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
                       >
+                        <option value="">Select Gender / Role</option>
                         <option value="Groom">Bride (Groom Profile)</option>
                         <option value="Bride">Groom (Bride Profile)</option>
                       </select>
@@ -499,6 +622,7 @@ export default function ProfilePage() {
                         onChange={(e) => setHeight(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
                       >
+                        <option value="">Select Height</option>
                         <option value="5'0&quot;">5&apos;0&quot; (152 cm)</option>
                         <option value="5'2&quot;">5&apos;2&quot; (157 cm)</option>
                         <option value="5'4&quot;">5&apos;4&quot; (162 cm)</option>
@@ -518,6 +642,7 @@ export default function ProfilePage() {
                         onChange={(e) => setMaritalStatus(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
                       >
+                        <option value="">Select Marital Status</option>
                         <option value="Never Married">Never Married</option>
                         <option value="Divorced">Divorced</option>
                         <option value="Widowed">Widowed</option>
@@ -556,6 +681,7 @@ export default function ProfilePage() {
                         onChange={(e) => setReligion(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
                       >
+                        <option value="">Select Religion</option>
                         <option value="Hindu">Hindu</option>
                         <option value="Muslim">Muslim</option>
                         <option value="Christian">Christian</option>
@@ -901,7 +1027,7 @@ export default function ProfilePage() {
                     <span>About Myself</span>
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal italic">
-                    &ldquo;{bio}&rdquo;
+                    {bio ? `“${bio}”` : <span className="text-slate-400 not-italic">No bio added yet. Click &quot;Edit Profile&quot; to write about yourself.</span>}
                   </p>
                 </div>
 
@@ -945,7 +1071,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Age</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{age} yrs</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{age ? `${age} yrs` : <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>
 
@@ -956,7 +1082,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Height</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{height}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{height || <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>
 
@@ -967,7 +1093,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Marital Status</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{maritalStatus}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{maritalStatus || <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>
 
@@ -992,7 +1118,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Living City</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedCity}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedCity || <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>
 
@@ -1014,7 +1140,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Religion</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedReligion}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedReligion || <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>
 
@@ -1025,7 +1151,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mother Tongue</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedMotherTongue}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedMotherTongue || <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>
 
@@ -1036,7 +1162,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Education</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{education}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{education || <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>
 
@@ -1047,7 +1173,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Profession</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedProfession}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedProfession || <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>
 

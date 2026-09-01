@@ -9,6 +9,7 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ShieldCheck,
+  ShieldAlert,
   Loader2,
   ArrowLeft,
   Heart,
@@ -308,14 +309,23 @@ export default function PublicProfilePage() {
 
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80 shadow-2xs">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>{profile.verified ? "100% Verified Member" : "Registered Member"}</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80 shadow-2xs">
-                    <Award className="w-3.5 h-3.5 text-[#d97706] shrink-0" />
-                    <span>{profile.verified ? "Verified Match Profile" : "Member Profile"}</span>
-                  </span>
+                  {profile.verified ? (
+                    <>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80 shadow-2xs">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>100% Verified Member</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80 shadow-2xs">
+                        <Award className="w-3.5 h-3.5 text-[#d97706] shrink-0" />
+                        <span>Verified Match Profile</span>
+                      </span>
+                    </>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 font-bold text-xs border border-slate-200 shadow-2xs">
+                      <ShieldAlert className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      <span>Unverified Profile</span>
+                    </span>
+                  )}
                   {profile.membership?.isPremium && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 font-bold text-xs border border-amber-300 shadow-2xs">
                       <Crown className="w-3.5 h-3.5 text-amber-600 shrink-0" />
