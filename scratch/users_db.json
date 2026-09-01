@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "profileId": "SH713726",
+    "mobileNumber": "9903797850",
+    "mobile_number": "9903797850",
+    "email": "",
+    "name": "rahul",
+    "display_name": "rahul",
+    "avatarUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250",
+    "avatar_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250",
+    "provider": "otp",
+    "gender": "Bride",
+    "maritalStatus": "Never Married",
+    "city": "punjab ",
+    "createdAt": "2026-09-01T11:21:58.395Z",
+    "updatedAt": "2026-09-01T11:21:58.703Z",
+    "age": 25,
+    "height": "5'8\"",
+    "religion": "Muslim",
+    "motherTongue": "Hindi",
+    "education": "B.Tech / Graduate",
+    "profession": "Private",
+    "companyName": "",
+    "bio": "Looking for a caring, well-educated, and family-oriented life partner.",
+    "passwordHash": "3ac9eafb400a1a3b5572cb4fd2d30259e2349e40de8721cd49fb7d4262da78f4c6cfbe58c15ece57952d71edb0017a506f7c06489b0614596f3999d6d6f51930",
+    "passwordSalt": "1f3ad30cb3561b4149f0be0cc0f82b5b"
+  }
+]
