@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { pool, hasPool } from '@/lib/db';
+import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();

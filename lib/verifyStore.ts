@@ -22,10 +22,14 @@ export interface VerificationRow {
 }
 
 function ensureFile() {
-  const dir = path.dirname(VERIFICATIONS_FILE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(VERIFICATIONS_FILE)) {
-    fs.writeFileSync(VERIFICATIONS_FILE, JSON.stringify([], null, 2));
+  try {
+    const dir = path.dirname(VERIFICATIONS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(VERIFICATIONS_FILE)) {
+      fs.writeFileSync(VERIFICATIONS_FILE, JSON.stringify([], null, 2));
+    }
+  } catch {
+    // Read-only filesystem in serverless environments
   }
 }
 
@@ -117,21 +121,33 @@ export async function submitVerification(input: {
     createdAt: nowIso(),
   };
 
-  const file = readFile();
-  file.unshift(record);
-  writeFile(file);
-
+  // 1. If database pool is available, insert into Postgres first
   if (hasPool) {
     try {
       await ensureVerificationsTable();
-      await pool!.query(
+      const res = await pool!.query(
         `INSERT INTO verifications (user_id, id_type, id_number, selfie_url, document_url)
-         VALUES ($1, $2, $3, $4, $5)`,
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, status, created_at`,
         [userId, input.idType, input.idNumber, input.selfieUrl || null, input.documentUrl || null]
       );
+      if (res.rows?.[0]) {
+        record.id = res.rows[0].id;
+        record.status = (res.rows[0].status || 'pending') as VerificationStatus;
+        record.createdAt = res.rows[0].created_at?.toISOString?.() || record.createdAt;
+      }
     } catch (e) {
       console.warn('[Verification] DB submit failed, kept file fallback:', e);
     }
+  }
+
+  // 2. Safe local file mirror (will not fail request if filesystem is read-only)
+  try {
+    const file = readFile();
+    file.unshift(record);
+    writeFile(file);
+  } catch (fileErr) {
+    console.warn('[Verification] File mirror skipped (read-only filesystem):', fileErr);
   }
 
   return record;

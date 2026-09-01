@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
-import { Hero, Features, Testimonals, Faqsection, Footer, Downloadapp, Blog, Steps, Newsletter } from "@/components/Global";
+import { Hero, Features, Testimonals, Faqsection, Footer, Downloadapp, Blog, Steps } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useMounted } from "@/hooks/useMounted";

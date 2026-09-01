@@ -2,14 +2,19 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { submitVerification, getVerificationStatus } from '@/lib/verifyStore';
+import { getSupabaseClient, DEFAULT_BUCKET } from '@/lib/supabaseClient';
 
 const VERIFICATION_UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads', 'verification');
 
 const ID_TYPES = ['aadhaar', 'pan', 'passport', 'driving_license', 'voter_id'];
 
 function ensureUploadsDir() {
-  if (!fs.existsSync(VERIFICATION_UPLOADS_DIR)) {
-    fs.mkdirSync(VERIFICATION_UPLOADS_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(VERIFICATION_UPLOADS_DIR)) {
+      fs.mkdirSync(VERIFICATION_UPLOADS_DIR, { recursive: true });
+    }
+  } catch {
+    // Read-only filesystem in serverless environments
   }
 }
 
@@ -21,10 +26,51 @@ async function saveFile(file: File, userId: string, prefix: string): Promise<str
   const buffer = Buffer.from(await file.arrayBuffer());
   const fileNameStr = file.name || 'upload.jpg';
   const fileExt = fileNameStr.split('.').pop()?.toLowerCase() || 'jpg';
-  ensureUploadsDir();
-  const fileName = `${userId}_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
-  fs.writeFileSync(path.join(VERIFICATION_UPLOADS_DIR, fileName), buffer);
-  return `/uploads/verification/${fileName}`;
+  const cleanPrefix = prefix.replace(/[^a-zA-Z0-9]/g, '_');
+  const fileName = `verification/${userId}_${cleanPrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
+
+  // 1. Try uploading to Supabase Storage first (primary for production & serverless)
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const bucket = (process.env.NEXT_PUBLIC_SUPABASE_BUCKET || DEFAULT_BUCKET).trim();
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, buffer, {
+          contentType: file.type || 'image/jpeg',
+          upsert: true,
+          cacheControl: '3600',
+        });
+
+      if (!error && data?.path) {
+        const { data: publicUrlData } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(data.path);
+
+        if (publicUrlData?.publicUrl) {
+          return publicUrlData.publicUrl;
+        }
+      } else if (error) {
+        console.warn('[Verification] Supabase storage upload warning:', error.message);
+      }
+    } catch (err) {
+      console.warn('[Verification] Supabase storage upload exception:', err);
+    }
+  }
+
+  // 2. Fallback to local public uploads (for local development)
+  try {
+    ensureUploadsDir();
+    const localFileName = `${userId}_${cleanPrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
+    fs.writeFileSync(path.join(VERIFICATION_UPLOADS_DIR, localFileName), buffer);
+    return `/uploads/verification/${localFileName}`;
+  } catch (fsErr) {
+    console.warn('[Verification] Local filesystem write failed (read-only environment):', fsErr);
+    // 3. Fallback: Base64 data URL if on read-only serverless and Supabase is unavailable
+    const base64 = buffer.toString('base64');
+    const mime = file.type || 'image/jpeg';
+    return `data:${mime};base64,${base64}`;
+  }
 }
 
 // GET /api/verification?userId=...

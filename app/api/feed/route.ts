@@ -1,15 +1,9 @@
 import { NextResponse } from 'next/server';
 import { pool, hasPool } from '@/lib/db';
+import { setCache, getCache } from '@/lib/cache';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
-}
-
-// Helper: run a raw query and return rows
-async function query(text: string, params: unknown[] = []) {
-  if (!hasPool) return { rows: [] };
-  const result = await pool.query(text, params);
-  return result as { rows: unknown[] };
 }
 
 export async function GET(req: Request) {
@@ -23,56 +17,102 @@ export async function GET(req: Request) {
       );
     }
 
+    // Check cache first
+    const cacheKey = `feed:${viewerId}`;
+    const cached = getCache<any>(cacheKey);
+    if (cached) {
+      return NextResponse.json({ success: true, profiles: cached });
+    }
+
     // 1. Get viewer's gender from profiles table
     const viewerProfile = await (
       hasPool
-        ? await pool.query(
+        ? await pool!.query(
             `SELECT gender FROM profiles WHERE user_id = $1`,
             [viewerId]
           )
         : { rows: [] }
     ) as { rows: { gender: string }[] };
 
-    const viewerGender = viewerProfile.rows.length > 0 ? viewerProfile.rows[0].gender : null;
+    const viewerGender = viewerProfile.rows.length > 0 ? (viewerProfile.rows[0].gender || '').toLowerCase() : '';
 
     // 2. Get viewer's partner preference (who they are looking for)
     const prefRows = await (
       hasPool
-        ? await pool.query(
-            `SELECT partner_gender FROM partner_preferences WHERE user_id = $1`,
+        ? await pool!.query(
+            `SELECT partner_gender, age_min, age_max, city FROM partner_preferences WHERE user_id = $1`,
             [viewerId]
           )
         : { rows: [] }
-    ) as { rows: { partner_gender: string }[] };
+    ) as {
+      rows: {
+        partner_gender: string | null;
+        age_min: number | null;
+        age_max: number | null;
+        city: string | null;
+      }[];
+    };
 
-    const partnerGender = prefRows.length > 0 ? prefRows[0].partner_gender : null;
+    const pref = (prefRows.rows.length > 0 ? prefRows.rows[0] : {}) as {
+      partner_gender?: string | null;
+      age_min?: number | null;
+      age_max?: number | null;
+      city?: string | null;
+    };
+
+    const partnerGender = (pref.partner_gender || '').toLowerCase() || null;
+    const ageMin = pref.age_min ?? null;
+    const ageMax = pref.age_max ?? null;
+    const prefCity = (pref.city || '').toLowerCase() || null;
 
     // 3. Determine which gender to show in feed
-    // Rules:
-    // - If partner_gender is set, only show profiles matching that gender.
-    // - If partner_gender is null or "both", show opposite gender to viewer's gender
-    //   (girl -> boys, boy -> girls). If viewer gender unknown, show all except viewer.
     let filterGender: string | null = null;
 
-    if (partnerGender && partnerGender.toLowerCase() !== 'both') {
+    if (partnerGender && partnerGender !== 'both') {
       filterGender = partnerGender;
     } else if (viewerGender) {
       // opposite gender
-      const opposite = viewerGender === 'female' ? 'male' : 'female';
-      filterGender = opposite;
+      filterGender = viewerGender === 'female' ? 'male' : 'female';
     }
     // if viewerGender unknown and partnerGender null -> show all (filterGender stays null)
 
-    // 4. Build and execute the feed query
-    const baseWhere = filterGender
-      ? `gender = ${
-          filterGender === 'male' ? 'MALE' : 'female'
-        }` // we'll use lowercase param
-      : '1=1';
+    // 4. Build SQL WHERE clauses
+    let whereClauses = [`user_id != $1`];
+    const params: unknown[] = [viewerId];
+    let paramIdx = 2; // $1 already used
 
-    // Actually we'll use parameterized gender.
-    // We'll construct query dynamically.
+    if (filterGender) {
+      whereClauses.push(`LOWER(gender) = LOWER($${paramIdx})`);
+      params.push(filterGender);
+      paramIdx++;
+    }
 
+    // Age range filter from partner preference
+    if (ageMin !== null || ageMax !== null) {
+      const ageCond: string[] = [];
+      if (ageMin !== null) {
+        ageCond.push(`age >= $${paramIdx}`);
+        params.push(ageMin);
+        paramIdx++;
+      }
+      if (ageMax !== null) {
+        ageCond.push(`age <= $${paramIdx}`);
+        params.push(ageMax);
+        paramIdx++;
+      }
+      whereClauses.push(`(${ageCond.join(' AND ')})`);
+    }
+
+    // Location filter (city or country) from partner preference
+    if (prefCity) {
+      whereClauses.push(`(LOWER(city) LIKE LOWER($${paramIdx}) OR LOWER(country) LIKE LOWER($${paramIdx}))`);
+      params.push(prefCity);
+      paramIdx++;
+    }
+
+    const whereClause = whereClauses.join(' AND ');
+
+    // 5. Execute query
     let sql = `SELECT id, user_id, display_name, avatar_url, age, height, religion,
                 mother_tongue, education, profession, city, country, bio, created_at,
                 verification_status, membership_tier, membership_expires_at,
@@ -80,21 +120,12 @@ export async function GET(req: Request) {
                 father_occupation, mother_occupation, siblings, family_type,
                 family_values, diet, smoking, drinking, disability
              FROM profiles
-            WHERE user_id != $1 `;
+            WHERE ${whereClause}
+            ORDER BY created_at DESC LIMIT 20`;
 
-    const params: unknown[] = [viewerId];
+    const { rows } = hasPool ? await pool!.query(sql, params) : { rows: [] };
 
-    if (filterGender) {
-      sql += ` AND LOWER(gender) = LOWER($${params.length + 1})`;
-      params.push(filterGender);
-    }
-
-    // Optional: add ordering, limit
-    sql += ` ORDER BY created_at DESC LIMIT 20`;
-
-    const { rows } = await query(sql, params);
-
-    // Map rows to a lean format
+    // Map rows to lean format
     const profiles = rows.map((r: any) => ({
       id: r.id,
       userId: r.user_id,
@@ -114,6 +145,9 @@ export async function GET(req: Request) {
       createdAt: r.created_at?.toISOString?.() || null,
       verified: r.verification_status === 'approved',
     }));
+
+    // Cache result for 30 seconds
+    setCache(cacheKey, profiles, 30_000);
 
     return NextResponse.json({ success: true, profiles });
   } catch (e) {

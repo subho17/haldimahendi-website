@@ -1,37 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Star, Search, UserPlus, Trash2, Calendar, MoreVertical } from "lucide-react";
-
-interface FeaturedProfile {
-  id: string;
-  user_id: string;
-  display_name: string;
-  avatar_url: string;
-  mobile_number: string;
-  city: string;
-  featured_until: string;
-  set_by_admin: boolean;
-  created_at: string;
-}
+import React, { useState, useEffect, useCallback } from "react";
+import { Star, Trash2, Calendar } from "lucide-react";
 
 interface AdminFeaturedProfilesProps {
-  onRefresh?: () => void;
 }
 
-export default function AdminFeaturedProfiles({ onRefresh }: AdminFeaturedProfilesProps) {
+export default function AdminFeaturedProfiles() {
   const [featured, setFeatured] = useState<any[] /* eslint-disable-line @typescript-eslint/no-explicit-any */>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<string | null>(null);
   const [formData, setFormData] = useState({ userId: '', days: '30' });
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState('');
 
-  const loadFeatured = async () => {
+  const loadFeatured = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -50,12 +36,11 @@ export default function AdminFeaturedProfiles({ onRefresh }: AdminFeaturedProfil
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadFeatured();
-  }, [page, search]);
+  }, [page, search, loadFeatured]);
 
   const handleAdd = async () => {
     if (!formData.userId || !formData.days) return;
@@ -232,7 +217,7 @@ if (data.success) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-extrabold text-slate-900">{editing ? 'Edit Featured' : 'Create Featured'}</h3>
+              <h3 className="text-lg font-extrabold text-slate-900">Create Featured Profile</h3>
               <button onClick={() => { setShowModal(false); setFormData({ userId: '', days: '30' }); }} className="text-slate-400 hover:text-slate-700 cursor-pointer disabled:opacity-40">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
