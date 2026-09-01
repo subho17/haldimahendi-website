@@ -97,6 +97,9 @@ export async function GET(req: Request) {
     const motherTongue = searchParams.get('motherTongue') || '';
     const query = (searchParams.get('q') || '').toLowerCase();
     const userId = (searchParams.get('userId') || '').trim();
+    const userMobileParam = (searchParams.get('userMobile') || searchParams.get('mobile') || '').replace(/\D/g, '');
+    const userEmailParam = (searchParams.get('userEmail') || searchParams.get('email') || '').toLowerCase().trim();
+    const profileIdParam = (searchParams.get('profileId') || '').toLowerCase().trim();
     const invisibleIds = userId ? new Set(await getInvisibleIds(userId)) : new Set<string>();
 
     let allProfiles: SearchProfile[] = [];
@@ -179,23 +182,48 @@ export async function GET(req: Request) {
       uniqueProfiles.push(p);
     }
 
-    // Filter profiles based on search criteria & exclude viewer's own profile
-    const normalizedUserId = userId.toLowerCase();
-    const cleanUserMobile = userId.replace(/\D/g, '');
+    // Filter profiles based on search criteria & robustly exclude viewer's own profile
+    const viewerExcludedIds = new Set<string>();
+    if (userId) viewerExcludedIds.add(userId.toLowerCase());
+    if (profileIdParam) viewerExcludedIds.add(profileIdParam);
+    if (userEmailParam) viewerExcludedIds.add(userEmailParam);
+    if (userMobileParam) viewerExcludedIds.add(userMobileParam);
 
-    const filtered = uniqueProfiles.filter((p) => {
-      // Exclude logged-in viewer's own profile from search
-      if (userId) {
-        const pId = p.id.toLowerCase();
+    const digitsOnlyUserId = userId.replace(/\D/g, '');
+    if (digitsOnlyUserId.length >= 10) viewerExcludedIds.add(digitsOnlyUserId);
+
+    // Cross-link viewer identifiers across all loaded profiles
+    if (viewerExcludedIds.size > 0) {
+      for (const p of uniqueProfiles) {
+        const pId = (p.id || '').toLowerCase();
         const pMobile = (p.mobileNumber || '').replace(/\D/g, '');
         const pEmail = (p.email || '').toLowerCase();
-        if (
-          pId === normalizedUserId ||
-          (cleanUserMobile && pMobile && pMobile === cleanUserMobile) ||
-          (pEmail && pEmail === normalizedUserId)
-        ) {
-          return false;
+
+        const isViewer =
+          (pId && viewerExcludedIds.has(pId)) ||
+          (pMobile && viewerExcludedIds.has(pMobile)) ||
+          (pEmail && viewerExcludedIds.has(pEmail));
+
+        if (isViewer) {
+          if (pId) viewerExcludedIds.add(pId);
+          if (pMobile) viewerExcludedIds.add(pMobile);
+          if (pEmail) viewerExcludedIds.add(pEmail);
         }
+      }
+    }
+
+    const filtered = uniqueProfiles.filter((p) => {
+      const pId = (p.id || '').toLowerCase();
+      const pMobile = (p.mobileNumber || '').replace(/\D/g, '');
+      const pEmail = (p.email || '').toLowerCase();
+
+      // Always exclude logged-in viewer
+      if (
+        (pId && viewerExcludedIds.has(pId)) ||
+        (pMobile && viewerExcludedIds.has(pMobile)) ||
+        (pEmail && viewerExcludedIds.has(pEmail))
+      ) {
+        return false;
       }
 
       if (invisibleIds.has(p.id)) return false;
@@ -207,9 +235,11 @@ export async function GET(req: Request) {
       if (city && !p.city.toLowerCase().includes(city.toLowerCase())) return false;
       if (motherTongue && motherTongue !== 'Any' && p.motherTongue && p.motherTongue.toLowerCase() !== motherTongue.toLowerCase()) return false;
       if (query) {
+        const cleanQueryMobile = query.replace(/\D/g, '');
         const matchesQuery =
           p.name.toLowerCase().includes(query) ||
           p.id.toLowerCase().includes(query) ||
+          (cleanQueryMobile.length >= 5 && pMobile.includes(cleanQueryMobile)) ||
           p.city.toLowerCase().includes(query) ||
           p.profession.toLowerCase().includes(query) ||
           p.religion.toLowerCase().includes(query);

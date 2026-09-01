@@ -18,45 +18,91 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = normalizeId(searchParams.get('userId'));
-    if (!userId) {
+    const profileIdParam = normalizeId(searchParams.get('profileId'));
+    const userMobileParam = normalizeId(searchParams.get('userMobile') || searchParams.get('mobile')).replace(/\D/g, '');
+    const userEmailParam = normalizeId(searchParams.get('userEmail') || searchParams.get('email')).toLowerCase();
+
+    if (!userId && !profileIdParam && !userMobileParam && !userEmailParam) {
       return NextResponse.json({ success: false, message: 'Missing userId parameter' }, { status: 400 });
     }
 
-    const prefs = (await loadPreferences(userId)) || ({} as MatchPreferences);
+    const effectiveUserId = userId || profileIdParam || userMobileParam || userEmailParam;
+    const prefs = (await loadPreferences(effectiveUserId)) || ({} as MatchPreferences);
 
     // ------------------------------------------------------------------
-    // Load viewer profile (for same-gender exclusion defaults)
+    // Build comprehensive viewer keys to exclude viewer completely
     // ------------------------------------------------------------------
-    let viewer: { id: string; gender?: string | null; nakshatra?: string | null; manglik?: string | boolean | null } = { id: userId };
+    const viewerKeys = new Set<string>();
+    if (userId) viewerKeys.add(userId.toLowerCase());
+    if (profileIdParam) viewerKeys.add(profileIdParam.toLowerCase());
+    if (userEmailParam) viewerKeys.add(userEmailParam);
+    if (userMobileParam) viewerKeys.add(userMobileParam);
+    const digitsOnlyUserId = userId.replace(/\D/g, '');
+    if (digitsOnlyUserId.length >= 10) viewerKeys.add(digitsOnlyUserId);
+
+    let viewer: { id: string; gender?: string | null; nakshatra?: string | null; manglik?: string | boolean | null } = { id: effectiveUserId };
+
+    // 1. Resolve viewer from Postgres
     if (hasPool) {
       try {
         await ensureProfilesTable();
-        const { rows } = await pool!.query(
-          'SELECT user_id, gender, nakshatra, manglik FROM profiles WHERE user_id = $1',
-          [userId]
-        );
-        if (rows.length > 0) viewer = { id: rows[0].user_id || userId, gender: rows[0].gender, nakshatra: rows[0].nakshatra, manglik: rows[0].manglik };
+        const { rows } = await pool!.query(`
+          SELECT id, user_id, mobile_number, email, gender, nakshatra, manglik
+          FROM profiles
+        `);
+        for (const r of rows) {
+          const rId = (r.id || '').toString().toLowerCase();
+          const rUserId = (r.user_id || '').toString().toLowerCase();
+          const rMob = (r.mobile_number || '').toString().replace(/\D/g, '');
+          const rEm = (r.email || '').toString().toLowerCase();
+
+          const isViewer =
+            (rId && viewerKeys.has(rId)) ||
+            (rUserId && viewerKeys.has(rUserId)) ||
+            (rMob && viewerKeys.has(rMob)) ||
+            (rEm && viewerKeys.has(rEm));
+
+          if (isViewer) {
+            if (rId) viewerKeys.add(rId);
+            if (rUserId) viewerKeys.add(rUserId);
+            if (rMob) viewerKeys.add(rMob);
+            if (rEm) viewerKeys.add(rEm);
+            if (r.gender && !viewer.gender) viewer.gender = r.gender;
+            if (r.nakshatra && !viewer.nakshatra) viewer.nakshatra = r.nakshatra;
+            if (r.manglik != null && viewer.manglik == null) viewer.manglik = r.manglik;
+          }
+        }
       } catch (e) {
-        console.warn('Error loading viewer profile:', e);
+        console.warn('Error loading viewer profile from PG:', e);
       }
     }
-    if (!viewer.gender) {
-      try {
-        const dir = path.dirname(USERS_FILE);
-        if (fs.existsSync(USERS_FILE)) {
-          const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
-          const hit = users.find(
-            (u: { profileId?: string; mobileNumber?: string; email?: string; gender?: string; nakshatra?: string; manglik?: string | boolean }) =>
-              u.profileId === userId || u.mobileNumber === userId || u.email === userId
-          );
-          if (hit?.gender) viewer = { ...viewer, gender: hit.gender };
-          if (hit?.nakshatra) viewer = { ...viewer, nakshatra: hit.nakshatra };
-          if (hit?.manglik != null) viewer = { ...viewer, manglik: hit.manglik };
+
+    // 2. Resolve viewer from USERS_FILE
+    try {
+      if (fs.existsSync(USERS_FILE)) {
+        const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
+        for (const u of users) {
+          const uProfileId = (u.profileId || '').toLowerCase();
+          const uMob = (u.mobileNumber || u.mobile_number || '').replace(/\D/g, '');
+          const uEm = (u.email || '').toLowerCase();
+
+          const isViewer =
+            (uProfileId && viewerKeys.has(uProfileId)) ||
+            (uMob && viewerKeys.has(uMob)) ||
+            (uEm && viewerKeys.has(uEm));
+
+          if (isViewer) {
+            if (uProfileId) viewerKeys.add(uProfileId);
+            if (uMob) viewerKeys.add(uMob);
+            if (uEm) viewerKeys.add(uEm);
+            if (u.gender && !viewer.gender) viewer.gender = u.gender;
+            if (u.nakshatra && !viewer.nakshatra) viewer.nakshatra = u.nakshatra;
+            if (u.manglik != null && viewer.manglik == null) viewer.manglik = u.manglik;
+          }
         }
-        void dir;
-      } catch {
-        // ignore
       }
+    } catch {
+      // ignore
     }
 
     // ------------------------------------------------------------------
@@ -68,19 +114,34 @@ export async function GET(req: Request) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(`
-          SELECT user_id, display_name, avatar_url, gender, age, height, marital_status,
+          SELECT id, user_id, mobile_number, email, display_name, avatar_url, gender, age, height, marital_status,
                  religion, mother_tongue, education, profession, city, country, created_at,
                  membership_tier, membership_expires_at, rashi, nakshatra, manglik, diet,
                  smoking, drinking, is_suspended
           FROM profiles
-          WHERE user_id <> $1 AND COALESCE(is_suspended, FALSE) = FALSE
+          WHERE COALESCE(is_suspended, FALSE) = FALSE
           ORDER BY created_at DESC
-        `, [userId]);
+        `);
 
         rows.forEach((r) => {
+          const rId = (r.id || '').toString().toLowerCase();
+          const rUserId = normalizeId(r.user_id).toLowerCase();
+          const rMob = (r.mobile_number || '').toString().replace(/\D/g, '');
+          const rEm = (r.email || '').toString().toLowerCase();
+
+          // Skip if viewer's own profile
+          if (
+            (rId && viewerKeys.has(rId)) ||
+            (rUserId && viewerKeys.has(rUserId)) ||
+            (rMob && viewerKeys.has(rMob)) ||
+            (rEm && viewerKeys.has(rEm))
+          ) {
+            return;
+          }
+
           const mem = resolveStatus(r.membership_tier, r.membership_expires_at);
           const rec: MatchCandidate = {
-            id: normalizeId(r.user_id),
+            id: normalizeId(r.user_id || r.id),
             name: r.display_name || 'Member',
             age: r.age,
             height: r.height,
@@ -117,47 +178,22 @@ export async function GET(req: Request) {
       const dir = path.dirname(USERS_FILE);
       if (fs.existsSync(USERS_FILE)) {
         const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
-        users.forEach((u: {
-          profileId?: string;
-          display_name?: string;
-          name?: string;
-          mobileNumber?: string;
-          mobile_number?: string;
-          email?: string;
-          gender?: string;
-          age?: number;
-          height?: string;
-          maritalStatus?: string;
-          religion?: string;
-          motherTongue?: string;
-          education?: string;
-          profession?: string;
-          city?: string;
-          country?: string;
-          avatar_url?: string;
-          avatarUrl?: string;
-          createdAt?: string;
-          membershipTier?: string;
-          membershipExpiresAt?: string;
-          rashi?: string;
-          nakshatra?: string;
-          manglik?: string | boolean;
-          diet?: string;
-          smoking?: string;
-          drinking?: string;
-          isSuspended?: boolean;
-        }) => {
+        users.forEach((u: any) => {
           const uid = normalizeId(u.profileId || u.mobileNumber || u.email);
-          const uMobile = (u.mobileNumber || '').replace(/\D/g, '');
+          const uProfileId = (u.profileId || '').toLowerCase();
+          const uMobile = (u.mobileNumber || u.mobile_number || '').replace(/\D/g, '');
           const uEmail = (u.email || '').toLowerCase().trim();
           const uName = (u.display_name || u.name || '').toLowerCase().trim();
-          const cleanViewerId = userId.toLowerCase();
-          const cleanViewerMobile = userId.replace(/\D/g, '');
 
           // Skip invalid, suspended, or viewer's own profile
-          if (!uid || uid.toLowerCase() === cleanViewerId) return;
-          if (cleanViewerMobile && uMobile && uMobile === cleanViewerMobile) return;
-          if (cleanViewerId && uEmail && uEmail === cleanViewerId) return;
+          if (
+            !uid ||
+            (uProfileId && viewerKeys.has(uProfileId)) ||
+            (uMobile && viewerKeys.has(uMobile)) ||
+            (uEmail && viewerKeys.has(uEmail))
+          ) {
+            return;
+          }
           if (u.isSuspended) return;
 
           // Skip duplicates already present in candidates

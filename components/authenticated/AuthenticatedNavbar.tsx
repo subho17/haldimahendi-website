@@ -27,6 +27,8 @@ import {
 
 interface SearchResultProfile {
   id: string;
+  mobileNumber?: string;
+  email?: string;
   name: string;
   age: number;
   height: string;
@@ -121,6 +123,10 @@ export default function AuthenticatedNavbar() {
     try {
       const params = new URLSearchParams();
       if (userId) params.set("userId", userId);
+      if (user?.profileId) params.set("profileId", user.profileId);
+      const mobile = user?.mobile_number || user?.mobileNumber || "";
+      if (mobile) params.set("userMobile", mobile);
+      if (user?.email) params.set("userEmail", user.email);
       if (searchQuery.trim()) params.set("q", searchQuery.trim());
       if (selectedGender) params.set("gender", selectedGender);
       if (selectedReligion && selectedReligion !== "Any") params.set("religion", selectedReligion);
@@ -129,7 +135,22 @@ export default function AuthenticatedNavbar() {
       const data = await res.json();
 
       if (data.success && Array.isArray(data.profiles)) {
-        setSearchResults(data.profiles.slice(0, 5)); // Show top 5 live matches
+        // Client-side safety filter: ensure logged-in user never matches themselves
+        const myProfileId = (user?.profileId || "").toLowerCase().trim();
+        const myMobile = (user?.mobile_number || user?.mobileNumber || "").replace(/\D/g, "");
+        const myEmail = (user?.email || "").toLowerCase().trim();
+
+        const safeProfiles = data.profiles.filter((p: SearchResultProfile) => {
+          const pId = (p.id || "").toLowerCase().trim();
+          const pMob = (p.mobileNumber || "").replace(/\D/g, "");
+          const pEm = (p.email || "").toLowerCase().trim();
+          if (myProfileId && pId === myProfileId) return false;
+          if (myMobile && pMob && pMob === myMobile) return false;
+          if (myEmail && pEm && pEm === myEmail) return false;
+          return true;
+        });
+
+        setSearchResults(safeProfiles.slice(0, 6)); // Show top live matches
       } else {
         setSearchResults([]);
       }
@@ -139,7 +160,7 @@ export default function AuthenticatedNavbar() {
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, selectedGender, selectedReligion, userId]);
+  }, [searchQuery, selectedGender, selectedReligion, userId, user]);
 
   useEffect(() => {
     if (isSearchOpen) {
@@ -156,7 +177,14 @@ export default function AuthenticatedNavbar() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/matches?userId=${encodeURIComponent(userId)}`);
+        const mParams = new URLSearchParams();
+        if (userId) mParams.set("userId", userId);
+        if (user?.profileId) mParams.set("profileId", user.profileId);
+        const mob = user?.mobile_number || user?.mobileNumber || "";
+        if (mob) mParams.set("userMobile", mob);
+        if (user?.email) mParams.set("userEmail", user.email);
+
+        const res = await fetch(`/api/matches?${mParams.toString()}`);
         const data = await res.json();
         if (!cancelled && data.success) {
           setMatchCount(typeof data.meta?.matches === "number" ? data.meta.matches : null);
@@ -169,7 +197,7 @@ export default function AuthenticatedNavbar() {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, user]);
 
   const handleSearchMouseEnter = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -453,6 +481,45 @@ My Haldimehendi
 
                   {/* Real-time Search Results List (2-Column Grid on Wide Screens) */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
+                    {/* Check if user searched for their own Profile ID or mobile */}
+                    {(() => {
+                      const cleanQ = searchQuery.trim().toLowerCase();
+                      const myId = (user?.profileId || "").toLowerCase().trim();
+                      const myMob = (user?.mobile_number || user?.mobileNumber || "").replace(/\D/g, "");
+                      const isOwn =
+                        Boolean(cleanQ) &&
+                        (cleanQ === myId ||
+                          (myMob && cleanQ.replace(/\D/g, "") === myMob) ||
+                          (cleanQ.length >= 4 && myId.includes(cleanQ)));
+
+                      if (isOwn) {
+                        return (
+                          <div className="mb-4 p-4 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-2.5">
+                              <User className="w-5 h-5 text-amber-600 shrink-0" />
+                              <div>
+                                <p className="font-bold text-amber-950 text-xs sm:text-sm">
+                                  This is your own profile ID ({user?.profileId || "You"})
+                                </p>
+                                <p className="text-[11px] text-amber-700 mt-0.5">
+                                  Search only shows prospective matches. Your own profile is not displayed in matching results.
+                                </p>
+                              </div>
+                            </div>
+                            <Link
+                              href="/profile"
+                              onClick={() => setIsSearchOpen(false)}
+                              className="self-start sm:self-auto px-4 py-2 bg-[#d97706] text-white rounded-xl font-bold text-xs hover:bg-[#b45309] transition shadow-xs flex items-center gap-1 shrink-0 cursor-pointer"
+                            >
+                              <span>View My Profile</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
                     <div className="flex items-center justify-between text-[11px] font-extrabold text-gray-400 uppercase tracking-wider mb-3">
                       <span>Live Matching Profiles ({searchResults.length})</span>
                       {isSearching && (
@@ -509,8 +576,8 @@ My Haldimehendi
                     ) : (
                       <div className="py-8 text-center text-gray-400 text-xs bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
                         <User className="w-8 h-8 mx-auto mb-1.5 text-gray-300" />
-                        <p className="font-bold text-gray-600">No matching profiles found.</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Try searching by member name, city, or profession</p>
+                        <p className="font-bold text-gray-600">No other matching profiles found.</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Search for prospective partner profiles by Name, Profile ID, or City</p>
                       </div>
                     )}
                   </div>

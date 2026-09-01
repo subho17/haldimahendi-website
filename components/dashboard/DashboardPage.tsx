@@ -76,8 +76,15 @@ export default function DashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId }),
       }).catch(() => {});
+      const mParams = new URLSearchParams();
+      if (userId) mParams.set("userId", userId);
+      if (user?.profileId) mParams.set("profileId", user.profileId);
+      const mob = user?.mobile_number || user?.mobileNumber || "";
+      if (mob) mParams.set("userMobile", mob);
+      if (user?.email) mParams.set("userEmail", user.email);
+
       Promise.all([
-        fetch(`/api/matches?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
+        fetch(`/api/matches?${mParams.toString()}`).then((r) => r.json()),
         fetch(`/api/interests?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
         fetch(`/api/verification?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
       ])
@@ -86,12 +93,22 @@ export default function DashboardPage() {
             setIsVerified(true);
           }
           if (matchData.success) {
-            const eligible = (matchData.matches || []).filter((m: MatchResult) => m.isEligible);
+            const myProfileId = (user?.profileId || "").toLowerCase().trim();
+            const myMobile = (user?.mobile_number || user?.mobileNumber || "").replace(/\D/g, "");
+            const myEmail = (user?.email || "").toLowerCase().trim();
+
+            const eligible = (matchData.matches || []).filter((m: MatchResult) => {
+              const mId = (m.profile?.id || "").toLowerCase().trim();
+              if (myProfileId && mId === myProfileId) return false;
+              if (myMobile && mId === myMobile) return false;
+              if (myEmail && mId === myEmail) return false;
+              return m.isEligible;
+            });
             setRecommended(eligible.slice(0, 3));
             setStats((prev) => ({
               ...prev,
               newMatches: eligible.length,
-              newCount: (matchData.meta?.newCount as number) || 0,
+              newCount: eligible.length,
             }));
           }
           if (interestData.success) {

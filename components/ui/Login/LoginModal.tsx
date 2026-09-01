@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import LoginPage from "./LoginPage";
@@ -24,15 +24,38 @@ export default function LoginModal({
     () => false
   );
 
+  const [shaking, setShaking] = useState(false);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [open]);
+
   if (!open || !mounted) return null;
+
+  // Prevent accidental dismissal when clicking the dark backdrop
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      setShaking(true);
+      setTimeout(() => setShaking(false), 300);
+    }
+  };
 
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
-      onClick={onClose}
+      onClick={handleBackdropClick}
     >
       <div
-        className="relative w-full max-w-md my-8 transition-all duration-300 animate-in fade-in zoom-in-95"
+        className={`relative w-full max-w-md my-8 transition-transform duration-200 animate-in fade-in zoom-in-95 ${
+          shaking ? "scale-[1.02]" : ""
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}

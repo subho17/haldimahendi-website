@@ -77,9 +77,24 @@ export async function GET(req: Request) {
     // if viewerGender unknown and partnerGender null -> show all (filterGender stays null)
 
     // 4. Build SQL WHERE clauses
+    const profileId = normalizeId(searchParams.get('profileId'));
+    const userMobile = normalizeId(searchParams.get('userMobile') || searchParams.get('mobile')).replace(/\D/g, '');
+
     let whereClauses = [`user_id != $1`];
     const params: unknown[] = [viewerId];
     let paramIdx = 2; // $1 already used
+
+    if (profileId) {
+      whereClauses.push(`user_id != $${paramIdx}`);
+      params.push(profileId);
+      paramIdx++;
+    }
+
+    if (userMobile) {
+      whereClauses.push(`(mobile_number IS NULL OR mobile_number != $${paramIdx})`);
+      params.push(userMobile);
+      paramIdx++;
+    }
 
     if (filterGender) {
       whereClauses.push(`LOWER(gender) = LOWER($${paramIdx})`);

@@ -51,6 +51,10 @@ export default function SearchPage() {
     try {
       const params = new URLSearchParams();
       if (userId) params.set("userId", userId);
+      if (user?.profileId) params.set("profileId", user.profileId);
+      const mobile = user?.mobile_number || user?.mobileNumber || "";
+      if (mobile) params.set("userMobile", mobile);
+      if (user?.email) params.set("userEmail", user.email);
       if (lookingFor !== "Any") params.set("gender", lookingFor);
       params.set("minAge", ageFrom);
       params.set("maxAge", ageTo);
@@ -61,7 +65,23 @@ export default function SearchPage() {
 
       const res = await fetch(`/api/search?${params.toString()}`);
       const data = await res.json();
-      setResults(data.success && Array.isArray(data.profiles) ? data.profiles : []);
+      if (data.success && Array.isArray(data.profiles)) {
+        const myProfileId = (user?.profileId || "").toLowerCase().trim();
+        const myMobile = (user?.mobile_number || user?.mobileNumber || "").replace(/\D/g, "");
+        const myEmail = (user?.email || "").toLowerCase().trim();
+        const safe = data.profiles.filter((p: SearchProfile) => {
+          const pId = (p.id || "").toLowerCase().trim();
+          const pMob = (p as any).mobileNumber ? String((p as any).mobileNumber).replace(/\D/g, "") : "";
+          const pEm = (p as any).email ? String((p as any).email).toLowerCase().trim() : "";
+          if (myProfileId && pId === myProfileId) return false;
+          if (myMobile && pMob && pMob === myMobile) return false;
+          if (myEmail && pEm && pEm === myEmail) return false;
+          return true;
+        });
+        setResults(safe);
+      } else {
+        setResults([]);
+      }
     } catch (e) {
       console.error("Search failed:", e);
       setResults([]);
