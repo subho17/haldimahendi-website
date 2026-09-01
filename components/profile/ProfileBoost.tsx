@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Zap, Clock, TrendingUp, Crown, Sparkles, AlertCircle, Info } from "lucide-react";
-
-interface ProfileBoostProps {
-  userId: string;
-  onUpdate?: () => void;
-}
+import { Zap, AlertCircle, Info } from "lucide-react";
 
 const BOOST_OPTIONS = [
   { id: '24h', label: '24 Hours', price: 99, days: 1, color: 'bg-blue-500' },
@@ -14,9 +9,8 @@ const BOOST_OPTIONS = [
   { id: '7d', label: '7 Days', price: 599, days: 7, color: 'bg-purple-600' },
 ];
 
-export default function ProfileBoost({ userId, onUpdate }: { userId: string; onUpdate?: () => void }) {
+export default function ProfileBoost({ userId }: { userId: string }) {
   const [activeBoostState, setActiveBoost] = useState<{ boost_type: string; expires_at: string } | null>(null);
-  const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,8 +23,6 @@ export default function ProfileBoost({ userId, onUpdate }: { userId: string; onU
         if (data.success) setActiveBoost(data.activeBoost);
       } catch (e) {
         console.error('Failed to load boost:', e);
-      } finally {
-        setLoading(false);
       }
     };
     load();
@@ -51,7 +43,7 @@ export default function ProfileBoost({ userId, onUpdate }: { userId: string; onU
       } else {
         setError(data.message || 'Failed to purchase boost');
       }
-    } catch (e) {
+    } catch {
       setError('Failed to purchase boost');
     } finally {
       setPurchasing(null);
@@ -66,15 +58,24 @@ export default function ProfileBoost({ userId, onUpdate }: { userId: string; onU
       });
       const data = await res.json();
       if (data.success) setActiveBoost(null);
-    } catch (e) {
-      console.error('Failed to remove boost:', e);
+    } catch {
+      console.error('Failed to remove boost');
     }
   };
 
+  const [now, setNow] = useState<number | null>(null);
+  
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   const getTimeRemaining = (expiresAt: string) => {
-    const now = Date.now();
+    if (!now) return '...';
     const end = new Date(expiresAt).getTime();
-    const diff = end - Date.now();
+    const diff = end - now;
     if (diff <= 0) return 'Expired';
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -84,8 +85,6 @@ export default function ProfileBoost({ userId, onUpdate }: { userId: string; onU
   };
 
   const activeBoostOption = BOOST_OPTIONS.find(b => activeBoostState?.boost_type === b.id);
-  const expiresIn = activeBoostState ? getTimeRemaining(activeBoostState.expires_at) : null;
-
   return (
     <div className="space-y-4 p-4 bg-white rounded-2xl border border-gray-100">
       <div className="flex items-center justify-between mb-4">

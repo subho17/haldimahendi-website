@@ -39,7 +39,6 @@ export default function Home() {
       <Testimonals />
       <Downloadapp />
       <Blog />
-      <Newsletter />
       <Faqsection />
       <Footer />
     </div>

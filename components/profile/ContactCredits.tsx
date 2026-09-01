@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { CreditCard, Gift, AlertCircle, Info, ArrowRight, Loader2 } from "lucide-react";
+import { CreditCard, AlertCircle, Info } from "lucide-react";
 
 const CREDIT_PACKAGES = [
   { id: 5, label: '5 Contacts', price: 199, desc: 'For getting started', color: 'bg-gray-500' },
@@ -9,11 +9,9 @@ const CREDIT_PACKAGES = [
   { id: 50, label: '50 Contacts', price: 999, desc: 'Best value', color: 'bg-purple-500' },
 ];
 
-export default function ContactCredits({ userId, onUpdate }: { userId: string; onUpdate?: () => void }) {
+export default function ContactCredits({ userId }: { userId: string }) {
   const [credits, setCredits] = useState<number>(0);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
-  const [source, setSource] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -27,12 +25,9 @@ export default function ContactCredits({ userId, onUpdate }: { userId: string; o
         if (data.success) {
           setCredits(data.credits || 0);
           setExpiresAt(data.expiresAt);
-          setSource(data.source);
         }
       } catch (e) {
         console.error('Failed to load credits:', e);
-      } finally {
-        setLoading(false);
       }
     };
     load();
@@ -55,7 +50,7 @@ export default function ContactCredits({ userId, onUpdate }: { userId: string; o
       } else {
         setError(data.message || 'Failed to purchase credits');
       }
-    } catch (e) {
+    } catch {
       setError('Failed to purchase credits');
     } finally {
       setPurchasing(null);
@@ -82,9 +77,8 @@ export default function ContactCredits({ userId, onUpdate }: { userId: string; o
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-            credits > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
-          }`}>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${credits > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+            }`}>
             {credits} Credits
           </span>
           {expiresAt && (
@@ -114,11 +108,10 @@ export default function ContactCredits({ userId, onUpdate }: { userId: string; o
           <div
             key={pkg.id}
             onClick={() => handlePurchase(pkg.id)}
-            className={`relative p-4 rounded-2xl border-2 transition-all text-center cursor-pointer ${
-              pkg.popular
-                ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20'
-                : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-            }`}
+            className={`relative p-4 rounded-2xl border-2 transition-all text-center cursor-pointer ${pkg.popular
+              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20'
+              : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+              }`}
           >
             {pkg.popular && (
               <span className="absolute -top-2 right-2 px-2 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-black">
@@ -139,11 +132,10 @@ export default function ContactCredits({ userId, onUpdate }: { userId: string; o
                 handlePurchase(pkg.id);
               }}
               disabled={!!purchasing}
-              className={`w-full mt-3 py-2 rounded-xl text-sm font-bold transition-colors ${
-                purchasing === String(pkg.id)
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 shadow-md shadow-amber-500/20'
-              }`}
+              className={`w-full mt-3 py-2 rounded-xl text-sm font-bold transition-colors ${purchasing === String(pkg.id)
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 shadow-md shadow-amber-500/20'
+                }`}
             >
               {purchasing === String(pkg.id) ? (
                 <span className="flex items-center justify-center gap-1">
@@ -164,7 +156,7 @@ export default function ContactCredits({ userId, onUpdate }: { userId: string; o
           <h4 className="font-bold text-emerald-800">How Contact Credits Work</h4>
         </div>
         <ul className="list-disc list-inside space-y-2 text-xs text-emerald-700">
-          <li>Each credit unlocks <span className="font-bold">one member's contact details</span> (phone/email)</li>
+          <li>Each credit unlocks <span className="font-bold">one member&apos;s contact details</span> (phone/email)</li>
           <li>Credits are consumed only when you <span className="font-bold">view contact info</span></li>
           <li>Credits <span className="font-bold">never expire</span> (valid for 1 year from purchase)</li>
           <li>Premium members get <span className="font-bold">monthly bonus credits</span> included</li>

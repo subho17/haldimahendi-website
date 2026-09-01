@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "ver_1788179732347_0vik",
+    "userId": "test_user",
+    "idType": "aadhaar",
+    "idNumber": "123456789012",
+    "selfieUrl": "/uploads/verification/test_user_selfie_1788179732343_msu3oc.jpg",
+    "documentUrl": "/uploads/verification/test_user_doc_1788179732346_js31zj.jpg",
+    "status": "pending",
+    "createdAt": "2026-08-31T12:35:32.347Z"
+  }
+]

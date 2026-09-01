@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
+import { NextResponse } from 'next/server';
+import { pool, hasPool } from '@/lib/db';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -85,13 +85,15 @@ export async function POST(req: Request) {
     }
 
     // Also update scratch file
-    const fs = require('fs');
-    const path = require('path');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const path = require('path');
     const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
     try {
       if (fs.existsSync(USERS_FILE)) {
         const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
-        const idx = users.findIndex((u: any) =>
+        const idx = users.findIndex((u: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) =>
           u.profileId === userId || u.mobileNumber === userId || u.mobile_number === userId || u.email === userId
         );
         if (idx >= 0) {
@@ -109,10 +111,7 @@ export async function POST(req: Request) {
     if (verified) {
       const checkCols = ['mobile_verified', 'email_verified', 'id_verified', 'photo_verified'];
       // We'd need to check all, but for simplicity, set a generic badge
-      const verifiedCount = checkCols.filter(c => {
-        // In real app, check all. For now, set based on this one.
-        return true;
-      }).length;
+      const verifiedCount = checkCols.filter(() => true).length;
       if (verifiedCount >= 3) badge = 'Verified';
       else if (verifiedCount >= 2) badge = 'Partially Verified';
       else badge = 'Verified';

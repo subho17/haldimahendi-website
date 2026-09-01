@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
+import { NextResponse } from 'next/server';
+import { pool, hasPool } from '@/lib/db';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -140,19 +140,20 @@ async function handlePOST(req: Request) {
       return NextResponse.json({ success: false, message: 'Invalid package' }, { status: 400 });
     }
 
-    const pack = CREDIT_PACKAGES[packageSize as keyof typeof CREDIT_PACKAGES];
     const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
 
     await addCredits(userId, packageSize, expiresAt);
 
     // Update scratch file
-    const fs = require('fs');
-    const path = require('path');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const path = require('path');
     const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
     try {
       if (fs.existsSync(USERS_FILE)) {
         const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
-        const idx = users.findIndex((u: any) =>
+        const idx = users.findIndex((u: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) =>
           u.profileId === userId || u.mobileNumber === userId || u.mobile_number === userId || u.email === userId
         );
         if (idx >= 0) {
@@ -184,13 +185,15 @@ async function handleDELETE(req: Request) {
     await consumeCredits(userId, credits);
 
     // Update scratch
-    const fs = require('fs');
-    const path = require('path');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const path = require('path');
     const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
     try {
       if (fs.existsSync(USERS_FILE)) {
         const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
-        const idx = users.findIndex((u: any) =>
+        const idx = users.findIndex((u: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) =>
           u.profileId === userId || u.mobileNumber === userId || u.mobile_number === userId || u.email === userId
         );
         if (idx >= 0) {

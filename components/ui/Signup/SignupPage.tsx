@@ -56,8 +56,9 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
   // Wizard Steps: 1 = Registration Choice / Mobile Check, 2 = OTP Verification, 3 = Matrimonial Profile Completion
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [profileStep, setProfileStep] = useState(1);
   const [mobileNumber, setMobileNumber] = useState("");
-  const [email, setEmail] = useState("");
+  const [email] = useState("");
   const [otp, setOtp] = useState("");
 
   // Profile completion fields
@@ -69,7 +70,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
   const [height, setHeight] = useState("5'8\"");
   const [maritalStatus, setMaritalStatus] = useState("Never Married");
   const [religion, setReligion] = useState(initReligion);
-  const [motherTongue, setMotherTongue] = useState(initMotherTongue);
+  const [motherTongue] = useState(initMotherTongue);
   const [education, setEducation] = useState("B.Tech / Graduate");
   const [profession, setProfession] = useState("Software Engineer");
   const [city, setCity] = useState("Mumbai");
@@ -289,7 +290,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
             {step === 1 && "Create Free Account ✨"}
             {step === 2 && "Verify Mobile OTP 📱"}
-            {step === 3 && "Create Matrimonial Profile 👤"}
+            {step === 3 && profileStep === 1 && "Basic Details 👤"}
+            {step === 3 && profileStep === 2 && "Personal Info 👤"}
+            {step === 3 && profileStep === 3 && "Education & Career 🎓"}
+            {step === 3 && profileStep === 4 && "Account Security 🔒"}
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm font-normal">
             {step === 1 && "Choose Mobile or Gmail registration to find your life partner."}
@@ -454,288 +458,331 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
         {/* Step 3: Complete Full Matrimonial Profile Form */}
         {step === 3 && (
-          <form onSubmit={handleCompleteProfile} className="space-y-4 animate-in fade-in">
-            
-            {/* Avatar Selector */}
-            <div className="flex flex-col items-center justify-center gap-3 mb-2">
-              <div className="relative group">
-                <Image
-                  src={avatarUrl}
-                  alt="Profile Avatar"
-                  width={80}
-                  height={80}
-                  className="rounded-full object-cover border-4 border-red-100 shadow-md"
-                />
-                <label className="absolute bottom-0 right-0 p-1.5 rounded-full bg-[#d97706] text-white cursor-pointer shadow-md hover:scale-105 transition">
-                  <Camera className="w-3.5 h-3.5" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                </label>
-              </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (profileStep < 4) {
+                setProfileStep((prev) => prev + 1);
+              } else {
+                handleCompleteProfile(e);
+              }
+            }}
+            className="space-y-4 animate-in fade-in"
+          >
+            {profileStep === 1 && (
+              <div className="space-y-4 animate-in slide-in-from-right-2 fade-in duration-300">
+                {/* Avatar Selector */}
+                <div className="flex flex-col items-center justify-center gap-3 mb-2">
+                  <div className="relative group">
+                    <Image
+                      src={avatarUrl}
+                      alt="Profile Avatar"
+                      width={80}
+                      height={80}
+                      className="rounded-full object-cover border-4 border-red-100 shadow-md"
+                    />
+                    <label className="absolute bottom-0 right-0 p-1.5 rounded-full bg-[#d97706] text-white cursor-pointer shadow-md hover:scale-105 transition">
+                      <Camera className="w-3.5 h-3.5" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
 
-              <div className="flex items-center gap-2 mt-1">
-                {DEFAULT_AVATARS.map((av, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setAvatarUrl(av.url)}
-                    style={{ position: "relative" }}
-                    className={`relative w-8 h-8 rounded-full overflow-hidden border-2 transition ${
-                      avatarUrl === av.url ? "border-[#d97706] scale-110" : "border-gray-200 opacity-70"
-                    }`}
-                  >
-                    <Image src={av.url} alt={av.label} width={32} height={32} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-              <span className="text-[11px] text-gray-400 font-medium">Upload photo to Supabase or select preset</span>
-            </div>
-
-            {/* Display Name */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
-                Full Display Name *
-              </label>
-              <div className="relative">
-                <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="e.g. Rahul Sharma"
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-xl text-gray-900 text-xs font-semibold focus:bg-white focus:border-[#d97706] outline-hidden"
-                />
-              </div>
-            </div>
-
-            {/* Gender Choice */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
-                Looking For
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setGender("Bride")}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                    gender === "Bride"
-                      ? "bg-red-50 border-[#d97706] text-[#d97706]"
-                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <span>👰 Bride</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setGender("Groom")}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                    gender === "Groom"
-                      ? "bg-red-50 border-[#d97706] text-[#d97706]"
-                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <span>🤵 Groom</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setGender("Other")}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                    gender === "Other"
-                      ? "bg-red-50 border-[#d97706] text-[#d97706]"
-                      : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <span>✨ Other</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {/* Age */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Age (Years)</label>
-                <input
-                  type="number"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                />
-              </div>
-
-              {/* Height */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Height</label>
-                <select
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                >
-                  <option value="5'2&quot;">5&apos;2&quot;</option>
-                  <option value="5'4&quot;">5&apos;4&quot;</option>
-                  <option value="5'6&quot;">5&apos;6&quot;</option>
-                  <option value="5'8&quot;">5&apos;8&quot;</option>
-                  <option value="5'10&quot;">5&apos;10&quot;</option>
-                  <option value="6'0&quot;">6&apos;0&quot;</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {/* Religion */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Religion</label>
-                <select
-                  value={religion}
-                  onChange={(e) => setReligion(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                >
-                  <option value="Hindu">Hindu</option>
-                  <option value="Muslim">Muslim</option>
-                  <option value="Christian">Christian</option>
-                  <option value="Sikh">Sikh</option>
-                  <option value="Jain">Jain</option>
-                </select>
-              </div>
-
-              {/* Marital Status */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Marital Status</label>
-                <select
-                  value={maritalStatus}
-                  onChange={(e) => setMaritalStatus(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                >
-                  <option value="Never Married">Never Married</option>
-                  <option value="Divorced">Divorced</option>
-                  <option value="Widowed">Widowed</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {/* Education */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Education</label>
-                <div className="relative">
-                  <BookOpen className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={education}
-                    onChange={(e) => setEducation(e.target.value)}
-                    placeholder="e.g. B.Tech"
-                    className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                  />
+                  <div className="flex items-center gap-2 mt-1">
+                    {DEFAULT_AVATARS.map((av, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setAvatarUrl(av.url)}
+                        style={{ position: "relative" }}
+                        className={`relative w-8 h-8 rounded-full overflow-hidden border-2 transition ${
+                          avatarUrl === av.url ? "border-[#d97706] scale-110" : "border-gray-200 opacity-70"
+                        }`}
+                      >
+                        <Image src={av.url} alt={av.label} width={32} height={32} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-gray-400 font-medium">Upload photo to Supabase or select preset</span>
                 </div>
-              </div>
 
-              {/* Profession */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Profession</label>
-                <div className="relative">
-                  <Briefcase className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <select
-                    value={profession}
-                    onChange={(e) => setProfession(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                  >
-                    <option value="">Select Profession</option>
-                    <option value="Govt">Govt</option>
-                    <option value="Private">Private</option>
-                    <option value="Own Business">Own Business</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Company Name (shown for Own Business) */}
-              {profession === "Own Business" && (
+                {/* Display Name */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Company Name</label>
+                  <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
+                    Full Display Name *
+                  </label>
                   <div className="relative">
-                    <Briefcase className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="e.g. My Company Pvt Ltd"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="e.g. Rahul Sharma"
+                      required
+                      className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-xl text-gray-900 text-xs font-semibold focus:bg-white focus:border-[#d97706] outline-hidden"
+                    />
+                  </div>
+                </div>
+
+                {/* Gender Choice */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
+                    Looking For
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setGender("Bride")}
+                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        gender === "Bride"
+                          ? "bg-red-50 border-[#d97706] text-[#d97706]"
+                          : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>👰 Bride</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setGender("Groom")}
+                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        gender === "Groom"
+                          ? "bg-red-50 border-[#d97706] text-[#d97706]"
+                          : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>🤵 Groom</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setGender("Other")}
+                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        gender === "Other"
+                          ? "bg-red-50 border-[#d97706] text-[#d97706]"
+                          : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>✨ Other</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {profileStep === 2 && (
+              <div className="space-y-4 animate-in slide-in-from-right-2 fade-in duration-300">
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Age */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Age (Years)</label>
+                    <input
+                      type="number"
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
+                      className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                    />
+                  </div>
+
+                  {/* Height */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Height</label>
+                    <select
+                      value={height}
+                      onChange={(e) => setHeight(e.target.value)}
+                      className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                    >
+                      <option value="5'2&quot;">5&apos;2&quot;</option>
+                      <option value="5'4&quot;">5&apos;4&quot;</option>
+                      <option value="5'6&quot;">5&apos;6&quot;</option>
+                      <option value="5'8&quot;">5&apos;8&quot;</option>
+                      <option value="5'10&quot;">5&apos;10&quot;</option>
+                      <option value="6'0&quot;">6&apos;0&quot;</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Religion */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Religion</label>
+                    <select
+                      value={religion}
+                      onChange={(e) => setReligion(e.target.value)}
+                      className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                    >
+                      <option value="Hindu">Hindu</option>
+                      <option value="Muslim">Muslim</option>
+                      <option value="Christian">Christian</option>
+                      <option value="Sikh">Sikh</option>
+                      <option value="Jain">Jain</option>
+                    </select>
+                  </div>
+
+                  {/* Marital Status */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Marital Status</label>
+                    <select
+                      value={maritalStatus}
+                      onChange={(e) => setMaritalStatus(e.target.value)}
+                      className="w-full px-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                    >
+                      <option value="Never Married">Never Married</option>
+                      <option value="Divorced">Divorced</option>
+                      <option value="Widowed">Widowed</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {profileStep === 3 && (
+              <div className="space-y-4 animate-in slide-in-from-right-2 fade-in duration-300">
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Education */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Education</label>
+                    <div className="relative">
+                      <BookOpen className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={education}
+                        onChange={(e) => setEducation(e.target.value)}
+                        placeholder="e.g. B.Tech"
+                        className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Profession */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Profession</label>
+                    <div className="relative">
+                      <Briefcase className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <select
+                        value={profession}
+                        onChange={(e) => setProfession(e.target.value)}
+                        className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                      >
+                        <option value="">Select Profession</option>
+                        <option value="Govt">Govt</option>
+                        <option value="Private">Private</option>
+                        <option value="Own Business">Own Business</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Company Name (shown for Own Business) */}
+                  {profession === "Own Business" && (
+                    <div className="space-y-1 col-span-2">
+                      <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Company Name</label>
+                      <div className="relative">
+                        <Briefcase className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                          placeholder="e.g. My Company Pvt Ltd"
+                          className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* City */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Living City</label>
+                  <div className="relative">
+                    <MapPin className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. Mumbai, Delhi"
                       className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                     />
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* City */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Living City</label>
-              <div className="relative">
-                <MapPin className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Mumbai, Delhi"
-                  className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                />
               </div>
-            </div>
+            )}
 
-            {/* Password (optional, for password login later) */}
-            <div className="pt-2 border-t border-gray-100">
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">
-                Create a Login Password <span className="text-gray-300 normal-case font-medium">(optional)</span>
-              </p>
-              <div className="grid grid-cols-1 gap-3">
-                <div className="relative">
-                  <Lock className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password (min 6 characters)"
-                    className="w-full pl-8 pr-10 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                <div className="relative">
-                  <Lock className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm password"
-                    className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
-                  />
+            {profileStep === 4 && (
+              <div className="space-y-4 animate-in slide-in-from-right-2 fade-in duration-300">
+                {/* Password (optional, for password login later) */}
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">
+                    Create a Login Password <span className="text-gray-300 normal-case font-medium">(optional)</span>
+                  </p>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="relative">
+                      <Lock className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Create a password (min 6 characters)"
+                        className="w-full pl-8 pr-10 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Lock className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm password"
+                        className="w-full pl-8 pr-3 py-2 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-medium text-gray-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-3"
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Save Matrimonial Profile & Start Matching</span>
-                  <Sparkles className="w-4 h-4" />
-                </>
+            <div className="flex gap-3 mt-4 pt-2">
+              {profileStep > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setProfileStep((prev) => prev - 1)}
+                  disabled={isLoading}
+                  className="w-1/3 py-3.5 px-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </button>
               )}
-            </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex-1 bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+              >
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : profileStep < 4 ? (
+                  <>
+                    <span>Next</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    <span>Save Profile & Start Matching</span>
+                    <Sparkles className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         )}
 

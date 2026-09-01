@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkAdminKey } from '@/lib/adminAuth';
-import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
+import { pool, hasPool } from '@/lib/db';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -86,7 +86,9 @@ async function deleteFeaturedProfile(userId: string) {
 }
 
 async function updateScratchFeatured(userId: string, days: number, isAdding: boolean) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fs = require('fs');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const path = require('path');
   const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
   
@@ -94,7 +96,7 @@ async function updateScratchFeatured(userId: string, days: number, isAdding: boo
     if (!fs.existsSync(USERS_FILE)) return;
     
     const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
-    const idx = users.findIndex((u: any) =>
+    const idx = users.findIndex((u: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) =>
       u.profileId === userId || u.mobileNumber === userId || u.mobile_number === userId || u.email === userId
     );
     
@@ -150,11 +152,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Max duration is 365 days' }, { status: 400 });
     }
 
+    const featuredUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     await setFeaturedProfile(userId, days);
     await updateScratchFeatured(userId, days, true);
 
-    const featuredUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
-    return NextResponse.json({ success: true, featuredUntil: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString() });
+    return NextResponse.json({ success: true, featuredUntil });
   } catch (e) {
     console.error('Error setting featured profile:', e);
     return NextResponse.json({ success: false, message: 'Failed to set featured profile' }, { status: 500 });

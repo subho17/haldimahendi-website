@@ -19,7 +19,8 @@ function normalizeId(v?: string | null): string {
 
 async function saveFile(file: File, userId: string, prefix: string): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
-  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const fileNameStr = file.name || 'upload.jpg';
+  const fileExt = fileNameStr.split('.').pop()?.toLowerCase() || 'jpg';
   ensureUploadsDir();
   const fileName = `${userId}_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
   fs.writeFileSync(path.join(VERIFICATION_UPLOADS_DIR, fileName), buffer);
@@ -105,8 +106,8 @@ export async function POST(req: Request) {
       message: 'Verification submitted. Our team will review it shortly.',
       submission: { id: submission.id, status: submission.status },
     });
-  } catch (e) {
+  } catch (e: unknown) {
     console.error('Error submitting verification:', e);
-    return NextResponse.json({ success: false, message: 'Failed to submit verification' }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Failed to submit verification: ' + (e instanceof Error ? e.message : 'Unknown error') }, { status: 500 });
   }
 }

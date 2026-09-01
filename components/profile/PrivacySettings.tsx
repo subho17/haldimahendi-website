@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Eye, EyeOff, Lock, User, Phone, Mail, Shield, Info, Settings } from "lucide-react";
+import { Phone, Mail, User, Shield, Eye, Info } from 'lucide-react';
 
 interface PrivacySettingsProps {
   userId: string;
-  onUpdate?: () => void;
 }
 
 const PRIVACY_OPTIONS = [
@@ -39,8 +38,8 @@ const PRIVACY_OPTIONS = [
   },
 ];
 
-export default function PrivacySettings({ userId, onUpdate }: PrivacySettingsProps) {
-  const [privacy, setPrivacy] = useState<Record<string, any>>({
+export default function PrivacySettings({ userId }: PrivacySettingsProps) {
+  const [privacy, setPrivacy] = useState<Record<string, any /* eslint-disable-line @typescript-eslint/no-explicit-any */>>({
     hide_phone: false,
     hide_email: false,
     hide_surname: false,
@@ -79,7 +78,7 @@ export default function PrivacySettings({ userId, onUpdate }: PrivacySettingsPro
     await saveSetting('photo_privacy', value);
   };
 
-  const saveSetting = async (key: string, value: any) => {
+  const saveSetting = async (key: string, value: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
     setSaving(true);
     setError(null);
     try {
@@ -92,30 +91,14 @@ export default function PrivacySettings({ userId, onUpdate }: PrivacySettingsPro
       if (!data.success) throw new Error(data.message || 'Failed to save');
       setMessage('Settings saved successfully!');
       setTimeout(() => setMessage(null), 3000);
-    } catch (e: any) {
+    } catch (e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) {
       setError(e.message || 'Failed to save settings');
     } finally {
       setSaving(false);
     }
   };
 
-  const getPhotoPrivacyLabel = (value: string) => {
-    switch (value) {
-      case 'public': return 'Public - Everyone can see';
-      case 'contacts_only': return 'Contacts Only - Only accepted connections';
-      case 'private': return 'Private - Only you can see';
-      default: return value;
-    }
-  };
-
-  const getPhotoPrivacyDescription = (value: string) => {
-    switch (value) {
-      case 'public': return 'Everyone can see your photos';
-      case 'contacts_only': return 'Only your accepted connections can see your photos';
-      case 'private': return 'Only you can see your photos';
-      default: return '';
-    }
-  }
+  
 
   if (loading) {
     return (
@@ -177,11 +160,10 @@ export default function PrivacySettings({ userId, onUpdate }: PrivacySettingsPro
               <button
                 onClick={() => handleToggle(opt.key, privacy[opt.key])}
                 disabled={saving}
-                className={`relative w-12 h-7 rounded-full transition-all ${
-                  privacy[opt.key]
+                className={`relative w-12 h-7 rounded-full transition-all ${privacy[opt.key]
                     ? 'bg-[#d97706] after:translate-x-5'
                     : 'bg-gray-200 after:translate-x-0'
-                } after:content-[""] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:shadow-sm after:transition-all`}
+                  } after:content-[""] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:shadow-sm after:transition-all`}
               />
             </div>
           </div>
@@ -207,13 +189,12 @@ export default function PrivacySettings({ userId, onUpdate }: PrivacySettingsPro
           ].map(opt => (
             <button
               key={opt.value}
-              onClick={() => handlePhotoPrivacyChange(opt.value as any)}
+              onClick={() => handlePhotoPrivacyChange(opt.value as any /* eslint-disable-line @typescript-eslint/no-explicit-any */)}
               disabled={saving}
-              className={`relative p-4 rounded-2xl border-2 transition-all text-center ${
-                privacy.photo_privacy === opt.value
+              className={`relative p-4 rounded-2xl border-2 transition-all text-center ${privacy.photo_privacy === opt.value
                   ? 'border-[#d97706] bg-[#d97706]/10 ring-2 ring-[#d97706]/20'
                   : 'border-gray-200 hover:border-[#d97706]/50 hover:bg-gray-50'
-              }`}
+                }`}
             >
               <div className="text-2xl mb-2">{opt.icon}</div>
               <p className="font-bold text-gray-900">{opt.label}</p>

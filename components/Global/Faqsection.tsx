@@ -45,7 +45,7 @@ export default function Faqsection() {
 
             {/* Description */}
             <p className="text-gray-500 text-base sm:text-lg leading-relaxed max-w-md font-medium">
-              Find answers to the most common questions about our matchmaking services, profile verification, and premium memberships. We're here to help you on your journey.
+              Find answers to the most common questions about our matchmaking services, profile verification, and premium memberships. We&apos;re here to help you on your journey.
             </p>
           </div>
 

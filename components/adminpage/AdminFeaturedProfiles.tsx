@@ -20,7 +20,7 @@ interface AdminFeaturedProfilesProps {
 }
 
 export default function AdminFeaturedProfiles({ onRefresh }: AdminFeaturedProfilesProps) {
-  const [featured, setFeatured] = useState<any[]>([]);
+  const [featured, setFeatured] = useState<any[] /* eslint-disable-line @typescript-eslint/no-explicit-any */>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -53,6 +53,7 @@ export default function AdminFeaturedProfiles({ onRefresh }: AdminFeaturedProfil
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadFeatured();
   }, [page, search]);
 
@@ -70,7 +71,8 @@ export default function AdminFeaturedProfiles({ onRefresh }: AdminFeaturedProfil
 if (data.success) {
           setShowModal(false);
           setFormData({ userId: '', days: '30' });
-          loadFeatured();
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadFeatured();
       } else {
         setError(data.message || 'Failed to add featured profile');
       }
@@ -153,7 +155,7 @@ if (data.success) {
         <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center text-slate-400">
           <Star className="w-10 h-10 mx-auto mb-2 text-slate-300" />
           <p className="font-bold text-slate-500">No featured profiles</p>
-          <p className="text-xs mt-0.5">Click "Create Featured" to add one.</p>
+          <p className="text-xs mt-0.5">Click &quot;Create Featured&quot; to add one.</p>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100">

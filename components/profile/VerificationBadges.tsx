@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ShieldCheck, Shield, BadgeCheck, AlertCircle, Info, Camera, Smartphone, Mail, IdCard } from "lucide-react";
+import { ShieldCheck, BadgeCheck, Shield, Info, Camera, Smartphone, Mail, IdCard } from "lucide-react";
 
 interface VerificationBadgeProps {
   userId: string;
   compact?: boolean;
-  onUpdate?: () => void;
 }
 
 const BADGE_CONFIG = [
@@ -16,7 +15,7 @@ const BADGE_CONFIG = [
   { key: 'photo', label: 'Photo', icon: Camera, color: 'bg-amber-100 text-amber-700' },
 ];
 
-export default function VerificationBadges({ userId, compact = false, onUpdate }: VerificationBadgeProps) {
+export default function VerificationBadges({ userId, compact = false }: VerificationBadgeProps) {
   const [badges, setBadges] = useState<Record<string, boolean>>({
     mobile: false,
     email: false,
@@ -57,8 +56,8 @@ export default function VerificationBadges({ userId, compact = false, onUpdate }
         setBadges(prev => ({ ...prev, [key]: !currentValue }));
         if (data.badge) setMainBadge(data.badge);
       }
-    } catch (e) {
-      console.error('Failed to update badge:', e);
+    } catch {
+      console.error('Failed to update badge:');
     }
   };
 
