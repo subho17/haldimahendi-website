@@ -56,7 +56,7 @@ export default function DashboardPage() {
   const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isVerified, setIsVerified] = useState(() => !!(user?.isVerified || (user as any)?.verified));
+  const [isVerified, setIsVerified] = useState(() => Boolean(user?.isVerified || (user as { verified?: boolean })?.verified));
 
   const userAvatar = user?.avatar_url || user?.avatarUrl;
   const displayName = user?.display_name || user?.name || "Shaadi Member";
@@ -130,7 +130,7 @@ export default function DashboardPage() {
         .catch(console.error)
         .finally(() => setLoading(false));
     }
-  }, [mounted, isAuthenticated, isLoading, router, userId]);
+  }, [mounted, isAuthenticated, isLoading, router, userId, user?.email, user?.mobileNumber, user?.mobile_number, user?.profileId]);
 
   const runAction = async (otherId: string, action: string) => {
     if (!userId || busyId) return;

@@ -19,7 +19,7 @@ export async function GET(req: Request) {
 
     // Check cache first
     const cacheKey = `feed:${viewerId}`;
-    const cached = getCache<any>(cacheKey);
+    const cached = getCache<unknown[]>(cacheKey);
     if (cached) {
       return NextResponse.json({ success: true, profiles: cached });
     }
@@ -80,7 +80,7 @@ export async function GET(req: Request) {
     const profileId = normalizeId(searchParams.get('profileId'));
     const userMobile = normalizeId(searchParams.get('userMobile') || searchParams.get('mobile')).replace(/\D/g, '');
 
-    let whereClauses = [`user_id != $1`];
+    const whereClauses = [`user_id != $1`];
     const params: unknown[] = [viewerId];
     let paramIdx = 2; // $1 already used
 
@@ -128,7 +128,7 @@ export async function GET(req: Request) {
     const whereClause = whereClauses.join(' AND ');
 
     // 5. Execute query
-    let sql = `SELECT id, user_id, display_name, avatar_url, age, height, religion,
+    const sql = `SELECT id, user_id, display_name, avatar_url, age, height, religion,
                 mother_tongue, education, profession, city, country, bio, created_at,
                 verification_status, membership_tier, membership_expires_at,
                 dob, birth_time, birth_place, rashi, nakshatra, manglik, gotra,
@@ -141,7 +141,7 @@ export async function GET(req: Request) {
     const { rows } = hasPool ? await pool!.query(sql, params) : { rows: [] };
 
     // Map rows to lean format
-    const profiles = rows.map((r: any) => ({
+    const profiles = rows.map((r: Record<string, unknown>) => ({
       id: r.id,
       userId: r.user_id,
       name: r.display_name || 'Member',
@@ -156,8 +156,7 @@ export async function GET(req: Request) {
       maritalStatus: r.marital_status,
       gender: r.gender,
       avatarUrl: r.avatar_url,
-      bio: r.bio,
-      createdAt: r.created_at?.toISOString?.() || null,
+      createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : (typeof r.created_at === 'string' ? r.created_at : null),
       verified: r.verification_status === 'approved',
     }));
 

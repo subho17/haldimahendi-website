@@ -93,7 +93,7 @@ export default function MatchesPage() {
         .catch(console.error)
         .finally(() => setLoading(false));
     }
-  }, [mounted, isAuthenticated, isLoading, router, userId]);
+  }, [mounted, isAuthenticated, isLoading, router, userId, user?.email, user?.mobileNumber, user?.mobile_number, user?.profileId]);
 
   const runAction = async (otherId: string, action: string) => {
     if (!userId || busyId) return;

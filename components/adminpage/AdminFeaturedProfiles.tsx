@@ -1,10 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Star, Trash2, Calendar } from "lucide-react";
-
-interface AdminFeaturedProfilesProps {
-}
+import { Star, Trash2 } from "lucide-react";
 
 export default function AdminFeaturedProfiles() {
   const [featured, setFeatured] = useState<any[] /* eslint-disable-line @typescript-eslint/no-explicit-any */>([]);
@@ -18,7 +15,6 @@ export default function AdminFeaturedProfiles() {
   const [error, setError] = useState('');
 
   const loadFeatured = useCallback(async () => {
-    setLoading(true);
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -39,8 +35,30 @@ export default function AdminFeaturedProfiles() {
   }, [page, search]);
 
   useEffect(() => {
-    loadFeatured();
-  }, [page, search, loadFeatured]);
+    let active = true;
+    (async () => {
+      try {
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: '20',
+        });
+        if (search) params.append('search', search);
+        const res = await fetch(`/api/admin/featured?${params.toString()}`);
+        const data = await res.json();
+        if (active && data.success) {
+          setFeatured(data.featured || []);
+          setTotal(data.total || 0);
+        }
+      } catch {
+        console.error('Failed to load featured profiles');
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [page, search]);
 
   const handleAdd = async () => {
     if (!formData.userId || !formData.days) return;
@@ -53,11 +71,10 @@ export default function AdminFeaturedProfiles() {
         body: JSON.stringify({ userId: formData.userId, days: parseInt(formData.days, 10) }),
       });
       const data = await res.json();
-if (data.success) {
-          setShowModal(false);
-          setFormData({ userId: '', days: '30' });
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadFeatured();
+      if (data.success) {
+        setShowModal(false);
+        setFormData({ userId: '', days: '30' });
+        loadFeatured();
       } else {
         setError(data.message || 'Failed to add featured profile');
       }
@@ -142,6 +159,7 @@ if (data.success) {
           {featured.map((f) => (
             <div key={f.id} className="p-4 flex flex-col lg:flex-row lg:items-center gap-4">
               <div className="flex items-center gap-3 flex-1 min-w-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={f.avatar_url} alt={f.display_name} className="w-12 h-12 rounded-full object-cover border border-slate-200 shrink-0" />
                 <div className="min-w-0">
                   <p className="text-sm font-extrabold text-slate-900 truncate flex items-center gap-1.5">

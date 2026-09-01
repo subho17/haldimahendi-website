@@ -112,13 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       height: userData.height ?? user?.height,
       maritalStatus: userData.maritalStatus ?? user?.maritalStatus,
       religion: userData.religion ?? user?.religion,
-      motherTongue: userData.motherTongue ?? (userData as any)?.mother_tongue ?? user?.motherTongue,
+      motherTongue: userData.motherTongue ?? (userData as { mother_tongue?: string })?.mother_tongue ?? user?.motherTongue,
       education: userData.education ?? user?.education,
       profession: userData.profession ?? user?.profession,
       city: userData.city ?? user?.city,
       country: userData.country ?? user?.country ?? "India",
       bio: userData.bio ?? user?.bio,
-      verificationStatus: userData.verificationStatus ?? (userData as any)?.verification_status ?? user?.verificationStatus,
+      verificationStatus: userData.verificationStatus ?? (userData as { verification_status?: string })?.verification_status ?? user?.verificationStatus,
       isVerified: userData.isVerified ?? user?.isVerified,
       createdAt: userData.createdAt || user?.createdAt || new Date().toISOString(),
       dob: userData.dob ?? user?.dob,
@@ -170,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newUser),
     }).catch((err) => console.warn("Failed to sync user to server:", err));
-  }, []);
+  }, [user]);
 
   const logout = useCallback(() => {
     try {

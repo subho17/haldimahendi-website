@@ -24,6 +24,8 @@ interface SearchProfile {
   gender: string;
   avatarUrl: string;
   bio?: string;
+  mobileNumber?: string;
+  email?: string;
   verified?: boolean;
   premium?: boolean;
 }
@@ -71,8 +73,8 @@ export default function SearchPage() {
         const myEmail = (user?.email || "").toLowerCase().trim();
         const safe = data.profiles.filter((p: SearchProfile) => {
           const pId = (p.id || "").toLowerCase().trim();
-          const pMob = (p as any).mobileNumber ? String((p as any).mobileNumber).replace(/\D/g, "") : "";
-          const pEm = (p as any).email ? String((p as any).email).toLowerCase().trim() : "";
+          const pMob = p.mobileNumber ? String(p.mobileNumber).replace(/\D/g, "") : "";
+          const pEm = p.email ? String(p.email).toLowerCase().trim() : "";
           if (myProfileId && pId === myProfileId) return false;
           if (myMobile && pMob && pMob === myMobile) return false;
           if (myEmail && pEm && pEm === myEmail) return false;

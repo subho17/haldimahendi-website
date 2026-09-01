@@ -51,7 +51,7 @@ export default function VerificationCard({ userId, onStatusChange }: Verificatio
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, onStatusChange]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

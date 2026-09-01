@@ -75,14 +75,14 @@ export default function ProfilePage() {
   const [height, setHeight] = useState(() => user?.height || "");
   const [maritalStatus, setMaritalStatus] = useState(() => user?.maritalStatus || "");
   const [religion, setReligion] = useState(() => user?.religion || "");
-  const [motherTongue, setMotherTongue] = useState(() => user?.motherTongue || (user as any)?.mother_tongue || "");
+  const [motherTongue, setMotherTongue] = useState(() => user?.motherTongue || (user as { mother_tongue?: string })?.mother_tongue || "");
   const [education, setEducation] = useState(() => user?.education || "");
   const [profession, setProfession] = useState(() => user?.profession || "");
   const [city, setCity] = useState(() => user?.city || "");
-  const [country, setCountry] = useState(() => (user as any)?.country || "India");
+  const [country, setCountry] = useState(() => (user as { country?: string })?.country || "India");
   const [bio, setBio] = useState(() => user?.bio || "");
   const [verificationStatus, setVerificationStatus] = useState<"none" | "pending" | "approved" | "rejected">(() => {
-    if (user?.isVerified || (user as any)?.verified || user?.verification_status === "approved" || user?.verificationStatus === "approved") return "approved";
+    if (user?.isVerified || (user as { verified?: boolean })?.verified || user?.verification_status === "approved" || user?.verificationStatus === "approved") return "approved";
     if (user?.verification_status === "pending" || user?.verificationStatus === "pending") return "pending";
     if (user?.verification_status === "rejected" || user?.verificationStatus === "rejected") return "rejected";
     return "none";

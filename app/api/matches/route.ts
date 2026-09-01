@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     const digitsOnlyUserId = userId.replace(/\D/g, '');
     if (digitsOnlyUserId.length >= 10) viewerKeys.add(digitsOnlyUserId);
 
-    let viewer: { id: string; gender?: string | null; nakshatra?: string | null; manglik?: string | boolean | null } = { id: effectiveUserId };
+    const viewer: { id: string; gender?: string | null; nakshatra?: string | null; manglik?: string | boolean | null } = { id: effectiveUserId };
 
     // 1. Resolve viewer from Postgres
     if (hasPool) {
@@ -178,7 +178,37 @@ export async function GET(req: Request) {
       const dir = path.dirname(USERS_FILE);
       if (fs.existsSync(USERS_FILE)) {
         const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
-        users.forEach((u: any) => {
+        interface ScratchUser {
+          profileId?: string;
+          display_name?: string;
+          name?: string;
+          mobileNumber?: string;
+          mobile_number?: string;
+          email?: string;
+          gender?: string;
+          age?: number;
+          height?: string;
+          maritalStatus?: string;
+          religion?: string;
+          motherTongue?: string;
+          education?: string;
+          profession?: string;
+          city?: string;
+          country?: string;
+          avatar_url?: string;
+          avatarUrl?: string;
+          createdAt?: string;
+          membershipTier?: string;
+          membershipExpiresAt?: string;
+          rashi?: string;
+          nakshatra?: string;
+          manglik?: string | boolean;
+          diet?: string;
+          smoking?: string;
+          drinking?: string;
+          isSuspended?: boolean;
+        }
+        users.forEach((u: ScratchUser) => {
           const uid = normalizeId(u.profileId || u.mobileNumber || u.email);
           const uProfileId = (u.profileId || '').toLowerCase();
           const uMobile = (u.mobileNumber || u.mobile_number || '').replace(/\D/g, '');
