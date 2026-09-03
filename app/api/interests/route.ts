@@ -12,6 +12,7 @@ import {
 import { buildProfileLookup } from '@/lib/profileLookup';
 import { isBlocked } from '@/lib/reportStore';
 import { notifyInterestEvent } from '@/lib/notificationStore';
+import { expandAllAliases } from '@/lib/userAliases';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -34,10 +35,12 @@ export async function GET(req: Request) {
       buildProfileLookup(),
     ]);
 
-    const acceptedIds = [
+    const rawAccepted = [
+      ...(state.acceptedIds || []),
       ...received.filter((r) => r.status === 'accepted').map((r) => r.senderId),
       ...sent.filter((r) => r.status === 'accepted').map((r) => r.recipientId),
     ];
+    const acceptedIds = await expandAllAliases(rawAccepted);
 
     const enrich = (
       rows: { senderId: string; recipientId: string; status: InterestStatus; createdAt: string }[],

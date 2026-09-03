@@ -4,6 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { pool, hasPool, ensureInteractionsTable } from '@/lib/db';
+import { getUserAliases, expandAllAliases } from '@/lib/userAliases';
 
 const INTERACTIONS_FILE = path.join(process.cwd(), 'scratch', 'interactions_db.json');
 
@@ -100,13 +101,33 @@ async function loadAll(): Promise<InteractionsFile> {
 export async function sendInterest(senderId: string, recipientId: string): Promise<void> {
   if (!senderId || !recipientId || senderId === recipientId) return;
 
+  const [senderAliases, recipientAliases] = await Promise.all([
+    getUserAliases(senderId),
+    getUserAliases(recipientId),
+  ]);
+
   const now = new Date().toISOString();
   const file = readFile();
   const existing = file.interests.find(
-    (i) => i.senderId === senderId && i.recipientId === recipientId
+    (i) =>
+      (senderAliases.includes(i.senderId) && recipientAliases.includes(i.recipientId)) ||
+      (senderAliases.includes(i.recipientId) && recipientAliases.includes(i.senderId))
   );
-  if (existing) existing.status = 'pending';
-  else file.interests.unshift({ id: `in_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, senderId, recipientId, status: 'pending', createdAt: now });
+
+  if (existing) {
+    // If it's already accepted, don't revert to pending
+    if (existing.status !== 'accepted') {
+      existing.status = 'pending';
+    }
+  } else {
+    file.interests.unshift({
+      id: `in_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      senderId,
+      recipientId,
+      status: 'pending',
+      createdAt: now,
+    });
+  }
   writeFile(file);
 
   if (hasPool) {
@@ -115,7 +136,9 @@ export async function sendInterest(senderId: string, recipientId: string): Promi
       await pool!.query(
         `INSERT INTO interests (sender_id, recipient_id, status)
          VALUES ($1, $2, 'pending')
-         ON CONFLICT (sender_id, recipient_id) DO UPDATE SET status = 'pending', updated_at = now()`,
+         ON CONFLICT (sender_id, recipient_id) DO UPDATE
+           SET status = CASE WHEN interests.status = 'accepted' THEN 'accepted' ELSE 'pending' END,
+               updated_at = now()`,
         [senderId, recipientId]
       );
     } catch (e) {
@@ -125,9 +148,18 @@ export async function sendInterest(senderId: string, recipientId: string): Promi
 }
 
 export async function unsendInterest(senderId: string, recipientId: string): Promise<void> {
+  const [senderAliases, recipientAliases] = await Promise.all([
+    getUserAliases(senderId),
+    getUserAliases(recipientId),
+  ]);
+
   const file = readFile();
   file.interests = file.interests.filter(
-    (i) => !(i.senderId === senderId && i.recipientId === recipientId)
+    (i) =>
+      !(
+        (senderAliases.includes(i.senderId) && recipientAliases.includes(i.recipientId)) ||
+        (senderAliases.includes(i.recipientId) && recipientAliases.includes(i.senderId))
+      )
   );
   writeFile(file);
 
@@ -135,8 +167,10 @@ export async function unsendInterest(senderId: string, recipientId: string): Pro
     try {
       await ensureInteractionsTable();
       await pool!.query(
-        'DELETE FROM interests WHERE sender_id = $1 AND recipient_id = $2',
-        [senderId, recipientId]
+        `DELETE FROM interests
+         WHERE (sender_id = ANY($1::text[]) AND recipient_id = ANY($2::text[]))
+            OR (sender_id = ANY($2::text[]) AND recipient_id = ANY($1::text[]))`,
+        [senderAliases, recipientAliases]
       );
     } catch (e) {
       console.warn('[Interactions] DB unsendInterest failed, kept file fallback:', e);
@@ -149,21 +183,52 @@ export async function setInterestStatus(
   recipientId: string,
   status: InterestStatus
 ): Promise<void> {
+  const [senderAliases, recipientAliases] = await Promise.all([
+    getUserAliases(senderId),
+    getUserAliases(recipientId),
+  ]);
+
   const file = readFile();
-  const row = file.interests.find(
-    (i) => i.senderId === senderId && i.recipientId === recipientId
-  );
-  if (row) row.status = status;
+  let fileUpdated = false;
+  file.interests.forEach((i) => {
+    const isMatch =
+      (senderAliases.includes(i.senderId) && recipientAliases.includes(i.recipientId)) ||
+      (senderAliases.includes(i.recipientId) && recipientAliases.includes(i.senderId));
+    if (isMatch) {
+      i.status = status;
+      fileUpdated = true;
+    }
+  });
+
+  if (!fileUpdated && status === 'accepted') {
+    file.interests.unshift({
+      id: `in_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      senderId,
+      recipientId,
+      status: 'accepted',
+      createdAt: new Date().toISOString(),
+    });
+  }
   writeFile(file);
 
   if (hasPool) {
     try {
       await ensureInteractionsTable();
-      await pool!.query(
+      const res = await pool!.query(
         `UPDATE interests SET status = $3, updated_at = now()
-         WHERE sender_id = $1 AND recipient_id = $2`,
-        [senderId, recipientId, status]
+         WHERE (sender_id = ANY($1::text[]) AND recipient_id = ANY($2::text[]))
+            OR (sender_id = ANY($2::text[]) AND recipient_id = ANY($1::text[]))`,
+        [senderAliases, recipientAliases, status]
       );
+
+      if (res.rowCount === 0 && status === 'accepted') {
+        await pool!.query(
+          `INSERT INTO interests (sender_id, recipient_id, status)
+           VALUES ($1, $2, 'accepted')
+           ON CONFLICT (sender_id, recipient_id) DO UPDATE SET status = 'accepted', updated_at = now()`,
+          [senderId, recipientId]
+        );
+      }
     } catch (e) {
       console.warn('[Interactions] DB setInterestStatus failed, kept file fallback:', e);
     }
@@ -223,37 +288,67 @@ export async function unshortlistProfile(userId: string, profileId: string): Pro
 // ------------------------------------------------------------------
 // Queries
 // ------------------------------------------------------------------
-export async function getSendState(userId: string): Promise<{ sentIds: string[]; shortlistedIds: string[] }> {
-  if (!userId) return { sentIds: [], shortlistedIds: [] };
+export async function getSendState(
+  userId: string
+): Promise<{ sentIds: string[]; shortlistedIds: string[]; acceptedIds: string[] }> {
+  if (!userId) return { sentIds: [], shortlistedIds: [], acceptedIds: [] };
+
+  const myAliases = await getUserAliases(userId);
 
   if (hasPool) {
     try {
       await ensureInteractionsTable();
-      const [sent, short] = await Promise.all([
-        pool!.query(`SELECT DISTINCT recipient_id FROM interests WHERE sender_id = $1`, [userId]),
-        pool!.query(`SELECT DISTINCT profile_id FROM shortlists WHERE user_id = $1`, [userId]),
+      const [sent, short, accepted] = await Promise.all([
+        pool!.query(`SELECT DISTINCT recipient_id FROM interests WHERE sender_id = ANY($1::text[])`, [myAliases]),
+        pool!.query(`SELECT DISTINCT profile_id FROM shortlists WHERE user_id = ANY($1::text[])`, [myAliases]),
+        pool!.query(
+          `SELECT DISTINCT
+             CASE WHEN sender_id = ANY($1::text[]) THEN recipient_id ELSE sender_id END AS partner_id
+           FROM interests
+           WHERE status = 'accepted'
+             AND (sender_id = ANY($1::text[]) OR recipient_id = ANY($1::text[]))`,
+          [myAliases]
+        ),
       ]);
-      return {
-        sentIds: sent.rows.map((r) => r.recipient_id) as string[],
-        shortlistedIds: short.rows.map((r) => r.profile_id) as string[],
-      };
+
+      const [sentIds, shortlistedIds, acceptedIds] = await Promise.all([
+        expandAllAliases(sent.rows.map((r) => r.recipient_id)),
+        expandAllAliases(short.rows.map((r) => r.profile_id)),
+        expandAllAliases(accepted.rows.map((r) => r.partner_id)),
+      ]);
+
+      return { sentIds, shortlistedIds, acceptedIds };
     } catch (e) {
       console.warn('[Interactions] DB getSendState failed, falling back to file:', e);
     }
   }
 
   const file = readFile();
-  return {
-    sentIds: file.interests.filter((i) => i.senderId === userId).map((i) => i.recipientId),
-    shortlistedIds: file.shortlists.filter((s) => s.userId === userId).map((s) => s.profileId),
-  };
+  const rawSent = file.interests
+    .filter((i) => myAliases.includes(i.senderId))
+    .map((i) => i.recipientId);
+  const rawShort = file.shortlists
+    .filter((s) => myAliases.includes(s.userId))
+    .map((s) => s.profileId);
+  const rawAccepted = file.interests
+    .filter((i) => i.status === 'accepted' && (myAliases.includes(i.senderId) || myAliases.includes(i.recipientId)))
+    .map((i) => (myAliases.includes(i.senderId) ? i.recipientId : i.senderId));
+
+  const [sentIds, shortlistedIds, acceptedIds] = await Promise.all([
+    expandAllAliases(rawSent),
+    expandAllAliases(rawShort),
+    expandAllAliases(rawAccepted),
+  ]);
+
+  return { sentIds, shortlistedIds, acceptedIds };
 }
 
 export async function getInbox(userId: string) {
+  const myAliases = await getUserAliases(userId);
   const { interests } = await loadAll();
   return {
-    received: interests.filter((i) => i.recipientId === userId),
-    sent: interests.filter((i) => i.senderId === userId),
+    received: interests.filter((i) => myAliases.includes(i.recipientId)),
+    sent: interests.filter((i) => myAliases.includes(i.senderId)),
   };
 }
 
@@ -262,15 +357,23 @@ export async function getInbox(userId: string) {
 export async function isAcceptedConnection(a: string, b: string): Promise<boolean> {
   if (!a || !b || a === b) return false;
 
+  const [aAliases, bAliases] = await Promise.all([
+    getUserAliases(a),
+    getUserAliases(b),
+  ]);
+
   if (hasPool) {
     try {
       await ensureInteractionsTable();
       const { rows } = await pool!.query(
         `SELECT 1 FROM interests
          WHERE status = 'accepted'
-           AND ((sender_id = $1 AND recipient_id = $2) OR (sender_id = $2 AND recipient_id = $1))
+           AND (
+             (sender_id = ANY($1::text[]) AND recipient_id = ANY($2::text[])) OR
+             (sender_id = ANY($2::text[]) AND recipient_id = ANY($1::text[]))
+           )
          LIMIT 1`,
-        [a, b]
+        [aAliases, bAliases]
       );
       if (rows.length > 0) return true;
     } catch (e) {
@@ -282,6 +385,7 @@ export async function isAcceptedConnection(a: string, b: string): Promise<boolea
   return file.interests.some(
     (i) =>
       i.status === 'accepted' &&
-      ((i.senderId === a && i.recipientId === b) || (i.senderId === b && i.recipientId === a))
+      ((aAliases.includes(i.senderId) && bAliases.includes(i.recipientId)) ||
+       (bAliases.includes(i.senderId) && aAliases.includes(i.recipientId)))
   );
 }

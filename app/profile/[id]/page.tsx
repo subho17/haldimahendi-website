@@ -29,6 +29,8 @@ import {
   Crown,
   Phone,
   Lock,
+  CheckCircle2,
+  Check,
 } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 
@@ -97,6 +99,7 @@ export default function PublicProfilePage() {
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
   const [interestSent, setInterestSent] = useState(false);
+  const [interestReceived, setInterestReceived] = useState(false);
   const [shortlisted, setShortlisted] = useState(false);
   const [connected, setConnected] = useState(false);
   const [blocked, setBlocked] = useState(false);
@@ -124,9 +127,17 @@ export default function PublicProfilePage() {
           if (profileData.success && profileData.profile) {
             setProfile(profileData.profile);
             if (interestData.success) {
-              setInterestSent((interestData.sentIds || []).includes(profileData.profile.id));
-              setShortlisted((interestData.shortlistedIds || []).includes(profileData.profile.id));
-              setConnected((interestData.acceptedIds || []).includes(profileData.profile.id));
+              const pId = profileData.profile.id;
+              const isAccepted = (interestData.acceptedIds || []).includes(pId) || (interestData.acceptedIds || []).includes(profileId);
+              const isSent = (interestData.sentIds || []).includes(pId) || (interestData.sentIds || []).includes(profileId);
+              const isReceived = (interestData.received || []).some(
+                (r: { senderId: string; status: string }) =>
+                  (r.senderId === pId || r.senderId === profileId) && r.status === "pending"
+              );
+              setConnected(isAccepted);
+              setInterestSent(isSent && !isAccepted);
+              setInterestReceived(isReceived && !isAccepted);
+              setShortlisted((interestData.shortlistedIds || []).includes(pId) || (interestData.shortlistedIds || []).includes(profileId));
             }
             if (blockData.success) {
               setBlocked((blockData.blockedIds || []).includes(profileData.profile.id));
@@ -158,7 +169,18 @@ export default function PublicProfilePage() {
       });
       const data = await res.json();
       if (data.success && data.state) {
-        setInterestSent((data.state.sentIds || []).includes(profile.id));
+        const isAccepted =
+          (data.state.acceptedIds || []).includes(profile.id) ||
+          (data.state.acceptedIds || []).includes(profileId || "") ||
+          action === "accept";
+        const isSent = (data.state.sentIds || []).includes(profile.id);
+        setConnected(isAccepted);
+        setInterestSent(isSent && !isAccepted);
+        if (action === "accept") {
+          setInterestReceived(false);
+        } else if (action === "decline") {
+          setInterestReceived(false);
+        }
         setShortlisted((data.state.shortlistedIds || []).includes(profile.id));
       } else {
         alert(data.message || "Something went wrong");
@@ -332,6 +354,12 @@ export default function PublicProfilePage() {
                       <span>{profile.membership.label || "Premium"} Member</span>
                     </span>
                   )}
+                  {connected && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs border border-emerald-300 shadow-2xs">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>Request Accepted • Connected</span>
+                    </span>
+                  )}
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{formattedName}</h1>
@@ -446,22 +474,46 @@ export default function PublicProfilePage() {
             {/* Action Bar */}
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-6 border-t border-slate-100">
               {connected ? (
-                <button
-                  onClick={() => router.push(`/chat?otherId=${encodeURIComponent(profile.id)}`)}
-                  disabled={busy}
-                  className="flex-1 w-full py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-60 shadow-xs"
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <MessageCircle className="w-4 h-4" /> Message Member
-                  </span>
-                </button>
+                <div className="flex-1 w-full flex flex-col sm:flex-row items-center gap-2">
+                  <div className="flex-1 w-full py-3 px-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-extrabold flex items-center justify-center gap-2 shadow-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>✓ Request Accepted</span>
+                  </div>
+                  <button
+                    onClick={() => router.push(`/chat?otherId=${encodeURIComponent(profile.id)}`)}
+                    disabled={busy}
+                    className="flex-1 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    <MessageCircle className="w-4 h-4" /> Message / Chat
+                  </button>
+                </div>
+              ) : interestReceived ? (
+                <div className="flex-1 w-full flex flex-col sm:flex-row items-center gap-2">
+                  <div className="py-2.5 px-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold text-center">
+                    Sent you an interest
+                  </div>
+                  <button
+                    onClick={() => runAction("accept")}
+                    disabled={busy}
+                    className="flex-1 w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-60"
+                  >
+                    <Check className="w-4 h-4" /> Accept Request
+                  </button>
+                  <button
+                    onClick={() => runAction("decline")}
+                    disabled={busy}
+                    className="py-3 px-4 rounded-xl border border-gray-200 text-gray-600 text-xs font-bold hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-60"
+                  >
+                    Decline
+                  </button>
+                </div>
               ) : interestSent ? (
                 <button
                   onClick={() => runAction("unsend")}
                   disabled={busy}
-                  className="flex-1 w-full py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-60 shadow-xs"
+                  className="flex-1 w-full py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-60 shadow-xs"
                 >
-                  ✓ Interest Sent (click to withdraw)
+                  ✓ Interest Sent (Pending Acceptance - click to withdraw)
                 </button>
               ) : (
                 <button

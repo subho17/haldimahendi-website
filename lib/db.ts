@@ -1,19 +1,50 @@
 import { Pool } from 'pg';
 
-const globalForDb = global as unknown as {
-  pool: Pool | undefined;
-};
+const globalForDb = (globalThis as unknown as {
+  pool?: Pool;
+  ensureOtpPromise?: Promise<void>;
+  ensureProfilesPromise?: Promise<void>;
+  ensurePreferencesPromise?: Promise<void>;
+  ensureInteractionsPromise?: Promise<void>;
+  ensureChatPromise?: Promise<void>;
+  ensureSafetyPromise?: Promise<void>;
+  ensureNotificationsPromise?: Promise<void>;
+  ensureVerificationsPromise?: Promise<void>;
+});
 
 function createPool(): Pool | undefined {
-  const connectionString = process.env.DATABASE_URL;
+  let connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     console.warn('[DB] DATABASE_URL not configured. Falling back to in-memory storage.');
     return undefined;
   }
-  return new Pool({ connectionString });
+
+  // Supabase pooler on port 5432 operates in Session mode, which has a hard limit
+  // of 15 clients (causing EMAXCONNSESSION errors under concurrent requests).
+  // Port 6543 connects to Supabase's Transaction pooler, designed for high-concurrency serverless/web apps.
+  if (connectionString.includes('.pooler.supabase.com:5432')) {
+    connectionString = connectionString.replace('.pooler.supabase.com:5432', '.pooler.supabase.com:6543');
+  }
+
+  const poolInstance = new Pool({
+    connectionString,
+    max: 10,
+    idleTimeoutMillis: 20000,
+    connectionTimeoutMillis: 10000,
+  });
+
+  poolInstance.on('error', (err) => {
+    console.error('[DB Pool error]', err.message);
+  });
+
+  return poolInstance;
 }
 
 export const pool = globalForDb.pool ?? createPool();
+
+if (!globalForDb.pool && pool) {
+  globalForDb.pool = pool;
+}
 
 export const hasPool = typeof pool !== 'undefined' && !!pool;
 
@@ -30,41 +61,39 @@ export const db = {
   },
 };
 
-let ensureOtpPromise: Promise<void> | undefined;
-let ensureProfilesPromise: Promise<void> | undefined;
-let ensurePreferencesPromise: Promise<void> | undefined;
-let ensureInteractionsPromise: Promise<void> | undefined;
-let ensureChatPromise: Promise<void> | undefined;
-
 // Idempotent bootstrap: creates the otp_codes table on first use so the
 // app works on Vercel without a separate migration step.
 export function ensureOtpTable(): Promise<void> {
   if (!hasPool) return Promise.resolve();
-  if (!ensureOtpPromise) {
-    ensureOtpPromise = (async () => {
-      await pool!.query(
-        `CREATE TABLE IF NOT EXISTS otp_codes (
-          mobile_number  TEXT PRIMARY KEY,
-          code           TEXT NOT NULL,
-          expires_at     TIMESTAMPTZ NOT NULL,
-          created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-          verified_at    TIMESTAMPTZ,
-          send_count     INT NOT NULL DEFAULT 0,
-          last_sent_at   TIMESTAMPTZ,
-          failed_attempts INT NOT NULL DEFAULT 0,
-          locked_until   TIMESTAMPTZ
-        )`
-      );
-      await pool!.query(
-        `ALTER TABLE otp_codes
-         ADD COLUMN IF NOT EXISTS send_count INT NOT NULL DEFAULT 0,
-         ADD COLUMN IF NOT EXISTS last_sent_at TIMESTAMPTZ,
-         ADD COLUMN IF NOT EXISTS failed_attempts INT NOT NULL DEFAULT 0,
-         ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ`
-      );
-    })();
-  }
-  return ensureOtpPromise;
+  if (globalForDb.ensureOtpPromise) return globalForDb.ensureOtpPromise;
+
+  globalForDb.ensureOtpPromise = (async () => {
+    await pool!.query(
+      `CREATE TABLE IF NOT EXISTS otp_codes (
+        mobile_number  TEXT PRIMARY KEY,
+        code           TEXT NOT NULL,
+        expires_at     TIMESTAMPTZ NOT NULL,
+        created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+        verified_at    TIMESTAMPTZ,
+        send_count     INT NOT NULL DEFAULT 0,
+        last_sent_at   TIMESTAMPTZ,
+        failed_attempts INT NOT NULL DEFAULT 0,
+        locked_until   TIMESTAMPTZ
+      )`
+    );
+    await pool!.query(
+      `ALTER TABLE otp_codes
+       ADD COLUMN IF NOT EXISTS send_count INT NOT NULL DEFAULT 0,
+       ADD COLUMN IF NOT EXISTS last_sent_at TIMESTAMPTZ,
+       ADD COLUMN IF NOT EXISTS failed_attempts INT NOT NULL DEFAULT 0,
+       ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ`
+    );
+  })().catch((err) => {
+    globalForDb.ensureOtpPromise = undefined;
+    throw err;
+  });
+
+  return globalForDb.ensureOtpPromise;
 }
 
 // ============================================================
@@ -75,9 +104,9 @@ export function ensureOtpTable(): Promise<void> {
 // Stores user profile data including avatar URL, display name, etc.
 export function ensureProfilesTable(): Promise<void> {
   if (!hasPool) return Promise.resolve();
-  if (ensureProfilesPromise) return ensureProfilesPromise;
+  if (globalForDb.ensureProfilesPromise) return globalForDb.ensureProfilesPromise;
 
-  ensureProfilesPromise = (async () => {
+  globalForDb.ensureProfilesPromise = (async () => {
     // Step 1: Create table with full matrimonial profile schema
     await pool!.query(`
       CREATE TABLE IF NOT EXISTS profiles (
@@ -140,24 +169,7 @@ export function ensureProfilesTable(): Promise<void> {
         hide_email          BOOLEAN DEFAULT FALSE,
         hide_surname        BOOLEAN DEFAULT FALSE,
         hide_photos         BOOLEAN DEFAULT FALSE,
-        photo_privacy       TEXT DEFAULT 'public', -- 'public', 'contacts_only', 'private'
-        -- Existing columns
-        dob            DATE,
-        birth_time     TEXT,
-        birth_place    TEXT,
-        rashi          TEXT,
-        nakshatra      TEXT,
-        manglik        TEXT,
-        gotra          TEXT,
-        father_occupation TEXT,
-        mother_occupation TEXT,
-        siblings       TEXT,
-        family_type    TEXT,
-        family_values  TEXT,
-        diet           TEXT,
-        smoking        TEXT,
-        drinking       TEXT,
-        disability     TEXT
+        photo_privacy       TEXT DEFAULT 'public'
       )
     `);
 
@@ -282,9 +294,12 @@ export function ensureProfilesTable(): Promise<void> {
       FOR EACH ROW
       EXECUTE FUNCTION update_profiles_updated_at();
     `);
-  })();
+  })().catch((err) => {
+    globalForDb.ensureProfilesPromise = undefined;
+    throw err;
+  });
 
-  return ensureProfilesPromise;
+  return globalForDb.ensureProfilesPromise;
 }
 
 // ============================================================
@@ -295,9 +310,9 @@ export function ensureProfilesTable(): Promise<void> {
 // engine (lib/matching.ts) uses these to qualify and score candidates.
 export function ensurePreferencesTable(): Promise<void> {
   if (!hasPool) return Promise.resolve();
-  if (ensurePreferencesPromise) return ensurePreferencesPromise;
+  if (globalForDb.ensurePreferencesPromise) return globalForDb.ensurePreferencesPromise;
 
-  ensurePreferencesPromise = (async () => {
+  globalForDb.ensurePreferencesPromise = (async () => {
     await pool!.query(`
       CREATE TABLE IF NOT EXISTS partner_preferences (
         id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -334,9 +349,12 @@ export function ensurePreferencesTable(): Promise<void> {
       FOR EACH ROW
       EXECUTE FUNCTION update_partner_preferences_updated_at();
     `);
-  })();
+  })().catch((err) => {
+    globalForDb.ensurePreferencesPromise = undefined;
+    throw err;
+  });
 
-  return ensurePreferencesPromise;
+  return globalForDb.ensurePreferencesPromise;
 }
 
 // ============================================================
@@ -348,9 +366,9 @@ export function ensurePreferencesTable(): Promise<void> {
 // shortlists: a user bookmarking a profile.
 export function ensureInteractionsTable(): Promise<void> {
   if (!hasPool) return Promise.resolve();
-  if (ensureInteractionsPromise) return ensureInteractionsPromise;
+  if (globalForDb.ensureInteractionsPromise) return globalForDb.ensureInteractionsPromise;
 
-  ensureInteractionsPromise = (async () => {
+  globalForDb.ensureInteractionsPromise = (async () => {
     await pool!.query(`
       CREATE TABLE IF NOT EXISTS interests (
         id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -372,9 +390,12 @@ export function ensureInteractionsTable(): Promise<void> {
         UNIQUE (user_id, profile_id)
       )
     `);
-  })();
+  })().catch((err) => {
+    globalForDb.ensureInteractionsPromise = undefined;
+    throw err;
+  });
 
-  return ensureInteractionsPromise;
+  return globalForDb.ensureInteractionsPromise;
 }
 
 // ============================================================
@@ -387,9 +408,9 @@ export function ensureInteractionsTable(): Promise<void> {
 // chat_messages: messages within a conversation.
 export function ensureChatTables(): Promise<void> {
   if (!hasPool) return Promise.resolve();
-  if (ensureChatPromise) return ensureChatPromise;
+  if (globalForDb.ensureChatPromise) return globalForDb.ensureChatPromise;
 
-  ensureChatPromise = (async () => {
+  globalForDb.ensureChatPromise = (async () => {
     await pool!.query(`
       CREATE TABLE IF NOT EXISTS conversations (
         id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -419,24 +440,26 @@ export function ensureChatTables(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_chat_messages_conv
       ON chat_messages (conversation_id, created_at)
     `);
-  })();
+  })().catch((err) => {
+    globalForDb.ensureChatPromise = undefined;
+    throw err;
+  });
 
-  return ensureChatPromise;
+  return globalForDb.ensureChatPromise;
 }
 
 // ============================================================
 // ⭐ SAFETY TABLES (REPORTS + BLOCKS) — auto-created on first use
 // ============================================================
 
-let ensureSafetyPromise: Promise<void> | undefined;
-
 // reports: user-submitted moderation reports against a member.
 //   status: 'open' (awaiting review) | 'resolved' | 'dismissed'
 // blocks: one user hiding/interacting-blocking another (blocker -> blocked).
-export function ensureSafetyTables(): Promise<void> {  if (!hasPool) return Promise.resolve();
-  if (ensureSafetyPromise) return ensureSafetyPromise;
+export function ensureSafetyTables(): Promise<void> {
+  if (!hasPool) return Promise.resolve();
+  if (globalForDb.ensureSafetyPromise) return globalForDb.ensureSafetyPromise;
 
-  ensureSafetyPromise = (async () => {
+  globalForDb.ensureSafetyPromise = (async () => {
     await pool!.query(`
       CREATE TABLE IF NOT EXISTS reports (
         id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -467,23 +490,25 @@ export function ensureSafetyTables(): Promise<void> {  if (!hasPool) return Prom
       CREATE INDEX IF NOT EXISTS idx_blocks_blocker
       ON blocks (blocker_id)
     `);
-  })();
+  })().catch((err) => {
+    globalForDb.ensureSafetyPromise = undefined;
+    throw err;
+  });
 
-  return ensureSafetyPromise;
+  return globalForDb.ensureSafetyPromise;
 }
 
 // ============================================================
 // ⭐ NOTIFICATIONS TABLE — auto-created on first use
 // ============================================================
 
-let ensureNotificationsPromise: Promise<void> | undefined;
 // notifications: in-app events for a member (interest received, accepted,
 // new message, system). `read` controls the unread badge.
 export function ensureNotificationsTable(): Promise<void> {
   if (!hasPool) return Promise.resolve();
-  if (ensureNotificationsPromise) return ensureNotificationsPromise;
+  if (globalForDb.ensureNotificationsPromise) return globalForDb.ensureNotificationsPromise;
 
-  ensureNotificationsPromise = (async () => {
+  globalForDb.ensureNotificationsPromise = (async () => {
     await pool!.query(`
       CREATE TABLE IF NOT EXISTS notifications (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -502,24 +527,25 @@ export function ensureNotificationsTable(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_notifications_user
       ON notifications (user_id, created_at)
     `);
-  })();
+  })().catch((err) => {
+    globalForDb.ensureNotificationsPromise = undefined;
+    throw err;
+  });
 
-  return ensureNotificationsPromise;
+  return globalForDb.ensureNotificationsPromise;
 }
 
 // ============================================================
 // ⭐ VERIFICATIONS TABLE — auto-created on first use
 // ============================================================
 
-let ensureVerificationsPromise: Promise<void> | undefined;
-
 // verifications: member photo/ID verification submissions.
 //   status: 'pending' | 'approved' | 'rejected'
 export function ensureVerificationsTable(): Promise<void> {
   if (!hasPool) return Promise.resolve();
-  if (ensureVerificationsPromise) return ensureVerificationsPromise;
+  if (globalForDb.ensureVerificationsPromise) return globalForDb.ensureVerificationsPromise;
 
-  ensureVerificationsPromise = (async () => {
+  globalForDb.ensureVerificationsPromise = (async () => {
     await pool!.query(`
       CREATE TABLE IF NOT EXISTS verifications (
         id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -542,7 +568,10 @@ export function ensureVerificationsTable(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_verifications_status
       ON verifications (status, created_at)
     `);
-  })();
+  })().catch((err) => {
+    globalForDb.ensureVerificationsPromise = undefined;
+    throw err;
+  });
 
-  return ensureVerificationsPromise;
+  return globalForDb.ensureVerificationsPromise;
 }

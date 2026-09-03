@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Filter, Loader2, Heart, Crown } from "lucide-react";
+import { Filter, Loader2, Heart, Crown, CheckCircle2 } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 
 interface MatchProfile {
@@ -43,13 +43,15 @@ export default function MatchesPage() {
   const [loading, setLoading] = useState(true);
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
   const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
+  const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const userId = user?.profileId || user?.mobileNumber || user?.email || "";
 
-  const loadInteractions = (data: { sentIds?: string[]; shortlistedIds?: string[] }) => {
+  const loadInteractions = (data: { sentIds?: string[]; shortlistedIds?: string[]; acceptedIds?: string[] }) => {
     setSentIds(new Set(data.sentIds || []));
     setShortlistedIds(new Set(data.shortlistedIds || []));
+    setAcceptedIds(new Set(data.acceptedIds || []));
   };
 
   useEffect(() => {
@@ -194,11 +196,15 @@ export default function MatchesPage() {
                       </div>
                     )}
 
-                    {m.isNew && (
+                    {acceptedIds.has(m.profile.id) ? (
+                      <span className="absolute bottom-3 left-3 z-10 inline-flex items-center gap-1 text-[10px] font-black text-white bg-emerald-600/95 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-md uppercase">
+                        <CheckCircle2 className="w-3 h-3" /> Accepted
+                      </span>
+                    ) : m.isNew ? (
                       <span className="absolute top-3 left-3 text-[10px] font-black text-white bg-[#d97706] px-2.5 py-0.5 rounded-full shadow-md uppercase">
                         NEW
                       </span>
-                    )}
+                    ) : null}
 
                     <span className="absolute top-3 right-3 text-xs font-black text-white bg-emerald-600/90 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-md border border-white/20">
                       {m.score}% Match
@@ -238,14 +244,26 @@ export default function MatchesPage() {
                   className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0 flex items-center gap-2"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {sentIds.has(m.profile.id) ? (
+                  {acceptedIds.has(m.profile.id) ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/chat?otherId=${encodeURIComponent(m.profile.id)}`);
+                      }}
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-extrabold hover:bg-emerald-200 transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                      title="Request Accepted - Click to Chat"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Accepted • Chat</span>
+                    </button>
+                  ) : sentIds.has(m.profile.id) ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         runAction(m.profile.id, "unsend");
                       }}
                       disabled={busyId === m.profile.id}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-60"
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-60"
                       title="Withdraw interest"
                     >
                       ✓ Interest Sent

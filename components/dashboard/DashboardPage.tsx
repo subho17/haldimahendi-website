@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Heart, Sparkles, Eye, UserCheck, Loader2 } from "lucide-react";
+import { Heart, Sparkles, Eye, UserCheck, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useMounted } from "@/hooks/useMounted";
 
@@ -54,6 +54,7 @@ export default function DashboardPage() {
   const [recommended, setRecommended] = useState<MatchResult[]>([]);
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
   const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
+  const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(() => Boolean(user?.isVerified || (user as { verified?: boolean })?.verified));
@@ -114,15 +115,14 @@ export default function DashboardPage() {
           if (interestData.success) {
             const sent = interestData.sentIds || [];
             const shortlisted = interestData.shortlistedIds || [];
-            const accepted = (interestData.received || []).filter(
-              (r: { status: string }) => r.status === "accepted"
-            ).length;
+            const accepted = interestData.acceptedIds || [];
             setSentIds(new Set(sent));
             setShortlistedIds(new Set(shortlisted));
+            setAcceptedIds(new Set(accepted));
             setStats((prev) => ({
               ...prev,
               interestsSent: sent.length,
-              interestsAccepted: accepted,
+              interestsAccepted: accepted.length,
               shortlisted: shortlisted.length,
             }));
           }
@@ -145,9 +145,11 @@ export default function DashboardPage() {
       if (data.success && data.state) {
         setSentIds(new Set(data.state.sentIds || []));
         setShortlistedIds(new Set(data.state.shortlistedIds || []));
+        setAcceptedIds(new Set(data.state.acceptedIds || []));
         setStats((prev) => ({
           ...prev,
           interestsSent: (data.state.sentIds || []).length,
+          interestsAccepted: (data.state.acceptedIds || []).length,
           shortlisted: (data.state.shortlistedIds || []).length,
         }));
       }
@@ -328,14 +330,25 @@ export default function DashboardPage() {
                     className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0 flex items-center gap-2"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {sentIds.has(m.profile.id) ? (
+                    {acceptedIds.has(m.profile.id) ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/chat?otherId=${encodeURIComponent(m.profile.id)}`);
+                        }}
+                        className="flex-1 py-2 px-3 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-extrabold hover:bg-emerald-200 transition-colors cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Accepted • Chat</span>
+                      </button>
+                    ) : sentIds.has(m.profile.id) ? (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           runAction(m.profile.id, "unsend");
                         }}
                         disabled={busyId === m.profile.id}
-                        className="flex-1 py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-60"
+                        className="flex-1 py-2 px-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-60"
                       >
                         ✓ Sent
                       </button>

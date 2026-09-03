@@ -103,14 +103,17 @@ export default function InboxPage() {
   };
 
   const pendingReceived = received.filter((r) => r.status === "pending");
-  const acceptedReceived = received.filter((r) => r.status === "accepted");
+  const acceptedList = [
+    ...received.filter((r) => r.status === "accepted"),
+    ...sent.filter((r) => r.status === "accepted"),
+  ];
 
   const shownList =
-    tab === "received" ? pendingReceived : tab === "accepted" ? acceptedReceived : sent;
+    tab === "received" ? pendingReceived : tab === "accepted" ? acceptedList : sent;
 
   const TABS: { key: TabKey; label: string; Icon: typeof Send; count: number }[] = [
     { key: "received", label: "Received", Icon: InboxIcon, count: pendingReceived.length },
-    { key: "accepted", label: "Accepted", Icon: UserCheck, count: acceptedReceived.length },
+    { key: "accepted", label: "Accepted", Icon: UserCheck, count: acceptedList.length },
     { key: "sent", label: "Sent", Icon: Send, count: sent.length },
   ];
 
@@ -246,11 +249,12 @@ export default function InboxPage() {
                         )}
                         {tab === "accepted" && (
                           <button
-                            onClick={() =>
-                              router.push(`/chat?otherId=${encodeURIComponent(inv.senderId)}`)
-                            }
+                            onClick={() => {
+                              const partnerId = inv.partner?.id || (inv.recipientId === userId ? inv.senderId : inv.recipientId);
+                              router.push(`/chat?otherId=${encodeURIComponent(partnerId)}`);
+                            }}
                             disabled={busy}
-                            className="flex-1 sm:flex-none px-4 py-2 bg-[#d97706] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#b45309] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+                            className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold rounded-xl shadow-xs hover:from-emerald-700 hover:to-teal-700 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
                           >
                             <MessageCircle className="w-4 h-4" />
                             <span>Message</span>
