@@ -23,7 +23,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
 
@@ -45,14 +45,9 @@ const DEFAULT_AVATARS = [
   { label: "Male Avatar 2", url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250" },
 ];
 
-export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, initialData }: SignupPageProps) {
+export default function SignupPage({ onOpenLogin, onSuccess, isModal = false }: SignupPageProps) {
   const { login } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const initLookingFor = initialData?.lookingFor || searchParams?.get("lookingFor") || "Woman";
-  const initReligion = initialData?.religion || searchParams?.get("religion") || "Hindu";
-  const initMotherTongue = initialData?.motherTongue || searchParams?.get("motherTongue") || "Hindi";
 
   // Wizard Steps: 1 = Registration Choice / Mobile Check, 2 = OTP Verification, 3 = Matrimonial Profile Completion
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -64,17 +59,17 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
   // Profile completion fields
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATARS[0].url);
-  const [gender, setGender] = useState<"Bride" | "Groom" | "Other">(initLookingFor === "Woman" ? "Bride" : "Groom");
+  const [gender, setGender] = useState<"Bride" | "Groom" | "Other">("Bride");
   const [companyName, setCompanyName] = useState("");
-  const [age, setAge] = useState("25");
-  const [height, setHeight] = useState("5'8\"");
-  const [maritalStatus, setMaritalStatus] = useState("Never Married");
-  const [religion, setReligion] = useState(initReligion);
-  const [motherTongue] = useState(initMotherTongue);
-  const [education, setEducation] = useState("B.Tech / Graduate");
-  const [profession, setProfession] = useState("Software Engineer");
-  const [city, setCity] = useState("Mumbai");
-  const [bio] = useState("Looking for a caring, well-educated, and family-oriented life partner.");
+  const [age, setAge] = useState("");
+  const [height, setHeight] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [religion, setReligion] = useState("");
+  const [motherTongue] = useState("");
+  const [education, setEducation] = useState("");
+  const [profession, setProfession] = useState("");
+  const [city, setCity] = useState("");
+  const [bio] = useState("");
 
   // Login password (optional, used for password-based login later)
   const [password, setPassword] = useState("");
