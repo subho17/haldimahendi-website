@@ -216,7 +216,7 @@ export default function MatchesPage() {
                       <h3 className="font-bold text-gray-900 group-hover:text-[#d97706] transition-colors text-base">
                         {m.profile.name}
                       </h3>
-                      <p className="text-xs text-gray-400 font-semibold">{m.profile.id}</p>
+                      <p className="text-xs text-gray-400 font-semibold">ID: {m.profile.id ? (m.profile.id.startsWith("#") ? m.profile.id : `#${m.profile.id}`) : ""}</p>
                     </div>
 
                     <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100">

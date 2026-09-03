@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { saveProfile, ProfileData } from '@/lib/otpStore';
 import { hashPassword } from '@/lib/password';
+import { generateUnique4DigitId, is4DigitId } from "@/lib/idGenerator";
 
 const USERS_FILE = path.join(process.cwd(), "scratch", "users_db.json");
 
@@ -77,12 +78,25 @@ export async function POST(req: Request) {
     }
 
     // Check if user exists by profileId or email or mobileNumber
+    const cleanMobile = (userData.mobileNumber || userData.mobile_number || "").replace(/\D/g, "");
+    const cleanEmail = (userData.email || "").toLowerCase().trim();
+
     const existingIndex = users.findIndex(
       (u: UserRecord) =>
         (userData.profileId && u.profileId === userData.profileId) ||
-        (userData.email && u.email && u.email === userData.email) ||
-        (userData.mobileNumber && u.mobileNumber && u.mobileNumber === userData.mobileNumber && userData.mobileNumber.length > 5)
+        (cleanEmail && u.email && u.email.toLowerCase().trim() === cleanEmail) ||
+        (cleanMobile && cleanMobile.length >= 10 && (
+          (u.mobileNumber && u.mobileNumber.replace(/\D/g, "") === cleanMobile) ||
+          (u.mobile_number && u.mobile_number.replace(/\D/g, "") === cleanMobile)
+        ))
     );
+
+    const existingProfileId = existingIndex >= 0 ? users[existingIndex].profileId : undefined;
+    let finalProfileId = userData.profileId || existingProfileId;
+    if (!is4DigitId(finalProfileId)) {
+      const allExistingIds = users.map((u) => u.profileId).filter(Boolean) as string[];
+      finalProfileId = generateUnique4DigitId(allExistingIds);
+    }
 
     const displayName = userData.name || userData.display_name || "Member";
     const avatar = userData.avatarUrl || userData.avatar_url || "/images/default-avatar.png";
@@ -104,7 +118,7 @@ export async function POST(req: Request) {
 
     const updatedUser: UserRecord = {
       ...userData,
-      profileId: userData.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
+      profileId: finalProfileId,
       name: displayName,
       display_name: displayName,
       email: userData.email || "",
@@ -138,9 +152,10 @@ export async function POST(req: Request) {
     // ✅ Also save to Supabase Postgres (profile + matrimonial details)
     try {
       const profileData: ProfileData = {
-        userId: mobile || userData.email || updatedUser.profileId || 'unknown',
+        userId: updatedUser.profileId || 'unknown',
         displayName,
         mobileNumber: mobile,
+        email: cleanEmail || userData.email || undefined,
         avatarUrl: avatar,
         provider: (userData.provider as 'otp' | 'google' | 'password') || 'otp',
         gender: userData.gender,

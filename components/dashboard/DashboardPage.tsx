@@ -208,7 +208,7 @@ export default function DashboardPage() {
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-bold mb-1.5 border border-white/30">
                   <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>{isVerified ? "Verified Member" : "Registered Member"} · ID: {user?.profileId}</span>
+                  <span>{isVerified ? "Verified Member" : "Registered Member"} · ID: {user?.profileId ? (user.profileId.startsWith("#") ? user.profileId : `#${user.profileId}`) : "----"}</span>
                 </div>
                 <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
                   Welcome back, {displayName} 👋
@@ -310,7 +310,7 @@ export default function DashboardPage() {
                         <h3 className="font-bold text-gray-900 group-hover:text-[#d97706] transition-colors text-base">
                           {m.profile.name}
                         </h3>
-                        <p className="text-xs text-gray-400 font-semibold">{m.profile.id}</p>
+                        <p className="text-xs text-gray-400 font-semibold">ID: {m.profile.id.startsWith("#") ? m.profile.id : `#${m.profile.id}`}</p>
                       </div>
 
                       <div className="space-y-1 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100">

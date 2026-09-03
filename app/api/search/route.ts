@@ -5,13 +5,12 @@ import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
 import { genderMatches } from '@/lib/matching';
 import { getInvisibleIds } from '@/lib/reportStore';
 import { resolveStatus } from '@/lib/membershipStore';
+import { is4DigitId, generateUnique4DigitId } from '@/lib/idGenerator';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
 interface SearchProfile {
   id: string;
-  mobileNumber?: string;
-  email?: string;
   name: string;
   age: number;
   height: string;
@@ -59,12 +58,11 @@ interface UserRecord {
 }
 
 function toSearchProfile(u: UserRecord): SearchProfile {
-  const stableId = u.profileId || u.mobileNumber || u.mobile_number || u.email || `SH${Math.floor(100000 + Math.random() * 900000)}`;
+  const stableId: string = is4DigitId(u.profileId) ? u.profileId! : generateUnique4DigitId();
+  u.profileId = stableId;
   return {
     id: stableId,
-    mobileNumber: u.mobileNumber || u.mobile_number || '',
-    email: u.email || '',
-    name: u.display_name || u.name || 'Shaadi Member',
+    name: u.display_name || u.name || 'Member',
     age: u.age || 26,
     height: u.height || "5'7\"",
     religion: u.religion || 'Hindu',
@@ -79,7 +77,7 @@ function toSearchProfile(u: UserRecord): SearchProfile {
     verified: u.verificationStatus === 'approved',
     premium: resolveStatus(u.membershipTier, u.membershipExpiresAt).isPremium,
     tier: resolveStatus(u.membershipTier, u.membershipExpiresAt).tier,
-    bio: u.bio || 'Registered Member on Shaadi Matrimonial.',
+    bio: u.bio || 'Registered Member.',
     isSuspended: !!u.isSuspended,
   };
 }
@@ -128,9 +126,7 @@ export async function GET(req: Request) {
 
         const pgProfiles: SearchProfile[] = rows.map((r) => ({
           id: r.user_id || r.id,
-          mobileNumber: r.mobile_number || '',
-          email: r.email || '',
-          name: r.display_name || 'Shaadi Member',
+          name: r.display_name || 'Member',
           age: r.age || 26,
           height: r.height || "5'7\"",
           religion: r.religion || 'Hindu',
@@ -155,28 +151,22 @@ export async function GET(req: Request) {
       }
     }
 
-    // Deduplicate across all sources by ID, Mobile Number, Email, and Name+Gender combination
+    // Deduplicate across all sources by ID and Name+Gender combination
     const seenKeys = new Set<string>();
     const uniqueProfiles: SearchProfile[] = [];
 
     for (const p of allProfiles) {
       const idKey = p.id ? `id:${p.id.toLowerCase().trim()}` : '';
-      const mobileKey = p.mobileNumber ? `mobile:${p.mobileNumber.replace(/\D/g, '')}` : '';
-      const emailKey = p.email ? `email:${p.email.toLowerCase().trim()}` : '';
       const nameKey = p.name ? `name:${p.name.toLowerCase().trim().replace(/\s+/g, ' ')}-${(p.gender || '').toLowerCase()}` : '';
 
       if (
         (idKey && seenKeys.has(idKey)) ||
-        (mobileKey && seenKeys.has(mobileKey)) ||
-        (emailKey && seenKeys.has(emailKey)) ||
         (nameKey && seenKeys.has(nameKey))
       ) {
         continue;
       }
 
       if (idKey) seenKeys.add(idKey);
-      if (mobileKey) seenKeys.add(mobileKey);
-      if (emailKey) seenKeys.add(emailKey);
       if (nameKey) seenKeys.add(nameKey);
 
       uniqueProfiles.push(p);
@@ -192,37 +182,11 @@ export async function GET(req: Request) {
     const digitsOnlyUserId = userId.replace(/\D/g, '');
     if (digitsOnlyUserId.length >= 10) viewerExcludedIds.add(digitsOnlyUserId);
 
-    // Cross-link viewer identifiers across all loaded profiles
-    if (viewerExcludedIds.size > 0) {
-      for (const p of uniqueProfiles) {
-        const pId = (p.id || '').toLowerCase();
-        const pMobile = (p.mobileNumber || '').replace(/\D/g, '');
-        const pEmail = (p.email || '').toLowerCase();
-
-        const isViewer =
-          (pId && viewerExcludedIds.has(pId)) ||
-          (pMobile && viewerExcludedIds.has(pMobile)) ||
-          (pEmail && viewerExcludedIds.has(pEmail));
-
-        if (isViewer) {
-          if (pId) viewerExcludedIds.add(pId);
-          if (pMobile) viewerExcludedIds.add(pMobile);
-          if (pEmail) viewerExcludedIds.add(pEmail);
-        }
-      }
-    }
-
     const filtered = uniqueProfiles.filter((p) => {
       const pId = (p.id || '').toLowerCase();
-      const pMobile = (p.mobileNumber || '').replace(/\D/g, '');
-      const pEmail = (p.email || '').toLowerCase();
 
       // Always exclude logged-in viewer
-      if (
-        (pId && viewerExcludedIds.has(pId)) ||
-        (pMobile && viewerExcludedIds.has(pMobile)) ||
-        (pEmail && viewerExcludedIds.has(pEmail))
-      ) {
+      if (pId && viewerExcludedIds.has(pId)) {
         return false;
       }
 
@@ -235,11 +199,9 @@ export async function GET(req: Request) {
       if (city && !p.city.toLowerCase().includes(city.toLowerCase())) return false;
       if (motherTongue && motherTongue !== 'Any' && p.motherTongue && p.motherTongue.toLowerCase() !== motherTongue.toLowerCase()) return false;
       if (query) {
-        const cleanQueryMobile = query.replace(/\D/g, '');
         const matchesQuery =
           p.name.toLowerCase().includes(query) ||
           p.id.toLowerCase().includes(query) ||
-          (cleanQueryMobile.length >= 5 && pMobile.includes(cleanQueryMobile)) ||
           p.city.toLowerCase().includes(query) ||
           p.profession.toLowerCase().includes(query) ||
           p.religion.toLowerCase().includes(query);

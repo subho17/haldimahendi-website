@@ -6,6 +6,7 @@ import { loadPreferences } from '@/lib/prefsStore';
 import { findMatches, type MatchCandidate, type MatchPreferences } from '@/lib/matching';
 import { getInvisibleIds } from '@/lib/reportStore';
 import { resolveStatus } from '@/lib/membershipStore';
+import { is4DigitId, generateUnique4DigitId } from '@/lib/idGenerator';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -163,8 +164,6 @@ export async function GET(req: Request) {
             diet: r.diet,
             smoking: r.smoking,
             drinking: r.drinking,
-            mobileNumber: r.mobile_number,
-            email: r.email,
           };
           candidates.push(rec);
         });
@@ -209,7 +208,12 @@ export async function GET(req: Request) {
           isSuspended?: boolean;
         }
         users.forEach((u: ScratchUser) => {
-          const uid = normalizeId(u.profileId || u.mobileNumber || u.email);
+          // Ensure profileId is a clean 4-digit ID
+          if (!is4DigitId(u.profileId)) {
+            const allIds = users.map((usr: ScratchUser) => usr.profileId).filter(Boolean) as string[];
+            u.profileId = generateUnique4DigitId(allIds);
+          }
+          const uid = normalizeId(u.profileId);
           const uProfileId = (u.profileId || '').toLowerCase();
           const uMobile = (u.mobileNumber || u.mobile_number || '').replace(/\D/g, '');
           const uEmail = (u.email || '').toLowerCase().trim();
@@ -229,8 +233,6 @@ export async function GET(req: Request) {
           // Skip duplicates already present in candidates
           const isDuplicate = candidates.some((c) => {
             if (c.id.toLowerCase() === uid.toLowerCase()) return true;
-            if (uMobile && c.mobileNumber && c.mobileNumber.replace(/\D/g, '') === uMobile) return true;
-            if (uEmail && c.email && c.email.toLowerCase().trim() === uEmail) return true;
             if (uName && c.name.toLowerCase().trim() === uName && (c.gender || '').toLowerCase() === (u.gender || '').toLowerCase()) return true;
             return false;
           });
@@ -251,8 +253,6 @@ export async function GET(req: Request) {
             maritalStatus: u.maritalStatus,
             gender: u.gender,
             avatarUrl: u.avatar_url || u.avatarUrl,
-            mobileNumber: u.mobileNumber || u.mobile_number,
-            email: u.email,
             createdAt: u.createdAt,
             premium: mem.isPremium,
             tier: mem.tier,

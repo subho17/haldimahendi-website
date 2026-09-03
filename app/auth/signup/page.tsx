@@ -13,7 +13,7 @@ export default function SignupPage() {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-rose-200/30 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-100/40 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative w-full max-w-xl">
+        <div className="relative w-full max-w-2xl">
           <Suspense fallback={<div className="flex h-64 items-center justify-center">Loading...</div>}>
             <SignupPageView />
           </Suspense>

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { useMounted } from "@/hooks/useMounted";
+import { is4DigitId, generateUnique4DigitId } from "@/lib/idGenerator";
 
 export interface UserProfile {
   profileId: string;
@@ -73,8 +74,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const displayName = parsed.display_name || parsed.name || "Haldimehendi Member";
       const avatar = parsed.avatar_url || parsed.avatarUrl || "/images/default-avatar.png";
       const mobile = parsed.mobile_number || parsed.mobileNumber || "";
+      const rawPId = parsed.profileId;
+      const pId: string = is4DigitId(rawPId) ? rawPId : (rawPId === "9903797850" ? "4829" : generateUnique4DigitId());
       return {
         ...parsed,
+        profileId: pId,
         name: displayName,
         display_name: displayName,
         avatarUrl: avatar,
@@ -95,10 +99,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const avatar = userData.avatar_url || userData.avatarUrl || "/images/default-avatar.png";
     const mobile = userData.mobile_number || userData.mobileNumber || "";
 
+    const rawId = userData.profileId || user?.profileId;
+    const pId: string = is4DigitId(rawId) ? rawId! : (rawId === "9903797850" ? "4829" : generateUnique4DigitId());
+
     const newUser: UserProfile = {
       ...(user || {}),
       ...userData,
-      profileId: userData.profileId || user?.profileId || `SH${Math.floor(100000 + Math.random() * 900000)}`,
+      profileId: pId,
       mobileNumber: mobile,
       mobile_number: mobile,
       email: userData.email ?? user?.email ?? "",

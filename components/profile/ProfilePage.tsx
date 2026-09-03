@@ -29,6 +29,8 @@ import {
   Award,
   Check,
   Crown,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
 import { useMounted } from "@/hooks/useMounted";
@@ -69,6 +71,7 @@ export default function ProfilePage() {
 
   // Editable Form Fields initialized lazily from user context
   const [displayName, setDisplayName] = useState(() => user?.display_name || user?.name || "");
+  const [email, setEmail] = useState(() => user?.email || "");
   const [avatarUrl, setAvatarUrl] = useState(() => user?.avatar_url || user?.avatarUrl || "");
   const [gender, setGender] = useState(() => user?.gender || "");
   const [age, setAge] = useState(() => (user?.age !== undefined && user?.age !== null ? String(user.age) : ""));
@@ -153,6 +156,7 @@ export default function ProfilePage() {
         if (data?.success && data.profile) {
           const p = data.profile;
           if (p.name) setDisplayName(p.name);
+          if (p.email) setEmail(p.email);
           if (p.avatarUrl) setAvatarUrl(p.avatarUrl);
           if (p.gender) setGender(p.gender);
           if (p.age !== undefined && p.age !== null) setAge(String(p.age));
@@ -243,6 +247,7 @@ export default function ProfilePage() {
       ...user,
       name: updatedName,
       display_name: updatedName,
+      email: email.trim() || user?.email || "",
       avatarUrl: avatarUrl || DEFAULT_AVATARS[0].url,
       avatar_url: avatarUrl || DEFAULT_AVATARS[0].url,
       gender,
@@ -283,7 +288,6 @@ export default function ProfilePage() {
         body: JSON.stringify({
           profileId: user?.profileId,
           mobileNumber: user?.mobile_number || user?.mobileNumber || "",
-          email: user?.email || "",
           ...updatedUser,
         }),
       });
@@ -304,12 +308,14 @@ export default function ProfilePage() {
   const formattedMotherTongue = formatCapitalize(motherTongue);
   const formattedProfession = formatCapitalize(profession);
   const userMobile = user?.mobile_number || user?.mobileNumber || "9163399882";
+  const userEmail = email || user?.email || "";
   const userProfileId = user?.profileId || "SH270341";
   const viewerId = user?.profileId || user?.mobile_number || user?.mobileNumber || user?.email || "";
 
   // Compute profile completeness score dynamically based on user's actual filled fields
   const fieldsToCheck = [
     displayName,
+    email,
     avatarUrl && !avatarUrl.includes("default-avatar") ? avatarUrl : "",
     gender,
     age,
@@ -444,7 +450,19 @@ export default function ProfilePage() {
                     {userMobile && (
                       <>
                         <span>•</span>
-                        <span>Mobile: <strong className="text-slate-800 font-bold">+91 {userMobile}</strong></span>
+                        <span className="inline-flex items-center gap-1">
+                          <Phone className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Mobile: <strong className="text-slate-800 font-bold">+91 {userMobile}</strong></span>
+                        </span>
+                      </>
+                    )}
+                    {userEmail && (
+                      <>
+                        <span>•</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Email: <strong className="text-slate-800 font-bold">{userEmail}</strong></span>
+                        </span>
                       </>
                     )}
                   </div>
@@ -635,7 +653,7 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Marital Status */}
-                    <div className="space-y-1.5 sm:col-span-2">
+                    <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Marital Status</label>
                       <select
                         value={maritalStatus}
@@ -648,6 +666,18 @@ export default function ProfilePage() {
                         <option value="Widowed">Widowed</option>
                         <option value="Awaiting Divorce">Awaiting Divorce</option>
                       </select>
+                    </div>
+
+                    {/* Email Address */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Email Address</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
+                        placeholder="e.g. rahul.sharma@example.com"
+                      />
                     </div>
 
                   </div>
@@ -1087,13 +1117,24 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Marital Status */}
-                    <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3 sm:col-span-2 lg:col-span-2">
+                    <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <Users className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Marital Status</span>
                         <span className="text-xs font-bold text-slate-900 truncate block">{maritalStatus || <span className="text-slate-400 font-normal">Not specified</span>}</span>
+                      </div>
+                    </div>
+
+                    {/* Email ID */}
+                    <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email ID</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{userEmail || <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>
 
@@ -1181,7 +1222,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Section 3: Astrology & Horoscope */}
-                {(rashi || nakshatra || manglik || dob) && (
+                {(rashi || nakshatra || manglik || dob || birthPlace || gotra) && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
                       <Sparkles className="w-4 h-4 text-[#d97706]" />

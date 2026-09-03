@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
 import { resolveStatus, getMembership } from '@/lib/membershipStore';
+import { is4DigitId, generateUnique4DigitId, maskPhoneNumber } from '@/lib/idGenerator';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -48,7 +49,9 @@ export interface PublicProfile {
   smoking?: string | null;
   drinking?: string | null;
   disability?: string | null;
+  email?: string | null;
   mobile?: string | null;
+  maskedMobile?: string | null;
 }
 
 // GET /api/profile?id=...
@@ -61,7 +64,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, message: 'Missing id parameter' }, { status: 400 });
     }
 
-    // Contact details are premium-gated: only revealed to premium viewers.
+    // Contact details are premium-gated: only revealed to premium viewers or self.
     let viewerIsPremium = false;
     if (viewerId) {
       try {
@@ -70,14 +73,13 @@ export async function GET(req: Request) {
         viewerIsPremium = false;
       }
     }
-    const revealContact = viewerIsPremium && id !== viewerId;
 
     // 1. Postgres profiles
     if (hasPool) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(
-          `SELECT user_id, display_name, avatar_url, mobile_number, gender, age, height, marital_status,
+          `SELECT user_id, display_name, email, avatar_url, mobile_number, gender, age, height, marital_status,
                   religion, mother_tongue, education, profession, city, country, bio, created_at,
                   verification_status, membership_tier, membership_expires_at,
                   dob, birth_time, birth_place, rashi, nakshatra, manglik, gotra,
@@ -89,6 +91,11 @@ export async function GET(req: Request) {
         );
         if (rows.length > 0) {
           const r = rows[0];
+          const isSelf = viewerId && (
+            normalizeId(r.user_id).toLowerCase() === viewerId.toLowerCase() ||
+            (r.mobile_number && r.mobile_number.replace(/\D/g, '') === viewerId.replace(/\D/g, ''))
+          );
+          const revealContact = Boolean(isSelf || viewerIsPremium);
           const mem = resolveStatus(r.membership_tier, r.membership_expires_at);
           const dob = r.dob instanceof Date ? r.dob.toISOString().slice(0, 10) : r.dob;
           return NextResponse.json({
@@ -131,7 +138,9 @@ export async function GET(req: Request) {
               smoking: r.smoking || null,
               drinking: r.drinking || null,
               disability: r.disability || null,
+              email: r.email || null,
               mobile: revealContact ? (r.mobile_number || null) : null,
+              maskedMobile: maskPhoneNumber(r.mobile_number),
             } as PublicProfile,
           });
         }
@@ -144,11 +153,34 @@ export async function GET(req: Request) {
     try {
       if (fs.existsSync(USERS_FILE)) {
         const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8') || '[]');
+        const cleanQuery = id.toLowerCase().trim();
         const hit = users.find(
-          (u: { profileId?: string; mobileNumber?: string; email?: string }) =>
-            u.profileId === id || u.mobileNumber === id || u.email === id
+          (u: { profileId?: string; mobileNumber?: string; mobile_number?: string; email?: string }) =>
+            (u.profileId && u.profileId.toLowerCase().trim() === cleanQuery) ||
+            (u.mobileNumber && u.mobileNumber.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '')) ||
+            (u.mobile_number && u.mobile_number.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '')) ||
+            (u.email && u.email.toLowerCase().trim() === cleanQuery)
         );
         if (hit) {
+          // Ensure profileId is a guaranteed 4-digit ID
+          if (!is4DigitId(hit.profileId)) {
+            const allIds = users.map((u: { profileId?: string }) => u.profileId).filter(Boolean);
+            hit.profileId = generateUnique4DigitId(allIds);
+            try {
+              fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf-8');
+            } catch (err) {
+              console.warn('Error updating profileId to 4-digit:', err);
+            }
+          }
+
+          const rawMobile = hit.mobileNumber || hit.mobile_number || null;
+          const isSelf = viewerId && (
+            (hit.profileId && hit.profileId.toLowerCase() === viewerId.toLowerCase()) ||
+            (rawMobile && rawMobile.replace(/\D/g, '') === viewerId.replace(/\D/g, '')) ||
+            (hit.email && hit.email.toLowerCase() === viewerId.toLowerCase())
+          );
+          const revealContact = Boolean(isSelf || viewerIsPremium);
+
           const mem = resolveStatus(hit.membershipTier, hit.membershipExpiresAt);
           const hitDob = (h: { dob?: unknown; dateOfBirth?: unknown }): string | null => {
             const d = h.dob || h.dateOfBirth || null;
@@ -160,7 +192,7 @@ export async function GET(req: Request) {
           return NextResponse.json({
             success: true,
             profile: {
-              id: normalizeId(hit.profileId || hit.mobileNumber || hit.email),
+              id: normalizeId(hit.profileId),
               name: hit.display_name || hit.name || 'Member',
               age: hit.age,
               height: hit.height,
@@ -197,7 +229,9 @@ export async function GET(req: Request) {
               smoking: hit.smoking || null,
               drinking: hit.drinking || null,
               disability: hit.disability || null,
-              mobile: revealContact ? (hit.mobileNumber || hit.mobile_number || null) : null,
+              email: hit.email || null,
+              mobile: revealContact ? rawMobile : null,
+              maskedMobile: maskPhoneNumber(rawMobile),
             } as PublicProfile,
           });
         }

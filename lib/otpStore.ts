@@ -278,6 +278,7 @@ export type ProfileData = {
   smoking?: string;
   drinking?: string;
   disability?: string;
+  email?: string;
 };
 
 export async function saveProfile(profileData: ProfileData): Promise<void> {
@@ -290,15 +291,16 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
     await ensureProfilesTable();
     await pool!.query(`
       INSERT INTO profiles (
-        user_id, display_name, mobile_number, avatar_url, provider, provider_id,
+        user_id, display_name, mobile_number, email, avatar_url, provider, provider_id,
         gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio,
         password_hash, password_salt, dob, birth_time, birth_place, rashi, nakshatra, manglik, gotra,
         father_occupation, mother_occupation, siblings, family_type, family_values, diet, smoking, drinking, disability,
         created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, now())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, now())
       ON CONFLICT (user_id) DO UPDATE
       SET display_name   = EXCLUDED.display_name,
+          email          = COALESCE(EXCLUDED.email, profiles.email),
           avatar_url     = EXCLUDED.avatar_url,
           gender         = COALESCE(EXCLUDED.gender, profiles.gender),
           age            = COALESCE(EXCLUDED.age, profiles.age),
@@ -333,6 +335,7 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
       profileData.userId,
       profileData.displayName,
       profileData.mobileNumber,
+      profileData.email || null,
       profileData.avatarUrl || undefined,
       profileData.provider,
       profileData.userId,

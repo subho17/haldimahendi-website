@@ -1,19 +1,47 @@
 {
   "interests": [
     {
+      "id": "in_1788432049228_6ukr",
+      "senderId": "6409",
+      "recipientId": "4829",
+      "status": "accepted",
+      "createdAt": "2026-09-03T10:40:49.225Z"
+    },
+    {
+      "id": "in_1788431112935_172o",
+      "senderId": "SH880057",
+      "recipientId": "4829",
+      "status": "accepted",
+      "createdAt": "2026-09-03T10:25:12.935Z"
+    },
+    {
+      "id": "in_1788430560299_iujb",
+      "senderId": "4829",
+      "recipientId": "3273",
+      "status": "pending",
+      "createdAt": "2026-09-03T10:16:00.298Z"
+    },
+    {
       "id": "in_1788292742077_3zl5",
-      "senderId": "SH713726",
-      "recipientId": "9332304234",
+      "senderId": "4829",
+      "recipientId": "4830",
       "status": "pending",
       "createdAt": "2026-09-01T19:59:02.076Z"
     },
     {
       "id": "in_1788291662579_daef",
-      "senderId": "9903797850",
-      "recipientId": "9332304234",
-      "status": "pending",
+      "senderId": "4829",
+      "recipientId": "4830",
+      "status": "accepted",
       "createdAt": "2026-09-01T19:41:02.577Z"
     }
   ],
-  "shortlists": []
+  "shortlists": [
+    {
+      "id": "sh_1788421077172_b9j2",
+      "userId": "4829",
+      "profileId": "4830",
+      "createdAt": "2026-09-03T07:37:57.172Z"
+    }
+  ]
 }

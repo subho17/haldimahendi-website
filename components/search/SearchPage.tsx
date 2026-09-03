@@ -33,7 +33,7 @@ interface SearchProfile {
 export default function SearchPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const userId = user?.mobileNumber || user?.mobile_number || user?.email || user?.profileId || "";
+  const userId = user?.profileId || user?.mobileNumber || user?.email || "";
 
   const [lookingFor, setLookingFor] = useState("Woman");
   const [ageFrom, setAgeFrom] = useState("21");
@@ -276,7 +276,7 @@ export default function SearchPage() {
                             <span>{p.name}</span>
                             <span className="text-xs text-emerald-600 font-bold">✓</span>
                           </h3>
-                          <p className="text-xs text-gray-400 font-semibold">{p.id}</p>
+                          <p className="text-xs text-gray-400 font-semibold">ID: {p.id ? (p.id.startsWith("#") ? p.id : `#${p.id}`) : ""}</p>
                         </div>
 
                         <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100">

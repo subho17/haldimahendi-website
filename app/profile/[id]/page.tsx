@@ -73,6 +73,7 @@ interface PublicProfile {
   drinking?: string | null;
   disability?: string | null;
   mobile?: string | null;
+  maskedMobile?: string | null;
 }
 
 function formatCapitalize(str?: string | null): string {
@@ -110,7 +111,7 @@ export default function PublicProfilePage() {
   const [reportBusy, setReportBusy] = useState(false);
   const [reportDone, setReportDone] = useState(false);
 
-  const viewerId = user?.mobileNumber || user?.email || user?.profileId || "";
+  const viewerId = user?.profileId || user?.mobileNumber || user?.email || "";
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
@@ -365,7 +366,7 @@ export default function PublicProfilePage() {
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{formattedName}</h1>
                 
                 <p className="text-xs text-slate-500 font-semibold">
-                  Profile ID: <strong className="text-slate-800">{profile.id}</strong>
+                  Profile ID: <strong className="text-slate-800">{profile.id ? (profile.id.startsWith("#") ? profile.id : `#${profile.id}`) : "----"}</strong>
                 </p>
 
                 {/* Quick Info Badges */}
@@ -439,25 +440,34 @@ export default function PublicProfilePage() {
                     {profile.mobile ? (
                       <p className="text-sm font-bold text-slate-800 mt-0.5">
                         +91 {profile.mobile}
-                        <span className="ml-2 text-[10px] font-black uppercase text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full align-middle">
-                          Premium unlocked
+                        <span className="ml-2 text-[10px] font-black uppercase text-emerald-600 bg-emerald-100 px-2.5 py-0.5 rounded-full align-middle">
+                          ✓ Premium Unlocked
                         </span>
                       </p>
                     ) : (
-                      <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                        {isAuthenticated
-                          ? "Contact details are available to Premium members."
-                          : "Log in & upgrade to Premium to unlock contact details."}
-                      </p>
+                      <div className="mt-0.5">
+                        <p className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-600 inline shrink-0" />
+                          <span>{profile.maskedMobile || "+91 ••••• •••••"}</span>
+                          <span className="text-[10px] font-black uppercase text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full align-middle">
+                            Subscribers Only
+                          </span>
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                          {isAuthenticated
+                            ? "Mobile number is confidential. Upgrade to a Premium subscription to view full contact details."
+                            : "Mobile number is confidential. Log in & subscribe to Premium to view."}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
                 {!profile.mobile && isAuthenticated && (
                   <Link
                     href="/membership"
-                    className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-white text-xs font-black shadow-md hover:from-amber-500 hover:to-amber-600 transition-all cursor-pointer"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-black shadow-md hover:shadow-lg transition-all cursor-pointer"
                   >
-                    <Crown className="w-4 h-4" /> Upgrade
+                    <Crown className="w-4 h-4" /> Upgrade to View
                   </Link>
                 )}
                 {!profile.mobile && !isAuthenticated && (

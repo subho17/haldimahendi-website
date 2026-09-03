@@ -205,7 +205,7 @@ export default function LoginPage({
       login({
         profileId: profile?.id || undefined,
         mobileNumber: clean,
-        name: profile?.name || `Member (${clean.slice(-4)})`,
+        name: profile?.name || "Member",
         display_name: profile?.name || undefined,
         avatarUrl: profile?.avatarUrl || "/images/default-avatar.png",
         avatar_url: profile?.avatarUrl || undefined,

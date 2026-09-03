@@ -2,8 +2,18 @@
 
 import { useSyncExternalStore, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
 import { X } from "lucide-react";
-import SignupPage from "./SignupPage";
+
+const SignupPage = dynamic(() => import("./SignupPage"), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white rounded-3xl p-8 max-w-lg mx-auto text-center space-y-3">
+      <div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto" />
+      <p className="text-xs font-bold text-slate-500">Loading signup...</p>
+    </div>
+  ),
+});
 
 interface SignupModalProps {
   open: boolean;
@@ -57,7 +67,7 @@ export default function SignupModal({
       onClick={handleBackdropClick}
     >
       <div
-        className={`relative w-full max-w-lg my-8 transition-transform duration-200 animate-in fade-in zoom-in-95 ${
+        className={`relative w-full max-w-2xl my-8 transition-transform duration-200 animate-in fade-in zoom-in-95 ${
           shaking ? "scale-[1.02]" : ""
         }`}
         onClick={(e) => e.stopPropagation()}

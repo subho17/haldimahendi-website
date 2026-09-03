@@ -553,7 +553,7 @@ My Haldimehendi
                                   <p className="font-bold text-xs sm:text-sm text-gray-900 truncate group-hover:text-[#d97706]">
                                     {profile.name}
                                   </p>
-                                  <span className="text-[10px] text-gray-400 font-mono font-bold">({profile.id})</span>
+                                  <span className="text-[10px] text-gray-400 font-mono font-bold">(ID: {profile.id ? (profile.id.startsWith("#") ? profile.id : `#${profile.id}`) : ""})</span>
                                 </div>
                                 <p className="text-[11px] text-gray-500 truncate mt-0.5 font-medium flex items-center gap-1.5">
                                   <span>{profile.age} yrs • {profile.height}</span>

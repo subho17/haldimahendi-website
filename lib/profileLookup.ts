@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
 import type { MatchCandidate } from '@/lib/matching';
+import { is4DigitId, generateUnique4DigitId } from '@/lib/idGenerator';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -74,8 +75,9 @@ export async function buildProfileLookup(): Promise<Map<string, MatchCandidate>>
         city?: string;
         createdAt?: string;
       }) => {
+        const finalId = is4DigitId(u.profileId) ? u.profileId! : generateUnique4DigitId();
         const candidate: MatchCandidate = {
-          id: normalizeId(u.profileId || u.mobileNumber || u.email),
+          id: finalId,
           name: u.display_name || u.name || 'Member',
           age: u.age,
           height: u.height,
@@ -90,9 +92,10 @@ export async function buildProfileLookup(): Promise<Map<string, MatchCandidate>>
           avatarUrl: u.avatar_url || u.avatarUrl,
           createdAt: u.createdAt,
         };
-        add(u.profileId, candidate);
-        add(u.mobileNumber, candidate);
-        add(u.email, candidate);
+        add(finalId, candidate);
+        if (u.profileId) add(u.profileId, candidate);
+        if (u.mobileNumber) add(u.mobileNumber, candidate);
+        if (u.email) add(u.email, candidate);
       });
     }
   } catch (e) {
