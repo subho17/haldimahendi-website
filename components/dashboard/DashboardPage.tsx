@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { Heart, Sparkles, Eye, UserCheck, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useMounted } from "@/hooks/useMounted";
+import ProfileCompletionPopup from "@/components/ui/ProfileCompletionPopup";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 
 interface MatchProfile {
   id: string;
@@ -43,6 +45,10 @@ export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const mounted = useMounted();
+  const { isComplete: isProfileComplete } = useProfileCompletion();
+  
+  // Verification reminder popup state
+  const [showVerifyPopup, setShowVerifyPopup] = useState<boolean>(false);
 
   const [stats, setStats] = useState<DashboardStats>({
     newMatches: 0,
@@ -69,6 +75,17 @@ export default function DashboardPage() {
       router.push("/");
     }
   }, [mounted, isAuthenticated, isLoading, router]);
+
+  // Verification reminder popup - show after 5 seconds if not verified and profile complete
+  useEffect(() => {
+    // Show popup after 5 seconds if user is not verified and profile is complete
+    if (!isVerified && isProfileComplete && !showVerifyPopup) {
+      const timeoutId = setTimeout(() => {
+        setShowVerifyPopup(true);
+      }, 5000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isVerified, isProfileComplete, showVerifyPopup]);
 
   useEffect(() => {
     if (mounted && isAuthenticated && userId) {
@@ -206,9 +223,16 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-bold mb-1.5 border border-white/30">
-                  <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>{isVerified ? "Verified Member" : "Registered Member"} · ID: {user?.profileId ? (user.profileId.startsWith("#") ? user.profileId : `#${user.profileId}`) : "----"}</span>
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-bold border border-white/30">
+                    <Sparkles className="w-3 h-3 text-amber-300" />
+                    <span>{isVerified ? "Verified Member" : "Registered Member"} · ID: {user?.profileId ? (user.profileId.startsWith("#") ? user.profileId : `#${user.profileId}`) : "----"}</span>
+                  </div>
+                  {isProfileComplete && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-200 text-[10px] font-bold border border-emerald-400/30">
+                      ✓ Profile Complete
+                    </span>
+                  )}
                 </div>
                 <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
                   Welcome back, {displayName} 👋
@@ -236,6 +260,11 @@ export default function DashboardPage() {
 
           </div>
         </div>
+
+        {/* Profile Completion Popup */}
+        {!isProfileComplete && (
+          <ProfileCompletionPopup autoDismiss={false} />
+        )}
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

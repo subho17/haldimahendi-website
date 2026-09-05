@@ -286,7 +286,7 @@ export default function PublicProfilePage() {
     { Icon: Sparkles, label: "Age", value: profile.age != null ? `${profile.age} yrs` : "—" },
     { Icon: Ruler, label: "Height", value: profile.height || "—" },
     { Icon: Users, label: "Marital Status", value: profile.maritalStatus || "—" },
-    { Icon: MapPin, label: "Living City", value: [formattedCity, profile.country || "India"].filter(Boolean).join(", ") || "—" },
+    { Icon: MapPin, label: "current City", value: [formattedCity, profile.country || "India"].filter(Boolean).join(", ") || "—" },
     { Icon: Sparkles, label: "Religion", value: formattedReligion || "—" },
     { Icon: Languages, label: "Mother Tongue", value: formattedMotherTongue || "—" },
     { Icon: GraduationCap, label: "Education", value: profile.education || "—" },
@@ -306,7 +306,7 @@ export default function PublicProfilePage() {
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        
+
         {/* Back Link */}
         <a
           href={back}
@@ -317,11 +317,11 @@ export default function PublicProfilePage() {
 
         {/* Outer Card */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden transition-all duration-300">
-          
+
           {/* Profile Header Block (Clean, No Banner) */}
           <div className="p-6 sm:p-8 border-b border-slate-100">
             <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-left">
-              
+
               <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#d97706] font-black text-5xl ring-2 ring-amber-100 shrink-0">
                 {profile.avatarUrl && profile.avatarUrl !== "/images/default-avatar.png" ? (
                   <Image src={profile.avatarUrl} alt={formattedName} fill className="object-cover" />
@@ -364,7 +364,7 @@ export default function PublicProfilePage() {
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{formattedName}</h1>
-                
+
                 <p className="text-xs text-slate-500 font-semibold">
                   Profile ID: <strong className="text-slate-800">{profile.id ? (profile.id.startsWith("#") ? profile.id : `#${profile.id}`) : "----"}</strong>
                 </p>
@@ -539,11 +539,10 @@ export default function PublicProfilePage() {
               <button
                 onClick={() => runAction(shortlisted ? "unshortlist" : "shortlist")}
                 disabled={busy}
-                className={`flex-1 w-full py-3 rounded-xl border text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 ${
-                  shortlisted
+                className={`flex-1 w-full py-3 rounded-xl border text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 ${shortlisted
                     ? "border-amber-200 bg-amber-50 text-amber-700"
                     : "border-slate-200 text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 {shortlisted ? "✓ Shortlisted (click to remove)" : "Shortlist Profile"}
               </button>
@@ -566,11 +565,10 @@ export default function PublicProfilePage() {
               <button
                 onClick={toggleBlock}
                 disabled={busy}
-                className={`flex-1 w-full py-2.5 rounded-xl border text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 ${
-                  blocked
+                className={`flex-1 w-full py-2.5 rounded-xl border text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 ${blocked
                     ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                     : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 <Ban className="w-4 h-4" /> {blocked ? "Unblock Member" : "Block Member"}
               </button>

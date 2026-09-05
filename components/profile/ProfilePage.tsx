@@ -36,6 +36,14 @@ import { uploadImageToSupabase } from "@/lib/supabaseClient";
 import { useMounted } from "@/hooks/useMounted";
 import VerificationCard from "@/components/profile/VerificationCard";
 import { RASHIS, NAKSHATRAS } from "@/lib/kundli";
+import {
+  MOTHER_TONGUES,
+  EDUCATION_OPTIONS,
+  OCCUPATION_OPTIONS,
+  FATHER_OCCUPATION_OPTIONS,
+  MOTHER_OCCUPATION_OPTIONS,
+} from "@/lib/profileOptions";
+import ComboboxInput from "@/components/ui/ComboboxInput";
 
 const DEFAULT_AVATARS = [
   { label: "Female Avatar 1", url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250" },
@@ -136,7 +144,7 @@ export default function ProfilePage() {
           });
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // Fetch live verification status from DB
     fetch(`/api/verification?userId=${encodeURIComponent(id)}`)
@@ -147,7 +155,7 @@ export default function ProfilePage() {
           setVerificationStatus(st);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // Fetch full profile details to populate any existing DB saved fields
     fetch(`/api/profile?id=${encodeURIComponent(id)}`)
@@ -190,7 +198,7 @@ export default function ProfilePage() {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [mounted, user]);
 
   if (!mounted || isLoading || !isAuthenticated) {
@@ -370,7 +378,7 @@ export default function ProfilePage() {
 
               {/* Avatar + Main Details */}
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-                
+
                 {/* Avatar with Ring */}
                 <div className="relative group shrink-0">
                   <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full ring-4 ring-white shadow-lg overflow-hidden bg-slate-100 relative">
@@ -387,9 +395,8 @@ export default function ProfilePage() {
                   {/* Upload Button overlay */}
                   <label
                     title="Change profile photo"
-                    className={`absolute bottom-0 right-0 p-2 rounded-full bg-[#d97706] text-white cursor-pointer shadow-md hover:bg-[#b45309] hover:scale-105 transition-all ${
-                      isUploading ? "animate-pulse" : ""
-                    }`}
+                    className={`absolute bottom-0 right-0 p-2 rounded-full bg-[#d97706] text-white cursor-pointer shadow-md hover:bg-[#b45309] hover:scale-105 transition-all ${isUploading ? "animate-pulse" : ""
+                      }`}
                   >
                     <Camera className="w-3.5 h-3.5" />
                     <input
@@ -487,11 +494,10 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsEditing(!isEditing)}
-                  className={`w-full sm:w-auto px-6 py-2.5 font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all ${
-                    isEditing
+                  className={`w-full sm:w-auto px-6 py-2.5 font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all ${isEditing
                       ? "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
                       : "bg-[#d97706] text-[#ffffff] hover:bg-[#b45309] shadow-rose-500/20"
-                  }`}
+                    }`}
                 >
                   {isEditing ? (
                     <>
@@ -529,8 +535,8 @@ export default function ProfilePage() {
                   {completionPercentage === 100
                     ? "🎉 Perfect! Your profile is 100% complete and fully verified."
                     : verificationStatus !== "approved"
-                    ? "💡 Tip: Verify your ID below to boost your profile strength and trust."
-                    : "💡 Tip: Fill in the remaining profile fields to reach 100% profile strength."}
+                      ? "💡 Tip: Verify your ID below to boost your profile strength and trust."
+                      : "💡 Tip: Fill in the remaining profile fields to reach 100% profile strength."}
                 </p>
               </div>
               <p className="text-[11px] text-slate-500 font-medium text-center sm:text-right">
@@ -568,9 +574,8 @@ export default function ProfilePage() {
                           type="button"
                           onClick={() => setAvatarUrl(av.url)}
                           style={{ position: "relative" }}
-                          className={`relative w-14 h-14 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
-                            isSelected ? "border-[#d97706] ring-2 ring-amber-200 scale-105 shadow-md" : "border-slate-200 opacity-70 hover:opacity-100"
-                          }`}
+                          className={`relative w-14 h-14 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${isSelected ? "border-[#d97706] ring-2 ring-amber-200 scale-105 shadow-md" : "border-slate-200 opacity-70 hover:opacity-100"
+                            }`}
                         >
                           <Image src={av.url} alt={av.label} width={56} height={56} className="w-full h-full object-cover" />
                           {isSelected && (
@@ -591,7 +596,7 @@ export default function ProfilePage() {
                     <span>Basic Details</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    
+
                     {/* Display Name */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Full Display Name *</label>
@@ -690,10 +695,10 @@ export default function ProfilePage() {
                     <span>Location, Religion & Education</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    
+
                     {/* City */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 block">Living City</label>
+                      <label className="text-xs font-bold text-slate-700 block">current City</label>
                       <input
                         type="text"
                         value={city}
@@ -726,36 +731,33 @@ export default function ProfilePage() {
                     {/* Mother Tongue */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Mother Tongue</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={motherTongue}
-                        onChange={(e) => setMotherTongue(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
-                        placeholder="e.g. Hindi, Bengali, Punjabi"
+                        onChange={setMotherTongue}
+                        options={MOTHER_TONGUES}
+                        placeholder="Select or type mother tongue..."
                       />
                     </div>
 
                     {/* Education */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Highest Education</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={education}
-                        onChange={(e) => setEducation(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
-                        placeholder="e.g. B.Tech / M.B.A"
+                        onChange={setEducation}
+                        options={EDUCATION_OPTIONS}
+                        placeholder="Select or type highest education..."
                       />
                     </div>
 
                     {/* Profession */}
                     <div className="space-y-1.5 sm:col-span-2">
                       <label className="text-xs font-bold text-slate-700 block">Profession / Occupation</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={profession}
-                        onChange={(e) => setProfession(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
-                        placeholder="e.g. Software Engineer, Business Owner"
+                        onChange={setProfession}
+                        options={OCCUPATION_OPTIONS}
+                        placeholder="Select or type profession / occupation..."
                       />
                     </div>
 
@@ -947,24 +949,22 @@ export default function ProfilePage() {
                     {/* Father occupation */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Father&apos;s Occupation</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={fatherOccupation}
-                        onChange={(e) => setFatherOccupation(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
-                        placeholder="e.g. Business Owner"
+                        onChange={setFatherOccupation}
+                        options={FATHER_OCCUPATION_OPTIONS}
+                        placeholder="Select or type father's occupation..."
                       />
                     </div>
 
                     {/* Mother occupation */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Mother&apos;s Occupation</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={motherOccupation}
-                        onChange={(e) => setMotherOccupation(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all"
-                        placeholder="e.g. Homemaker"
+                        onChange={setMotherOccupation}
+                        options={MOTHER_OCCUPATION_OPTIONS}
+                        placeholder="Select or type mother's occupation..."
                       />
                     </div>
 
@@ -1048,7 +1048,7 @@ export default function ProfilePage() {
             ) : (
               /* VIEW MODE DISPLAY */
               <div className="space-y-8 pt-2 animate-in fade-in duration-300">
-                
+
                 {/* About Myself Callout */}
                 <div className="relative bg-gradient-to-br from-rose-50/50 via-slate-50/80 to-white p-6 rounded-2xl border border-rose-100/70 shadow-2xs">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-[#d97706] rounded-l-2xl" />
@@ -1071,7 +1071,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    
+
                     {/* Display Name */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
@@ -1151,14 +1151,14 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    
-                    {/* Living City */}
+
+                    {/* current City */}
                     <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-rose-100/60 text-[#d97706]">
                         <MapPin className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Living City</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">current City</span>
                         <span className="text-xs font-bold text-slate-900 truncate block">{formattedCity || <span className="text-slate-400 font-normal">Not specified</span>}</span>
                       </div>
                     </div>

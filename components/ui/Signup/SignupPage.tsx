@@ -28,6 +28,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
 import { RASHIS, NAKSHATRAS } from "@/lib/kundli";
+import {
+  MOTHER_TONGUES,
+  EDUCATION_OPTIONS,
+  OCCUPATION_OPTIONS,
+  FATHER_OCCUPATION_OPTIONS,
+  MOTHER_OCCUPATION_OPTIONS,
+} from "@/lib/profileOptions";
+import ComboboxInput from "@/components/ui/ComboboxInput";
 
 interface SignupPageProps {
   onOpenLogin?: () => void;
@@ -61,7 +69,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATARS[0].url);
-  const [gender, setGender] = useState<"Bride" | "Groom" | "Other">(() => {
+  const [gender, setGender] = useState<"Bride" | "Groom">(() => {
     if (initialData?.lookingFor) {
       const lf = initialData.lookingFor.toLowerCase();
       if (lf.includes("groom")) return "Groom";
@@ -350,10 +358,9 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
   return (
     <div className={`w-full font-sans ${isModal ? "p-1 sm:p-2" : "p-2 sm:p-4"}`}>
-      <div className={`bg-white rounded-3xl shadow-2xl shadow-black/10 border border-slate-200/90 p-5 sm:p-8 ${
-        step === 3 ? "max-w-2xl" : "max-w-lg"
-      } w-full mx-auto text-left relative overflow-hidden transition-all duration-300`}>
-        
+      <div className={`bg-white rounded-3xl shadow-2xl shadow-black/10 border border-slate-200/90 p-5 sm:p-8 ${step === 3 ? "max-w-2xl" : "max-w-lg"
+        } w-full mx-auto text-left relative overflow-hidden transition-all duration-300`}>
+
         {/* Top Trust Badge */}
         <div className="flex items-center justify-between mb-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-[#d97706] font-bold text-xs border border-amber-200/60">
@@ -421,9 +428,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
         {/* Error / Already Registered Alert Banner */}
         {error && (
-          <div className={`mb-5 p-4 rounded-2xl border animate-in fade-in ${
-            isExistingUser ? "bg-amber-50 text-amber-900 border-amber-200" : "bg-rose-50 text-rose-600 border-rose-100"
-          }`}>
+          <div className={`mb-5 p-4 rounded-2xl border animate-in fade-in ${isExistingUser ? "bg-amber-50 text-amber-900 border-amber-200" : "bg-rose-50 text-rose-600 border-rose-100"
+            }`}>
             <div className="flex items-start gap-2.5">
               <AlertCircle className={`w-5 h-5 shrink-0 mt-0.5 ${isExistingUser ? "text-amber-600" : "text-rose-600"}`} />
               <div className="flex-1">
@@ -569,7 +575,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
         {/* Step 3: Complete Full Matrimonial Profile Form */}
         {step === 3 && (
           <form onSubmit={handleNextProfileStep} className="space-y-5 animate-in fade-in">
-            
+
             {/* ----------------- SUB-STEP 1: Basic & Contact Details ----------------- */}
             {profileStep === 1 && (
               <div className="space-y-4 animate-in slide-in-from-right-2 fade-in duration-300">
@@ -600,9 +606,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                         key={idx}
                         type="button"
                         onClick={() => setAvatarUrl(av.url)}
-                        className={`relative w-8 h-8 rounded-full overflow-hidden border-2 transition ${
-                          avatarUrl === av.url ? "border-[#d97706] scale-110 shadow-xs" : "border-slate-200 opacity-70"
-                        }`}
+                        className={`relative w-8 h-8 rounded-full overflow-hidden border-2 transition ${avatarUrl === av.url ? "border-[#d97706] scale-110 shadow-xs" : "border-slate-200 opacity-70"
+                          }`}
                       >
                         <Image src={av.url} alt={av.label} width={32} height={32} className="w-full h-full object-cover" />
                       </button>
@@ -653,11 +658,11 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                   <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
                     Looking For
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setGender("Bride")}
-                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                         gender === "Bride"
                           ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
                           : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
@@ -669,25 +674,13 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     <button
                       type="button"
                       onClick={() => setGender("Groom")}
-                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                         gender === "Groom"
                           ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
                           : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                       }`}
                     >
                       <span>🤵 Groom</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setGender("Other")}
-                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                        gender === "Other"
-                          ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
-                          : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span>✨ Other</span>
                     </button>
                   </div>
                 </div>
@@ -750,9 +743,9 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     <span>Location, Religion & Education</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Living City */}
+                    {/* current City */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 block">Living City</label>
+                      <label className="text-xs font-bold text-slate-700 block">current City</label>
                       <input
                         type="text"
                         value={city}
@@ -785,36 +778,33 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     {/* Mother Tongue */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Mother Tongue</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={motherTongue}
-                        onChange={(e) => setMotherTongue(e.target.value)}
-                        placeholder="Hindi"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        onChange={setMotherTongue}
+                        options={MOTHER_TONGUES}
+                        placeholder="Select or type mother tongue..."
                       />
                     </div>
 
                     {/* Highest Education */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Highest Education</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={education}
-                        onChange={(e) => setEducation(e.target.value)}
-                        placeholder="B.Tech / Graduate"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        onChange={setEducation}
+                        options={EDUCATION_OPTIONS}
+                        placeholder="Select or type highest education..."
                       />
                     </div>
 
                     {/* Profession / Occupation */}
                     <div className="space-y-1.5 sm:col-span-2">
                       <label className="text-xs font-bold text-slate-700 block">Profession / Occupation</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={profession}
-                        onChange={(e) => setProfession(e.target.value)}
-                        placeholder="Private"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        onChange={setProfession}
+                        options={OCCUPATION_OPTIONS}
+                        placeholder="Select or type profession / occupation..."
                       />
                     </div>
                   </div>
@@ -1015,24 +1005,22 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     {/* Father's Occupation */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Father&apos;s Occupation</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={fatherOccupation}
-                        onChange={(e) => setFatherOccupation(e.target.value)}
-                        placeholder="e.g. Business Owner"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        onChange={setFatherOccupation}
+                        options={FATHER_OCCUPATION_OPTIONS}
+                        placeholder="Select or type father's occupation..."
                       />
                     </div>
 
                     {/* Mother's Occupation */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 block">Mother&apos;s Occupation</label>
-                      <input
-                        type="text"
+                      <ComboboxInput
                         value={motherOccupation}
-                        onChange={(e) => setMotherOccupation(e.target.value)}
-                        placeholder="e.g. Homemaker"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        onChange={setMotherOccupation}
+                        options={MOTHER_OCCUPATION_OPTIONS}
+                        placeholder="Select or type mother's occupation..."
                       />
                     </div>
 
@@ -1180,9 +1168,9 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                   <>
                     <span>Next: {
                       profileStep === 1 ? "Location & Religion" :
-                      profileStep === 2 ? "Kundli & Horoscope" :
-                      profileStep === 3 ? "Lifestyle & Family" :
-                      "Account Security"
+                        profileStep === 2 ? "Kundli & Horoscope" :
+                          profileStep === 3 ? "Lifestyle & Family" :
+                            "Account Security"
                     }</span>
                     <ArrowRight className="w-4 h-4" />
                   </>

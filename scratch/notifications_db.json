@@ -11,7 +11,7 @@
         "conversationId": "34ed973c-58ce-400c-b800-313e61dbaf08",
         "profileId": "4829"
       },
-      "read": false,
+      "read": true,
       "createdAt": "2026-09-03T10:54:07.582Z"
     },
     {
@@ -39,7 +39,7 @@
         "conversationId": "34ed973c-58ce-400c-b800-313e61dbaf08",
         "profileId": "6409"
       },
-      "read": false,
+      "read": true,
       "createdAt": "2026-09-03T10:41:55.680Z"
     },
     {
