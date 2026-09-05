@@ -111,16 +111,29 @@ export async function GET(req: Request) {
     // ------------------------------------------------------------------
     const candidates: MatchCandidate[] = [];
 
+    // Determine gender filter based on user's lookingFor preference
+    // This is fetched from the viewer's profile (loaded earlier as 'prefs')
+    const userLookingFor = (prefs.partnerGender || (prefs as unknown as { gender?: string }).gender || '').toLowerCase();
+    
     if (hasPool) {
       try {
         await ensureProfilesTable();
+        
+        // Build gender filter SQL based on lookingFor preference
+        let genderCondition = '';
+        if (userLookingFor === 'groom' || userLookingFor === 'man') {
+          genderCondition = "AND LOWER(gender) IN ('male', 'groom', 'man')";
+        } else if (userLookingFor === 'bride' || userLookingFor === 'woman') {
+          genderCondition = "AND LOWER(gender) IN ('female', 'bride', 'woman')";
+        }
+        
         const { rows } = await pool!.query(`
           SELECT id, user_id, mobile_number, email, display_name, avatar_url, gender, age, height, marital_status,
                  religion, mother_tongue, education, profession, city, country, created_at,
                  membership_tier, membership_expires_at, rashi, nakshatra, manglik, diet,
                  smoking, drinking, is_suspended
           FROM profiles
-          WHERE COALESCE(is_suspended, FALSE) = FALSE
+          WHERE COALESCE(is_suspended, FALSE) = FALSE ${genderCondition}
           ORDER BY created_at DESC
         `);
 

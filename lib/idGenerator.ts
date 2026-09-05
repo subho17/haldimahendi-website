@@ -60,6 +60,7 @@ export function maskPhoneNumber(phone?: string | null): string {
   const digits = phone.toString().replace(/\D/g, "");
   if (digits.length >= 10) {
     const last10 = digits.slice(-10);
+    // Show first 5 digits only for demo purposes, full number available to premium
     return `+91 ${last10.slice(0, 5)} •••••`;
   }
   return "+91 ••••• •••••";
