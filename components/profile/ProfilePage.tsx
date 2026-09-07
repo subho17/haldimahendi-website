@@ -612,15 +612,15 @@ export default function ProfilePage() {
 
                     {/* Gender / Profile Role */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 block">Looking For *</label>
+                      <label className="text-xs font-bold text-slate-700 block">Profile Gender / Role *</label>
                       <select
                         value={gender}
                         onChange={(e) => setGender(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select Gender / Role</option>
-                        <option value="Groom">Bride (Groom Profile)</option>
-                        <option value="Bride">Groom (Bride Profile)</option>
+                        <option value="Groom">Groom (Male)</option>
+                        <option value="Bride">Bride (Female)</option>
                       </select>
                     </div>
 

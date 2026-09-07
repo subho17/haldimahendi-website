@@ -66,15 +66,22 @@ export async function GET(req: Request) {
     const prefCity = (pref.city || '').toLowerCase() || null;
 
     // 3. Determine which gender to show in feed
-    let filterGender: string | null = null;
+    let filterTarget: 'male' | 'female' | null = null;
 
-    if (partnerGender && partnerGender !== 'both') {
-      filterGender = partnerGender;
+    if (partnerGender && partnerGender !== 'both' && partnerGender !== 'any') {
+      if (['groom', 'man', 'male', 'boy', 'men'].includes(partnerGender)) {
+        filterTarget = 'male';
+      } else if (['bride', 'woman', 'female', 'girl', 'women'].includes(partnerGender)) {
+        filterTarget = 'female';
+      }
     } else if (viewerGender) {
-      // opposite gender
-      filterGender = viewerGender === 'female' ? 'male' : 'female';
+      // Opposite gender if partner preference unset
+      if (['groom', 'man', 'male', 'boy', 'men'].includes(viewerGender)) {
+        filterTarget = 'female';
+      } else if (['bride', 'woman', 'female', 'girl', 'women'].includes(viewerGender)) {
+        filterTarget = 'male';
+      }
     }
-    // if viewerGender unknown and partnerGender null -> show all (filterGender stays null)
 
     // 4. Build SQL WHERE clauses
     const profileId = normalizeId(searchParams.get('profileId'));
@@ -96,10 +103,10 @@ export async function GET(req: Request) {
       paramIdx++;
     }
 
-    if (filterGender) {
-      whereClauses.push(`LOWER(gender) = LOWER($${paramIdx})`);
-      params.push(filterGender);
-      paramIdx++;
+    if (filterTarget === 'male') {
+      whereClauses.push(`LOWER(gender) IN ('male', 'groom', 'man')`);
+    } else if (filterTarget === 'female') {
+      whereClauses.push(`LOWER(gender) IN ('female', 'bride', 'woman')`);
     }
 
     // Age range filter from partner preference

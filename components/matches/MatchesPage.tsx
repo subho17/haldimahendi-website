@@ -66,6 +66,7 @@ export default function MatchesPage() {
       const mob = user?.mobile_number || user?.mobileNumber || "";
       if (mob) mParams.set("userMobile", mob);
       if (user?.email) mParams.set("userEmail", user.email);
+      if (user?.gender) mParams.set("viewerGender", user.gender);
 
       Promise.all([
         fetch(`/api/matches?${mParams.toString()}`).then((r) => r.json()),
@@ -82,7 +83,7 @@ export default function MatchesPage() {
               if (myProfileId && mId === myProfileId) return false;
               if (myMobile && mId === myMobile) return false;
               if (myEmail && mId === myEmail) return false;
-              return true;
+              return m.isEligible !== false;
             });
 
             setMatches(safeMatches);
@@ -95,7 +96,7 @@ export default function MatchesPage() {
         .catch(console.error)
         .finally(() => setLoading(false));
     }
-  }, [mounted, isAuthenticated, isLoading, router, userId, user?.email, user?.mobileNumber, user?.mobile_number, user?.profileId]);
+  }, [mounted, isAuthenticated, isLoading, router, userId, user?.email, user?.mobileNumber, user?.mobile_number, user?.profileId, user?.gender]);
 
   const runAction = async (otherId: string, action: string) => {
     if (!userId || busyId) return;

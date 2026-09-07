@@ -4,6 +4,7 @@ import path from "path";
 import { saveProfile, ProfileData } from '@/lib/otpStore';
 import { hashPassword } from '@/lib/password';
 import { generateUnique4DigitId, is4DigitId } from "@/lib/idGenerator";
+import { savePreferences, loadPreferences } from '@/lib/prefsStore';
 
 const USERS_FILE = path.join(process.cwd(), "scratch", "users_db.json");
 
@@ -190,6 +191,26 @@ export async function POST(req: Request) {
       await saveProfile(profileData);
     } catch (e) {
       console.warn('Failed to save profile to DB:', e);
+    }
+
+    // Ensure default partner preferences exist in DB
+    try {
+      const pId = updatedUser.profileId;
+      if (pId && userData.gender) {
+        const existingPrefs = await loadPreferences(pId);
+        if (!existingPrefs || !existingPrefs.partnerGender) {
+          const isGroom = ['groom', 'man', 'male'].includes(userData.gender.toLowerCase());
+          await savePreferences({
+            ...(existingPrefs || {}),
+            userId: pId,
+            partnerGender: isGroom ? 'Woman' : 'Man',
+            ageMin: existingPrefs?.ageMin ?? 21,
+            ageMax: existingPrefs?.ageMax ?? 35,
+          });
+        }
+      }
+    } catch (prefErr) {
+      console.warn('Failed to ensure default partner preferences:', prefErr);
     }
 
     return NextResponse.json({

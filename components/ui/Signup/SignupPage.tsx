@@ -72,10 +72,14 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
   const [gender, setGender] = useState<"Bride" | "Groom">(() => {
     if (initialData?.lookingFor) {
       const lf = initialData.lookingFor.toLowerCase();
-      if (lf.includes("groom")) return "Groom";
-      if (lf.includes("bride")) return "Bride";
+      if (lf.includes("woman") || lf.includes("bride") || lf.includes("female") || lf.includes("girl")) {
+        return "Groom";
+      }
+      if (lf.includes("man") || lf.includes("groom") || lf.includes("male") || lf.includes("boy")) {
+        return "Bride";
+      }
     }
-    return "Bride";
+    return "Groom";
   });
   const [age, setAge] = useState("25");
   const [height, setHeight] = useState("5'6\"");
@@ -300,6 +304,17 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
       const data = await res.json();
       if (data.success && data.user?.profileId) {
         login({ ...profileData, profileId: data.user.profileId });
+        // Save default partner preferences immediately
+        fetch("/api/preferences", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: data.user.profileId,
+            partnerGender: gender === "Groom" ? "Woman" : "Man",
+            ageMin: 21,
+            ageMax: 35,
+          }),
+        }).catch(() => {});
       } else {
         login(profileData);
       }
@@ -653,24 +668,17 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                   <span className="text-[10px] text-slate-400 block pl-1">Will be displayed on your profile & used for account recovery</span>
                 </div>
 
-                {/* Looking For Gender Choice */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
-                    Looking For
-                  </label>
+                {/* Profile Gender Choice */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
+                      I Am Creating Profile For <span className="text-[#d97706]">*</span>
+                    </label>
+                    <span className="text-[11px] text-amber-700 font-semibold">
+                      Looking for: {gender === "Groom" ? "👰 Bride (Female)" : "🤵 Groom (Male)"}
+                    </span>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setGender("Bride")}
-                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                        gender === "Bride"
-                          ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
-                          : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span>👰 Bride</span>
-                    </button>
-
                     <button
                       type="button"
                       onClick={() => setGender("Groom")}
@@ -680,9 +688,24 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                           : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                       }`}
                     >
-                      <span>🤵 Groom</span>
+                      <span>🤵 Groom (Male)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setGender("Bride")}
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        gender === "Bride"
+                          ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
+                          : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span>👰 Bride (Female)</span>
                     </button>
                   </div>
+                  <p className="text-[10px] text-slate-400">
+                    Matches will automatically show {gender === "Groom" ? "verified Brides (Women)" : "verified Grooms (Men)"}.
+                  </p>
                 </div>
 
                 {/* Age, Height & Marital Status */}

@@ -100,6 +100,7 @@ export default function DashboardPage() {
       const mob = user?.mobile_number || user?.mobileNumber || "";
       if (mob) mParams.set("userMobile", mob);
       if (user?.email) mParams.set("userEmail", user.email);
+      if (user?.gender) mParams.set("viewerGender", user.gender);
 
       Promise.all([
         fetch(`/api/matches?${mParams.toString()}`).then((r) => r.json()),
@@ -120,7 +121,7 @@ export default function DashboardPage() {
               if (myProfileId && mId === myProfileId) return false;
               if (myMobile && mId === myMobile) return false;
               if (myEmail && mId === myEmail) return false;
-              return m.isEligible;
+              return m.isEligible !== false;
             });
             setRecommended(eligible.slice(0, 3));
             setStats((prev) => ({
@@ -147,7 +148,7 @@ export default function DashboardPage() {
         .catch(console.error)
         .finally(() => setLoading(false));
     }
-  }, [mounted, isAuthenticated, isLoading, router, userId, user?.email, user?.mobileNumber, user?.mobile_number, user?.profileId]);
+  }, [mounted, isAuthenticated, isLoading, router, userId, user?.email, user?.mobileNumber, user?.mobile_number, user?.profileId, user?.gender]);
 
   const runAction = async (otherId: string, action: string) => {
     if (!userId || busyId) return;

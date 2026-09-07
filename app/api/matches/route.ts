@@ -22,6 +22,7 @@ export async function GET(req: Request) {
     const profileIdParam = normalizeId(searchParams.get('profileId'));
     const userMobileParam = normalizeId(searchParams.get('userMobile') || searchParams.get('mobile')).replace(/\D/g, '');
     const userEmailParam = normalizeId(searchParams.get('userEmail') || searchParams.get('email')).toLowerCase();
+    const viewerGenderParam = normalizeId(searchParams.get('viewerGender') || searchParams.get('gender'));
 
     if (!userId && !profileIdParam && !userMobileParam && !userEmailParam) {
       return NextResponse.json({ success: false, message: 'Missing userId parameter' }, { status: 400 });
@@ -41,7 +42,10 @@ export async function GET(req: Request) {
     const digitsOnlyUserId = userId.replace(/\D/g, '');
     if (digitsOnlyUserId.length >= 10) viewerKeys.add(digitsOnlyUserId);
 
-    const viewer: { id: string; gender?: string | null; nakshatra?: string | null; manglik?: string | boolean | null } = { id: effectiveUserId };
+    const viewer: { id: string; gender?: string | null; nakshatra?: string | null; manglik?: string | boolean | null } = {
+      id: effectiveUserId,
+      gender: viewerGenderParam || null,
+    };
 
     // 1. Resolve viewer from Postgres
     if (hasPool) {
@@ -107,12 +111,23 @@ export async function GET(req: Request) {
     }
 
     // ------------------------------------------------------------------
+    // Infer partnerGender from viewer's gender if not explicitly configured
+    // ------------------------------------------------------------------
+    if (!prefs.partnerGender && viewer.gender) {
+      const vG = viewer.gender.toString().trim().toLowerCase();
+      if (['groom', 'man', 'male', 'boy', 'men', 'gents'].includes(vG)) {
+        prefs.partnerGender = 'Woman';
+      } else if (['bride', 'woman', 'female', 'girl', 'women', 'ladies'].includes(vG)) {
+        prefs.partnerGender = 'Man';
+      }
+    }
+
+    // ------------------------------------------------------------------
     // Collect candidate profiles
     // ------------------------------------------------------------------
     const candidates: MatchCandidate[] = [];
 
     // Determine gender filter based on user's lookingFor preference
-    // This is fetched from the viewer's profile (loaded earlier as 'prefs')
     const userLookingFor = (prefs.partnerGender || (prefs as unknown as { gender?: string }).gender || '').toLowerCase();
     
     if (hasPool) {
@@ -121,9 +136,9 @@ export async function GET(req: Request) {
         
         // Build gender filter SQL based on lookingFor preference
         let genderCondition = '';
-        if (userLookingFor === 'groom' || userLookingFor === 'man') {
+        if (['groom', 'man', 'male'].includes(userLookingFor)) {
           genderCondition = "AND LOWER(gender) IN ('male', 'groom', 'man')";
-        } else if (userLookingFor === 'bride' || userLookingFor === 'woman') {
+        } else if (['bride', 'woman', 'female'].includes(userLookingFor)) {
           genderCondition = "AND LOWER(gender) IN ('female', 'bride', 'woman')";
         }
         
@@ -306,7 +321,8 @@ export async function GET(req: Request) {
         matches: totalEligible,
         newCount,
       },
-      matches,
+      matches: eligible,
+      allMatches: matches,
     });
   } catch (e) {
     console.error('Error generating matches:', e);
