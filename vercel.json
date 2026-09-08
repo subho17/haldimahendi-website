@@ -1,0 +1,5 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "cd matrimonial && npm install && npm run build",
+  "outputDirectory": "matrimonial/.next"
+}
