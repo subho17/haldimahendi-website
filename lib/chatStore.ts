@@ -25,6 +25,8 @@ export interface ChatMessage {
   senderId: string;
   recipientId: string;
   content: string;
+  voiceUrl?: string | null; // Optional: audio file URL (Supabase Storage or similar)
+  voiceDuration?: number | null; // Optional: duration in seconds
   createdAt: string;
   readAt?: string | null;
 }
@@ -176,7 +178,7 @@ export async function getThread(conversationId: string, requesterId: string): Pr
     try {
       await ensureChatTables();
       const { rows } = await pool!.query(
-        `SELECT id, conversation_id, sender_id, recipient_id, content, created_at, read_at
+        `SELECT id, conversation_id, sender_id, recipient_id, content, voice_url, voice_duration, created_at, read_at
          FROM chat_messages
          WHERE conversation_id = $1
          ORDER BY created_at ASC`,
@@ -190,6 +192,8 @@ export async function getThread(conversationId: string, requesterId: string): Pr
           senderId: m.sender_id,
           recipientId: m.recipient_id,
           content: m.content,
+          voiceUrl: m.voice_url,
+          voiceDuration: m.voice_duration,
           createdAt: pgIso(m.created_at),
           readAt: m.read_at ? pgIso(m.read_at) : null,
         })),
@@ -210,23 +214,25 @@ export async function sendChatMessage(
   conversationId: string,
   senderId: string,
   recipientId: string,
-  content: string
+  content: string,
+  voiceUrl?: string,
+  voiceDuration?: number
 ): Promise<ChatMessage | null> {
   const cleanContent = (content || '').trim();
-  if (!conversationId || !senderId || !recipientId || !cleanContent) return null;
+  if (!conversationId || !senderId || !recipientId || (!cleanContent && !voiceUrl)) return null;
 
   if (hasPool) {
     try {
       await ensureChatTables();
       const { rows } = await pool!.query(
-        `INSERT INTO chat_messages (conversation_id, sender_id, recipient_id, content)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id, conversation_id, sender_id, recipient_id, content, created_at, read_at`,
-        [conversationId, senderId, recipientId, cleanContent]
+        `INSERT INTO chat_messages (conversation_id, sender_id, recipient_id, content, voice_url, voice_duration)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, conversation_id, sender_id, recipient_id, content, voice_url, voice_duration, created_at, read_at`,
+        [conversationId, senderId, recipientId, cleanContent, voiceUrl, voiceDuration]
       );
       await pool!.query(
         `UPDATE conversations SET last_message = $2, last_message_at = now() WHERE id = $1`,
-        [conversationId, cleanContent]
+        [conversationId, cleanContent || (voiceUrl ? 'Voice message' : '')]
       );
       const m = rows[0];
       return {
@@ -235,6 +241,8 @@ export async function sendChatMessage(
         senderId: m.sender_id,
         recipientId: m.recipient_id,
         content: m.content,
+        voiceUrl: m.voice_url,
+        voiceDuration: m.voice_duration,
         createdAt: pgIso(m.created_at),
         readAt: m.read_at ? pgIso(m.read_at) : null,
       };
@@ -250,6 +258,8 @@ export async function sendChatMessage(
     senderId,
     recipientId,
     content: cleanContent,
+    voiceUrl,
+    voiceDuration,
     createdAt: new Date().toISOString(),
     readAt: null,
   };

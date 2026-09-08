@@ -22,6 +22,7 @@ import {
   EyeOff,
   Mail,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,6 +41,7 @@ import ComboboxInput from "@/components/ui/ComboboxInput";
 interface SignupPageProps {
   onOpenLogin?: () => void;
   onSuccess?: () => void;
+  onClose?: () => void;
   isModal?: boolean;
   initialData?: {
     lookingFor?: string;
@@ -55,7 +57,7 @@ const DEFAULT_AVATARS = [
   { label: "Male Avatar 2", url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250" },
 ];
 
-export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, initialData }: SignupPageProps) {
+export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = false, initialData }: SignupPageProps) {
   const { login } = useAuth();
   const router = useRouter();
 
@@ -179,7 +181,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleaned = mobileNumber.replace(/\D/g, "");
-    if (!otp || otp.length < 4) {
+    const cleanedOtp = otp.replace(/\D/g, "").trim();
+    if (!cleanedOtp || cleanedOtp.length < 4) {
       setError("Please enter the 4-digit OTP code.");
       return;
     }
@@ -191,7 +194,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
       const res = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobileNumber: cleaned, otp }),
+        body: JSON.stringify({ mobileNumber: cleaned, otp: cleanedOtp }),
       });
 
       const data = await res.json();
@@ -372,13 +375,28 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
   };
 
   return (
-    <div className={`w-full font-sans ${isModal ? "p-1 sm:p-2" : "p-2 sm:p-4"}`}>
-      <div className={`bg-white rounded-3xl shadow-2xl shadow-black/10 border border-slate-200/90 p-5 sm:p-8 ${step === 3 ? "max-w-2xl" : "max-w-lg"
-        } w-full mx-auto text-left relative overflow-hidden transition-all duration-300`}>
+    <div className={`w-full font-sans ${isModal ? "p-0" : "p-2 sm:p-4"}`}>
+      <div
+        className={`bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/25 border border-slate-200/90 ${
+          isModal ? "p-4 sm:p-6" : "p-6 sm:p-8"
+        } w-full mx-auto text-left relative transition-all duration-300`}
+        style={{ maxWidth: "620px" }}
+      >
+        {/* Close Button (anchored snugly to the top-right corner of the card) */}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close signup modal"
+            className="absolute -top-2.5 -right-2.5 sm:-top-3 sm:-right-3 z-30 bg-white rounded-full p-1.5 sm:p-2 shadow-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center"
+          >
+            <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          </button>
+        )}
 
         {/* Top Trust Badge */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-[#d97706] font-bold text-xs border border-amber-200/60">
+        <div className="flex items-center justify-between mb-3 pr-6">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-[#d97706] font-bold text-[11px] border border-amber-200/60">
             <Heart className="w-3.5 h-3.5 fill-[#d97706]" />
             <span>
               {step === 1 && "Step 1 of 3 • Mobile Verification"}
@@ -395,7 +413,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
         {/* Step Progress Bar for Step 3 */}
         {step === 3 && (
-          <div className="mb-6 space-y-1.5">
+          <div className="mb-3.5 space-y-1">
             <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full transition-all duration-300"
@@ -413,8 +431,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
         )}
 
         {/* Title Header */}
-        <div className="space-y-1 mb-6">
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+        <div className="space-y-0.5 mb-3.5">
+          <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
             {step === 1 && <span>Create Free Account ✨</span>}
             {step === 2 && <span>Verify Mobile OTP 📱</span>}
             {step === 3 && profileStep === 1 && <span>Basic & Contact Details 👤</span>}
@@ -436,36 +454,36 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
         {/* Info Banner */}
         {infoMessage && (
-          <div className="mb-4 bg-emerald-50 text-emerald-800 text-xs sm:text-sm font-bold p-3 rounded-xl border border-emerald-200 animate-in fade-in text-center shadow-xs">
+          <div className="mb-3 bg-emerald-50 text-emerald-800 text-xs font-bold py-2 px-3.5 rounded-xl border border-emerald-200 animate-in fade-in text-center shadow-xs">
             <span>{infoMessage}</span>
           </div>
         )}
 
         {/* Error / Already Registered Alert Banner */}
         {error && (
-          <div className={`mb-5 p-4 rounded-2xl border animate-in fade-in ${isExistingUser ? "bg-amber-50 text-amber-900 border-amber-200" : "bg-rose-50 text-rose-600 border-rose-100"
+          <div className={`mb-3.5 p-3.5 rounded-xl border animate-in fade-in ${isExistingUser ? "bg-amber-50 text-amber-900 border-amber-200" : "bg-rose-50 text-rose-600 border-rose-100"
             }`}>
             <div className="flex items-start gap-2.5">
-              <AlertCircle className={`w-5 h-5 shrink-0 mt-0.5 ${isExistingUser ? "text-amber-600" : "text-rose-600"}`} />
+              <AlertCircle className={`w-4 h-4 shrink-0 mt-0.5 ${isExistingUser ? "text-amber-600" : "text-rose-600"}`} />
               <div className="flex-1">
-                <p className="text-xs sm:text-sm font-bold">{error}</p>
+                <p className="text-xs font-bold">{error}</p>
                 {isExistingUser && (
-                  <div className="mt-3">
+                  <div className="mt-2.5">
                     {onOpenLogin ? (
                       <button
                         type="button"
                         onClick={onOpenLogin}
-                        className="px-4 py-2 bg-[#d97706] hover:bg-[#b45309] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+                        className="px-3.5 py-1.5 bg-[#d97706] hover:bg-[#b45309] text-white font-bold text-xs rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
                       >
-                        <LogIn className="w-4 h-4" />
+                        <LogIn className="w-3.5 h-3.5" />
                         <span>Sign In to Your Account Now</span>
                       </button>
                     ) : (
                       <Link
                         href="/auth/login"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#d97706] hover:bg-[#b45309] text-white font-bold text-xs rounded-xl shadow-md"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#d97706] hover:bg-[#b45309] text-white font-bold text-xs rounded-lg shadow-xs"
                       >
-                        <LogIn className="w-4 h-4" />
+                        <LogIn className="w-3.5 h-3.5" />
                         <span>Sign In to Your Account Now</span>
                       </Link>
                     )}
@@ -491,7 +509,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                   onChange={(e) => setMobileNumber(e.target.value)}
                   placeholder="+91 98765 43210"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-amber-500/10 outline-hidden transition placeholder:text-slate-400"
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#d97706] focus:ring-2 focus:ring-amber-500/10 outline-hidden transition placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -499,10 +517,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+              className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3 px-5 rounded-xl shadow-md shadow-amber-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Get Verification OTP</span>
@@ -515,23 +533,31 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
         {/* Step 2: OTP Verification */}
         {step === 2 && (
-          <form onSubmit={handleVerifyOtp} className="space-y-5 animate-in fade-in">
-            <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-2 border border-amber-100">
-              <KeyRound className="w-8 h-8 text-[#d97706]" />
+          <form onSubmit={handleVerifyOtp} className="space-y-4 animate-in fade-in">
+            <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-1 border border-amber-100">
+              <KeyRound className="w-7 h-7 text-[#d97706]" />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider text-center">
+              <label htmlFor="signup-otp-input" className="text-xs font-bold text-slate-700 block uppercase tracking-wider text-center">
                 Enter 4-Digit OTP <span className="text-[#d97706]">*</span>
               </label>
               <input
+                id="signup-otp-input"
                 type="text"
-                maxLength={4}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="1 2 3 4"
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/\D/g, "").slice(0, 6);
+                  setOtp(cleaned);
+                  if (error) setError("");
+                }}
+                placeholder="• • • •"
                 required
-                className="w-full text-center tracking-widest text-2xl py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-extrabold focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-amber-500/10 outline-hidden"
+                className="w-full text-center tracking-[0.25em] font-mono text-2xl py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-extrabold focus:bg-white focus:border-[#d97706] focus:ring-2 focus:ring-amber-500/10 outline-hidden transition placeholder:tracking-normal placeholder:font-sans placeholder:text-slate-400"
               />
             </div>
 
@@ -556,14 +582,14 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
               </button>
             </div>
 
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-3 pt-1">
               <button
                 type="button"
                 onClick={() => {
                   setStep(1);
                   setInfoMessage("");
                 }}
-                className="w-1/3 py-3.5 px-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer"
+                className="w-1/3 py-2.5 px-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs sm:text-sm hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer transition"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
@@ -572,10 +598,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-2/3 bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+                className="w-2/3 bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-amber-500/20 active:scale-[0.99] transition-all text-xs sm:text-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-75"
               >
                 {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <span>Verify & Continue</span>
@@ -589,20 +615,20 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
         {/* Step 3: Complete Full Matrimonial Profile Form */}
         {step === 3 && (
-          <form onSubmit={handleNextProfileStep} className="space-y-5 animate-in fade-in">
+          <form onSubmit={handleNextProfileStep} className="space-y-3.5 animate-in fade-in">
 
             {/* ----------------- SUB-STEP 1: Basic & Contact Details ----------------- */}
             {profileStep === 1 && (
-              <div className="space-y-4 animate-in slide-in-from-right-2 fade-in duration-300">
+              <div className="space-y-3.5 animate-in slide-in-from-right-2 fade-in duration-300">
                 {/* Avatar Selector */}
-                <div className="flex flex-col items-center justify-center gap-3 mb-2">
+                <div className="flex flex-col items-center justify-center gap-2 mb-1">
                   <div className="relative group">
                     <Image
                       src={avatarUrl}
                       alt="Profile Avatar"
-                      width={84}
-                      height={84}
-                      className="rounded-full object-cover border-4 border-amber-100 shadow-md"
+                      width={72}
+                      height={72}
+                      className="rounded-full object-cover border-2 border-amber-200 shadow-md"
                     />
                     <label className="absolute bottom-0 right-0 p-1.5 rounded-full bg-[#d97706] text-white cursor-pointer shadow-md hover:scale-105 transition">
                       <Camera className="w-3.5 h-3.5" />
@@ -615,16 +641,16 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </label>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-0.5">
                     {DEFAULT_AVATARS.map((av, idx) => (
                       <button
                         key={idx}
                         type="button"
                         onClick={() => setAvatarUrl(av.url)}
-                        className={`relative w-8 h-8 rounded-full overflow-hidden border-2 transition ${avatarUrl === av.url ? "border-[#d97706] scale-110 shadow-xs" : "border-slate-200 opacity-70"
+                        className={`relative w-7 h-7 rounded-full overflow-hidden border-2 transition ${avatarUrl === av.url ? "border-[#d97706] scale-110 shadow-xs" : "border-slate-200 opacity-70"
                           }`}
                       >
-                        <Image src={av.url} alt={av.label} width={32} height={32} className="w-full h-full object-cover" />
+                        <Image src={av.url} alt={av.label} width={28} height={28} className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
@@ -637,35 +663,35 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     Full Display Name <span className="text-[#d97706]">*</span>
                   </label>
                   <div className="relative">
-                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="e.g. Rahul Sharma"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs font-bold focus:bg-white focus:border-[#d97706] outline-hidden transition"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs font-bold focus:bg-white focus:border-[#d97706] outline-hidden transition"
                     />
                   </div>
                 </div>
 
-                {/* Email Address Input (REQUIRED / REQUESTED) */}
+                {/* Email Address Input */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
                     Email ID <span className="text-[#d97706]">*</span>
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="e.g. rahul.sharma@example.com"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs font-bold focus:bg-white focus:border-[#d97706] outline-hidden transition"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-xs font-bold focus:bg-white focus:border-[#d97706] outline-hidden transition"
                     />
                   </div>
-                  <span className="text-[10px] text-slate-400 block pl-1">Will be displayed on your profile & used for account recovery</span>
+                  <span className="text-[10px] text-slate-400 block pl-1">Displayed on profile & used for account recovery</span>
                 </div>
 
                 {/* Profile Gender Choice */}
@@ -674,15 +700,15 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
                       I Am Creating Profile For <span className="text-[#d97706]">*</span>
                     </label>
-                    <span className="text-[11px] text-amber-700 font-semibold">
-                      Looking for: {gender === "Groom" ? "👰 Bride (Female)" : "🤵 Groom (Male)"}
+                    <span className="text-xs text-amber-700 font-semibold">
+                      Looking for: {gender === "Groom" ? "👰 Bride" : "🤵 Groom"}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setGender("Groom")}
-                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                         gender === "Groom"
                           ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
                           : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
@@ -694,7 +720,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     <button
                       type="button"
                       onClick={() => setGender("Bride")}
-                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                         gender === "Bride"
                           ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
                           : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
@@ -718,7 +744,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                       max="80"
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                     />
                   </div>
 
@@ -727,7 +753,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     <select
                       value={height}
                       onChange={(e) => setHeight(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706] cursor-pointer"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706] cursor-pointer"
                     >
                       <option value="5'0&quot;">5&apos;0&quot;</option>
                       <option value="5'2&quot;">5&apos;2&quot;</option>
@@ -745,7 +771,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     <select
                       value={maritalStatus}
                       onChange={(e) => setMaritalStatus(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706] cursor-pointer"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706] cursor-pointer"
                     >
                       <option value="Never Married">Never Married</option>
                       <option value="Divorced">Divorced</option>
@@ -757,34 +783,34 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
               </div>
             )}
 
-            {/* ----------------- SUB-STEP 2: Location, Religion & Education (Screenshot 1) ----------------- */}
+            {/* ----------------- SUB-STEP 2: Location, Religion & Education ----------------- */}
             {profileStep === 2 && (
-              <div className="space-y-4 animate-in slide-in-from-right-2 fade-in duration-300">
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+              <div className="space-y-3.5 animate-in slide-in-from-right-2 fade-in duration-300">
+                <div className="bg-slate-50/50 p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-3">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/80 pb-2">
                     <MapPin className="w-4 h-4 text-[#d97706]" />
                     <span>Location, Religion & Education</span>
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* current City */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 block">current City</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Current City */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700 block">Current City</label>
                       <input
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        placeholder="punjab"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        placeholder="e.g. Mumbai, Kolkata, Delhi"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
                       />
                     </div>
 
                     {/* Religion */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Religion</label>
                       <select
                         value={religion}
                         onChange={(e) => setReligion(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select Religion</option>
                         <option value="Hindu">Hindu</option>
@@ -799,7 +825,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Mother Tongue */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Mother Tongue</label>
                       <ComboboxInput
                         value={motherTongue}
@@ -810,7 +836,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Highest Education */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Highest Education</label>
                       <ComboboxInput
                         value={education}
@@ -821,7 +847,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Profession / Occupation */}
-                    <div className="space-y-1.5 sm:col-span-2">
+                    <div className="space-y-1 sm:col-span-2">
                       <label className="text-xs font-bold text-slate-700 block">Profession / Occupation</label>
                       <ComboboxInput
                         value={profession}
@@ -835,59 +861,59 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
               </div>
             )}
 
-            {/* ----------------- SUB-STEP 3: Astrology & Horoscope (Kundli) (Screenshot 2) ----------------- */}
+            {/* ----------------- SUB-STEP 3: Astrology & Horoscope (Kundli) ----------------- */}
             {profileStep === 3 && (
-              <div className="space-y-4 animate-in slide-in-from-right-2 fade-in duration-300">
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+              <div className="space-y-3.5 animate-in slide-in-from-right-2 fade-in duration-300">
+                <div className="bg-slate-50/50 p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-3">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/80 pb-2">
                     <Sparkles className="w-4 h-4 text-[#d97706]" />
                     <span>Astrology & Horoscope (Kundli)</span>
                   </h4>
-                  <p className="text-[11px] text-slate-500 -mt-2">
+                  <p className="text-xs text-slate-500 -mt-1">
                     Used for kundli compatibility scoring in matches.
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Date of Birth */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Date of Birth</label>
                       <input
                         type="date"
                         value={dob}
                         onChange={(e) => setDob(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
                       />
                     </div>
 
                     {/* Birth Time */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Birth Time</label>
                       <input
                         type="time"
                         value={birthTime}
                         onChange={(e) => setBirthTime(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
                       />
                     </div>
 
                     {/* Birth Place */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Birth Place</label>
                       <input
                         type="text"
                         value={birthPlace}
                         onChange={(e) => setBirthPlace(e.target.value)}
                         placeholder="e.g. Kolkata, West Bengal"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
                       />
                     </div>
 
                     {/* Rashi (Moon Sign) */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Rashi (Moon Sign)</label>
                       <select
                         value={rashi}
                         onChange={(e) => setRashi(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select Rashi</option>
                         {RASHIS.map((r) => (
@@ -897,12 +923,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Nakshatra (Star) */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Nakshatra (Star)</label>
                       <select
                         value={nakshatra}
                         onChange={(e) => setNakshatra(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select Nakshatra</option>
                         {NAKSHATRAS.map((n) => (
@@ -912,12 +938,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Manglik (Mangal Dosh) */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Manglik (Mangal Dosh)</label>
                       <select
                         value={manglik}
                         onChange={(e) => setManglik(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Not sure / Skip</option>
                         <option value="No">No</option>
@@ -927,14 +953,14 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Gotra */}
-                    <div className="space-y-1.5 sm:col-span-2">
+                    <div className="space-y-1 sm:col-span-2">
                       <label className="text-xs font-bold text-slate-700 block">Gotra</label>
                       <input
                         type="text"
                         value={gotra}
                         onChange={(e) => setGotra(e.target.value)}
                         placeholder="e.g. Kashyap"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
                       />
                     </div>
                   </div>
@@ -942,23 +968,23 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
               </div>
             )}
 
-            {/* ----------------- SUB-STEP 4: Lifestyle & Family Details (Screenshot 3) ----------------- */}
+            {/* ----------------- SUB-STEP 4: Lifestyle & Family Details ----------------- */}
             {profileStep === 4 && (
-              <div className="space-y-5 animate-in slide-in-from-right-2 fade-in duration-300">
+              <div className="space-y-3.5 animate-in slide-in-from-right-2 fade-in duration-300">
                 {/* LIFESTYLE CARD */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+                <div className="bg-slate-50/50 p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-3">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/80 pb-2">
                     <Heart className="w-4 h-4 text-[#d97706]" />
                     <span>Lifestyle</span>
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Diet */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Diet</label>
                       <select
                         value={diet}
                         onChange={(e) => setDiet(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select</option>
                         <option value="Vegetarian">Vegetarian</option>
@@ -970,12 +996,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Smoking */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Smoking</label>
                       <select
                         value={smoking}
                         onChange={(e) => setSmoking(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select</option>
                         <option value="No">No</option>
@@ -985,12 +1011,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Drinking */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Drinking</label>
                       <select
                         value={drinking}
                         onChange={(e) => setDrinking(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select</option>
                         <option value="No">No</option>
@@ -1000,12 +1026,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Disability */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Disability</label>
                       <select
                         value={disability}
                         onChange={(e) => setDisability(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select</option>
                         <option value="None">None</option>
@@ -1019,14 +1045,14 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                 </div>
 
                 {/* FAMILY DETAILS CARD */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+                <div className="bg-slate-50/50 p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-3">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/80 pb-2">
                     <Users className="w-4 h-4 text-[#d97706]" />
                     <span>Family Details</span>
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Father's Occupation */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Father&apos;s Occupation</label>
                       <ComboboxInput
                         value={fatherOccupation}
@@ -1037,7 +1063,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Mother's Occupation */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Mother&apos;s Occupation</label>
                       <ComboboxInput
                         value={motherOccupation}
@@ -1048,24 +1074,24 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Siblings */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Siblings</label>
                       <input
                         type="text"
                         value={siblings}
                         onChange={(e) => setSiblings(e.target.value)}
                         placeholder="e.g. 1 brother, 1 sister"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
                       />
                     </div>
 
                     {/* Family Type */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 block">Family Type</label>
                       <select
                         value={familyType}
                         onChange={(e) => setFamilyType(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select</option>
                         <option value="Nuclear Family">Nuclear Family</option>
@@ -1075,12 +1101,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </div>
 
                     {/* Family Values */}
-                    <div className="space-y-1.5 sm:col-span-2">
+                    <div className="space-y-1 sm:col-span-2">
                       <label className="text-xs font-bold text-slate-700 block">Family Values</label>
                       <select
                         value={familyValues}
                         onChange={(e) => setFamilyValues(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
                         <option value="">Select</option>
                         <option value="Traditional">Traditional</option>
@@ -1095,26 +1121,26 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
             {/* ----------------- SUB-STEP 5: Security & Bio ----------------- */}
             {profileStep === 5 && (
-              <div className="space-y-4 animate-in slide-in-from-right-2 fade-in duration-300">
+              <div className="space-y-3.5 animate-in slide-in-from-right-2 fade-in duration-300">
                 {/* About Myself (Bio) */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-2">
-                  <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <div className="bg-slate-50/50 p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-2">
+                  <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4 text-[#d97706]" />
                     <span>About Myself (Bio)</span>
                   </label>
                   <textarea
-                    rows={3}
+                    rows={2}
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all leading-relaxed"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all leading-relaxed"
                     placeholder="Describe your interests, lifestyle, family, and partner expectations..."
                   />
                 </div>
 
                 {/* Password (optional, for password login later) */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-3">
+                <div className="bg-slate-50/50 p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-2.5">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                       <Lock className="w-4 h-4 text-[#d97706]" />
                       <span>Create Account Password (Optional)</span>
                     </h4>
@@ -1123,7 +1149,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
                     <div className="relative">
                       <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
@@ -1131,12 +1157,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Create password (min 6 chars)"
-                        className="w-full pl-8 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                        className="w-full pl-8 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -1148,7 +1174,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirm password"
-                        className="w-full pl-8 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706]"
+                        className="w-full pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706]"
                       />
                     </div>
                   </div>
@@ -1157,13 +1183,13 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
             )}
 
             {/* Navigation buttons */}
-            <div className="flex gap-3 mt-4 pt-2">
+            <div className="flex gap-3 mt-3.5 pt-1">
               {profileStep > 1 ? (
                 <button
                   type="button"
                   onClick={() => setProfileStep((prev) => (prev - 1) as 1 | 2 | 3 | 4 | 5)}
                   disabled={isLoading}
-                  className="w-1/3 py-3.5 px-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs sm:text-sm hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="w-1/3 py-2.5 px-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs sm:text-sm hover:bg-slate-50 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Back</span>
@@ -1173,7 +1199,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={isLoading}
-                  className="w-1/3 py-3.5 px-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs sm:text-sm hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="w-1/3 py-2.5 px-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs sm:text-sm hover:bg-slate-50 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Back</span>
@@ -1183,10 +1209,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.99] transition-all text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+                className="flex-1 bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-amber-500/20 active:scale-[0.99] transition-all text-xs sm:text-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-75"
               >
                 {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : profileStep < 5 ? (
                   <>
                     <span>Next: {
@@ -1209,7 +1235,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
         )}
 
         {/* Social Proof Footer */}
-        <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[11px] text-slate-500 font-medium">
+        <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-center gap-5 text-xs text-slate-500 font-medium">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             <span>100% Privacy Control</span>
@@ -1222,7 +1248,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, isModal = false, in
 
         {/* Switch to Login */}
         {step === 1 && (
-          <div className="mt-4 pt-3 border-t border-slate-100 text-center">
+          <div className="mt-3 pt-2.5 border-t border-slate-100 text-center">
             {onOpenLogin ? (
               <button
                 type="button"

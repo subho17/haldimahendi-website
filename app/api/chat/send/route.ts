@@ -10,10 +10,13 @@ function normalizeId(v?: string | null): string {
 }
 
 // POST /api/chat/send
-// Body: { conversationId, senderId, recipientId, content }
+// Body: { conversationId, senderId, recipientId, content, voiceUrl?, voiceDuration? }
 // Sends a message. Requires the conversation to exist, sender/recipient to
 // be its two participants, and the two users to be connected via an
 // accepted interest.
+// content: text message (required if voiceUrl not provided, or can be empty for voice-only)
+// voiceUrl: optional audio file URL (Supabase Storage or similar)
+// voiceDuration: optional duration in seconds
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -21,6 +24,8 @@ export async function POST(req: Request) {
     const senderId = normalizeId(body.senderId);
     const recipientId = normalizeId(body.recipientId);
     const content = String(body.content || '').trim();
+    const voiceUrl = String(body.voiceUrl || '').trim();
+    const voiceDuration = body.voiceDuration !== undefined ? Number(body.voiceDuration) : undefined;
 
     if (!conversationId || !senderId || !recipientId) {
       return NextResponse.json(
@@ -28,11 +33,10 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    if (!content) {
-      return NextResponse.json({ success: false, message: 'Message cannot be empty' }, { status: 400 });
-    }
-    if (senderId === recipientId) {
-      return NextResponse.json({ success: false, message: 'Cannot message yourself' }, { status: 400 });
+
+    // Validate: either text content or voice message must be provided
+    if (!content && !voiceUrl) {
+      return NextResponse.json({ success: false, message: 'Either text or voice message required' }, { status: 400 });
     }
 
     const conversation = await getConversationById(conversationId);
@@ -64,7 +68,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const message = await sendChatMessage(conversationId, senderId, recipientId, content);
+    const message = await sendChatMessage(conversationId, senderId, recipientId, content, voiceUrl, voiceDuration);
     if (!message) {
       return NextResponse.json({ success: false, message: 'Failed to send message' }, { status: 500 });
     }
@@ -73,10 +77,10 @@ export async function POST(req: Request) {
     try {
       const lookup = await buildProfileLookup();
       const sender = lookup.get(senderId);
-      await createNotification(recipientId, 'message', `${sender?.name || 'A member'} sent you a message: "${content.slice(0, 80)}"`, {
+      const preview = voiceUrl ? '(voice message)' : (content.slice(0, 80) || '(no text)');
+      await createNotification(recipientId, 'message', `${sender?.name || 'A member'} sent you ${preview}`, {
         actorId: senderId,
-        title: 'New Message',
-        data: { conversationId, profileId: senderId },
+        data: { conversationId, profileId: senderId, ...(voiceDuration !== undefined ? { voiceDuration: String(voiceDuration) } : {}) },
       });
     } catch (e) {
       console.warn('[Chat] Failed to create message notification:', e);

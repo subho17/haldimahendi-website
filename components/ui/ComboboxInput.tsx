@@ -54,7 +54,7 @@ export default function ComboboxInput({
           required={required}
           className={
             className ||
-            "w-full pl-3.5 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+            "w-full pl-3 pr-8 py-1.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
           }
         />
         <button
