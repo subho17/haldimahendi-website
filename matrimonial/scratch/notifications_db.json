@@ -1,0 +1,164 @@
+{
+  "notifications": [
+    {
+      "id": "nt_1788432847582_24po",
+      "userId": "6409",
+      "actorId": "4829",
+      "type": "message",
+      "title": "New Message",
+      "message": "rahul sent you a message: \"hu\"",
+      "data": {
+        "conversationId": "34ed973c-58ce-400c-b800-313e61dbaf08",
+        "profileId": "4829"
+      },
+      "read": true,
+      "createdAt": "2026-09-03T10:54:07.582Z"
+    },
+    {
+      "id": "nt_1788432801275_e1tf",
+      "userId": "6409",
+      "actorId": "4829",
+      "type": "message",
+      "title": "New Message",
+      "message": "rahul sent you a message: \"whats up\"",
+      "data": {
+        "conversationId": "34ed973c-58ce-400c-b800-313e61dbaf08",
+        "profileId": "4829"
+      },
+      "read": true,
+      "createdAt": "2026-09-03T10:53:21.275Z"
+    },
+    {
+      "id": "nt_1788432115680_nd9t",
+      "userId": "4829",
+      "actorId": "6409",
+      "type": "message",
+      "title": "New Message",
+      "message": "Pooja Sharma sent you a message: \"hello rahul\"",
+      "data": {
+        "conversationId": "34ed973c-58ce-400c-b800-313e61dbaf08",
+        "profileId": "6409"
+      },
+      "read": true,
+      "createdAt": "2026-09-03T10:41:55.680Z"
+    },
+    {
+      "id": "nt_1788432094346_bn9q",
+      "userId": "6409",
+      "actorId": "4829",
+      "type": "message",
+      "title": "New Message",
+      "message": "rahul sent you a message: \"hi pooja\"",
+      "data": {
+        "conversationId": "34ed973c-58ce-400c-b800-313e61dbaf08",
+        "profileId": "4829"
+      },
+      "read": true,
+      "createdAt": "2026-09-03T10:41:34.346Z"
+    },
+    {
+      "id": "nt_1788432081845_tg4q",
+      "userId": "6409",
+      "actorId": "4829",
+      "type": "accept",
+      "title": "Interest Accepted",
+      "message": "rahul accepted your interest. You can now chat!",
+      "data": {
+        "profileId": "4829"
+      },
+      "read": true,
+      "createdAt": "2026-09-03T10:41:21.845Z"
+    },
+    {
+      "id": "nt_1788432049554_uwal",
+      "userId": "4829",
+      "actorId": "6409",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "Pooja Sharma sent you an interest.",
+      "data": {
+        "profileId": "6409"
+      },
+      "read": true,
+      "createdAt": "2026-09-03T10:40:49.554Z"
+    },
+    {
+      "id": "nt_1788431113255_ogbi",
+      "userId": "SH880057",
+      "actorId": "4829",
+      "type": "accept",
+      "title": "Interest Accepted",
+      "message": "rahul accepted your interest. You can now chat!",
+      "data": {
+        "profileId": "4829"
+      },
+      "read": false,
+      "createdAt": "2026-09-03T10:25:13.255Z"
+    },
+    {
+      "id": "nt_1788430560620_uvn6",
+      "userId": "3273",
+      "actorId": "4829",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "rahul sent you an interest.",
+      "data": {
+        "profileId": "4829"
+      },
+      "read": false,
+      "createdAt": "2026-09-03T10:16:00.620Z"
+    },
+    {
+      "id": "nt_1788421143533_vh8c",
+      "userId": "4830",
+      "actorId": "4829",
+      "type": "accept",
+      "title": "Interest Accepted",
+      "message": "rahul accepted your interest. You can now chat!",
+      "data": {
+        "profileId": "4829"
+      },
+      "read": false,
+      "createdAt": "2026-09-03T07:39:03.533Z"
+    },
+    {
+      "id": "nt_1788292745484_96bf",
+      "userId": "4830",
+      "actorId": "4829",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "rahul sent you an interest.",
+      "data": {
+        "profileId": "4829"
+      },
+      "read": false,
+      "createdAt": "2026-09-01T19:59:05.484Z"
+    },
+    {
+      "id": "nt_1788291662978_99gr",
+      "userId": "4830",
+      "actorId": "4829",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "rahul sent you an interest.",
+      "data": {
+        "profileId": "4829"
+      },
+      "read": false,
+      "createdAt": "2026-09-01T19:41:02.978Z"
+    },
+    {
+      "id": "nt_1788290339099_52zg",
+      "userId": "4830",
+      "actorId": "4829",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "rahul sent you an interest.",
+      "data": {
+        "profileId": "4829"
+      },
+      "read": false,
+      "createdAt": "2026-09-01T19:18:59.099Z"
+    }
+  ]
+}
