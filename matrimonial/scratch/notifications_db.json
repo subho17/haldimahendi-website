@@ -1,6 +1,19 @@
 {
   "notifications": [
     {
+      "id": "nt_1788942306087_8bgw",
+      "userId": "user-3",
+      "actorId": "9389",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "Member sent you an interest.",
+      "data": {
+        "profileId": "9389"
+      },
+      "read": false,
+      "createdAt": "2026-09-09T08:25:06.087Z"
+    },
+    {
       "id": "nt_1788432847582_24po",
       "userId": "6409",
       "actorId": "4829",
