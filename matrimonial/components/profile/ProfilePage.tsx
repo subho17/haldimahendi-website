@@ -518,19 +518,34 @@ export default function ProfilePage() {
           <div className="p-6 sm:p-8 pt-6">
 
             {/* Profile Completion Bar */}
-            <div className="my-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className={`my-6 p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 transition-colors ${
+              completionPercentage === 100
+                ? "bg-emerald-50/70 border-emerald-200/80 shadow-2xs"
+                : "bg-slate-50 border-slate-100"
+            }`}>
               <div className="w-full sm:w-1/2 space-y-1 text-center sm:text-left">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                  <span>Profile Strength</span>
-                  <span className="text-[#d97706]">{completionPercentage}% Completed</span>
+                  <span className="flex items-center gap-1.5">
+                    Profile Strength
+                    {completionPercentage === 100 && (
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600 inline" />
+                    )}
+                  </span>
+                  <span className={completionPercentage === 100 ? "text-emerald-700 font-extrabold" : "text-[#d97706]"}>
+                    {completionPercentage}% Completed
+                  </span>
                 </div>
-                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div className={`w-full h-2 rounded-full overflow-hidden ${completionPercentage === 100 ? "bg-emerald-100" : "bg-slate-200"}`}>
                   <div
-                    className="h-full bg-gradient-to-r from-rose-500 to-[#d97706] rounded-full transition-all duration-500"
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      completionPercentage === 100
+                        ? "bg-gradient-to-r from-emerald-500 to-green-600 shadow-xs"
+                        : "bg-gradient-to-r from-rose-500 to-[#d97706]"
+                    }`}
                     style={{ width: `${completionPercentage}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-slate-500 pt-0.5">
+                <p className={`text-[10px] pt-0.5 ${completionPercentage === 100 ? "text-emerald-700 font-semibold" : "text-slate-500"}`}>
                   {completionPercentage === 100
                     ? "🎉 Perfect! Your profile is 100% complete and fully verified."
                     : verificationStatus !== "approved"
@@ -538,8 +553,12 @@ export default function ProfilePage() {
                       : "💡 Tip: Fill in the remaining profile fields to reach 100% profile strength."}
                 </p>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium text-center sm:text-right">
-                ✨ A 100% complete profile gets up to <strong className="text-slate-800">3x more interest requests</strong>.
+              <p className={`text-[11px] font-medium text-center sm:text-right ${completionPercentage === 100 ? "text-emerald-800" : "text-slate-500"}`}>
+                {completionPercentage === 100 ? (
+                  <>✨ Your profile is <strong className="text-emerald-900 font-bold">100% complete</strong> — eligible for maximum matching priority &amp; trust badge!</>
+                ) : (
+                  <>✨ A 100% complete profile gets up to <strong className="text-slate-800">3x more interest requests</strong>.</>
+                )}
               </p>
             </div>
 

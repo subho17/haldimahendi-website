@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { submitVerification, getVerificationStatus } from '@/lib/verifyStore';
 import { getSupabaseClient, DEFAULT_BUCKET } from '@/lib/supabaseClient';
+import { isImageFile } from '@/lib/imageUtils';
 
 const VERIFICATION_UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads', 'verification');
 
@@ -22,12 +23,24 @@ function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
 }
 
+function resolveContentType(file: File, fileExt: string): string {
+  const mime = (file.type || '').toLowerCase();
+  if (mime && mime !== 'application/octet-stream') {
+    return mime;
+  }
+  if (fileExt === 'heic' || fileExt === 'heif') return 'image/heic';
+  if (fileExt === 'png') return 'image/png';
+  if (fileExt === 'webp') return 'image/webp';
+  return 'image/jpeg';
+}
+
 async function saveFile(file: File, userId: string, prefix: string): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
   const fileNameStr = file.name || 'upload.jpg';
   const fileExt = fileNameStr.split('.').pop()?.toLowerCase() || 'jpg';
   const cleanPrefix = prefix.replace(/[^a-zA-Z0-9]/g, '_');
   const fileName = `verification/${userId}_${cleanPrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
+  const contentType = resolveContentType(file, fileExt);
 
   // 1. Try uploading to Supabase Storage first (primary for production & serverless)
   const supabase = getSupabaseClient();
@@ -37,7 +50,7 @@ async function saveFile(file: File, userId: string, prefix: string): Promise<str
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(fileName, buffer, {
-          contentType: file.type || 'image/jpeg',
+          contentType,
           upsert: true,
           cacheControl: '3600',
         });
@@ -68,7 +81,7 @@ async function saveFile(file: File, userId: string, prefix: string): Promise<str
     console.warn('[Verification] Local filesystem write failed (read-only environment):', fsErr);
     // 3. Fallback: Base64 data URL if on read-only serverless and Supabase is unavailable
     const base64 = buffer.toString('base64');
-    const mime = file.type || 'image/jpeg';
+    const mime = contentType || 'image/jpeg';
     return `data:${mime};base64,${base64}`;
   }
 }
@@ -126,10 +139,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Both a clear selfie and an ID document are required' }, { status: 400 });
     }
 
-    // Only accept image uploads for safety.
-    const isImage = (f: File) => (f.type || '').startsWith('image/');
-    if (!isImage(selfie) || !isImage(document)) {
-      return NextResponse.json({ success: false, message: 'Please upload image files only' }, { status: 400 });
+    // Only accept image uploads for safety (supports JPG, PNG, WebP, HEIC/HEIF).
+    if (!isImageFile(selfie) || !isImageFile(document)) {
+      return NextResponse.json({ success: false, message: 'Please upload image files only (JPG, PNG, WebP, HEIC)' }, { status: 400 });
     }
 
     const selfieUrl = await saveFile(selfie, userId, 'selfie');

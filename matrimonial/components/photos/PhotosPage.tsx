@@ -8,6 +8,7 @@ import { Camera, Upload, Loader2, Trash2, Star, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useMounted } from "@/hooks/useMounted";
+import { ACCEPTED_IMAGE_TYPES, convertHeicToJpeg, isImageFile } from "@/lib/imageUtils";
 
 interface PhotoRecord {
   id: string;
@@ -64,11 +65,12 @@ export default function PhotosPage() {
   }, [mounted, isAuthenticated, isLoading, userId, router]);
 
   const uploadFiles = async (files: FileList | File[]) => {
-    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (list.length === 0) return;
+    const validFiles = Array.from(files).filter((f) => isImageFile(f));
+    if (validFiles.length === 0) return;
     setUploading(true);
     try {
-      for (const file of list) {
+      const convertedFiles = await Promise.all(validFiles.map((f) => convertHeicToJpeg(f)));
+      for (const file of convertedFiles) {
         const form = new FormData();
         form.append("file", file);
         form.append("userId", userId);
@@ -157,7 +159,7 @@ export default function PhotosPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept={ACCEPTED_IMAGE_TYPES}
                 multiple
                 className="hidden"
                 onChange={(e) => {

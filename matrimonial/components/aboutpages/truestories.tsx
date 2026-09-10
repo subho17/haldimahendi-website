@@ -5,46 +5,46 @@ import { ArrowRight } from 'lucide-react';
 const stories = [
   {
     name: "Vaibhav & Alka",
-    story: "Alka and Me met via Shaadi.com in 2021. We both liked good conversations & connected over common interests like reading & traveling. I was impressed with Alka's clear",
+    story: "Alka and I connected on Haldimehendi.com in 2021. We both bonded over meaningful conversations, literature, and travel. Today, we are happily married!",
     image: "/story1.png"
   },
   {
     name: "Shweta & Prateek",
-    story: "Thanks Shaadi.com as I could find my partner here and got married on 29th November 2023.",
+    story: "Thanks to Haldimehendi.com, I found my true life partner here and we tied the knot on 29th November 2023. Couldn't have asked for a smoother journey.",
     image: "/story2.png"
   },
   {
     name: "Harsh & Himanshi",
-    story: "I created my profile here on suggestion of my very close friend who also got her partner from this platform. I also met my partner Harsh here. I am grateful to Shaadi.com",
+    story: "I created my profile on the recommendation of my close friend who also met her spouse on Haldimehendi. We connected instantly and our families clicked right away.",
     image: "/story3.png"
   },
   {
     name: "Piyas & Anindita",
-    story: "Thanks to you (This App) My life has settled through this App.",
-    image: "/story2.png" // Reusing due to image gen limits
+    story: "Haldimehendi's intuitive filters and verified profiles made finding someone with shared cultural roots seamless. We are so grateful!",
+    image: "/story2.png"
   },
   {
     name: "Devesh & Jyoti",
-    story: "I am very thankful to Shaadi.com Application where I've found my love for Life. It was the time when we both were struggling to find out a good Life Partner to spend",
-    image: "/story3.png" // Reusing due to image gen limits
+    story: "We are incredibly thankful to the Haldimehendi platform where I found the love of my life. The privacy controls and direct chat made the initial icebreaking effortless.",
+    image: "/story3.png"
   },
   {
     name: "Akash & Rani",
-    story: "We connected through Shaadi.com and met in person. Then we shared each other's profile with our parents, and came to know that it was already shared but was",
-    image: "/story1.png" // Reusing due to image gen limits
+    story: "We connected through Haldimehendi.com and after thoughtful conversations, met in person. Our vision of family and life matched completely.",
+    image: "/story1.png"
   }
 ];
 
 export default function TrueStories() {
   return (
-    <main className="flex-1 max-w-4xl">
-      <h1 className="text-3xl font-semibold text-[#253252] mb-8">True Stories - Shaadi.com</h1>
+    <div className="w-full">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">True Stories — Haldimehendi</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left Column */}
         <div className="flex flex-col gap-6">
           {stories.filter((_, i) => i % 2 === 0).map((s, idx) => (
-            <div key={idx} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-shadow">
+            <div key={idx} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-shadow">
               <div className="relative w-full">
                 <Image 
                   src={s.image}
@@ -55,12 +55,12 @@ export default function TrueStories() {
                 />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-[#253252] mb-3">{s.name}</h3>
-                <p className="text-gray-700 leading-relaxed text-[15px] mb-5">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{s.name}</h3>
+                <p className="text-gray-700 leading-relaxed text-sm sm:text-[15px] mb-4">
                   {s.story}
                 </p>
-                <button className="flex items-center gap-2 border border-gray-300 rounded-full px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                  Read more <ArrowRight className="w-4 h-4" />
+                <button className="flex items-center gap-2 border border-gray-200 rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                  Read story <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -70,7 +70,7 @@ export default function TrueStories() {
         {/* Right Column */}
         <div className="flex flex-col gap-6">
           {stories.filter((_, i) => i % 2 !== 0).map((s, idx) => (
-            <div key={idx} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-shadow">
+            <div key={idx} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-shadow">
               <div className="relative w-full">
                 <Image 
                   src={s.image}
@@ -81,18 +81,18 @@ export default function TrueStories() {
                 />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-[#253252] mb-3">{s.name}</h3>
-                <p className="text-gray-700 leading-relaxed text-[15px] mb-5">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{s.name}</h3>
+                <p className="text-gray-700 leading-relaxed text-sm sm:text-[15px] mb-4">
                   {s.story}
                 </p>
-                <button className="flex items-center gap-2 border border-gray-300 rounded-full px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                  Read more <ArrowRight className="w-4 h-4" />
+                <button className="flex items-center gap-2 border border-gray-200 rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                  Read story <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           ))}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

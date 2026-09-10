@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
-import { genderMatches } from '@/lib/matching';
+import { loadPreferences } from '@/lib/prefsStore';
+import { findMatches, type MatchCandidate, type MatchPreferences } from '@/lib/matching';
 import { getInvisibleIds } from '@/lib/reportStore';
-import { resolveStatus } from '@/lib/membershipStore';
 import { is4DigitId, generateUnique4DigitId } from '@/lib/idGenerator';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
@@ -15,12 +15,10 @@ interface SearchProfile {
   age: number;
   height: string;
   religion: string;
-  caste?: string;
   motherTongue?: string;
   education: string;
   profession: string;
   city: string;
-  state?: string;
   country?: string;
   maritalStatus: string;
   gender: string;
@@ -30,6 +28,19 @@ interface SearchProfile {
   tier?: string;
   bio?: string;
   isSuspended?: boolean;
+}
+
+function normalizeGender(g?: string): 'male' | 'female' | 'other' {
+  if (!g) return 'other';
+  const s = g.trim().toLowerCase();
+  if (['groom', 'man', 'male', 'boy', 'men'].includes(s)) return 'male';
+  if (['bride', 'woman', 'female', 'girl', 'women', 'ladies'].includes(s)) return 'female';
+  return 'other';
+}
+
+function genderMatches(target?: string, candidate?: string): boolean {
+  if (!target || !candidate) return true;
+  return normalizeGender(target) === normalizeGender(candidate);
 }
 
 interface UserRecord {
@@ -75,14 +86,13 @@ function toSearchProfile(u: UserRecord): SearchProfile {
     gender: u.gender || 'Groom',
     avatarUrl: u.avatar_url || u.avatarUrl || '/images/default-avatar.png',
     verified: u.verificationStatus === 'approved',
-    premium: resolveStatus(u.membershipTier, u.membershipExpiresAt).isPremium,
-    tier: resolveStatus(u.membershipTier, u.membershipExpiresAt).tier,
+    premium: false,
+    tier: 'free',
     bio: u.bio || 'Registered Member.',
     isSuspended: !!u.isSuspended,
   };
 }
 
-// GET /api/search
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -95,14 +105,21 @@ export async function GET(req: Request) {
     const motherTongue = searchParams.get('motherTongue') || '';
     const query = (searchParams.get('q') || '').toLowerCase();
     const userId = (searchParams.get('userId') || '').trim();
-    const userMobileParam = (searchParams.get('userMobile') || searchParams.get('mobile') || '').replace(/\D/g, '');
-    const userEmailParam = (searchParams.get('userEmail') || searchParams.get('email') || '').toLowerCase().trim();
-    const profileIdParam = (searchParams.get('profileId') || '').toLowerCase().trim();
     const invisibleIds = userId ? new Set(await getInvisibleIds(userId)) : new Set<string>();
 
-    let allProfiles: SearchProfile[] = [];
+    // 1. Load user preferences for matching algorithm
+    let prefs: MatchPreferences = {};
+    if (userId) {
+      prefs = await loadPreferences(userId) || {};
+      // If preferences don't specify partnerGender, default based on user's gender
+      if (!prefs.partnerGender) {
+        const userGender = (prefs as Record<string, unknown>).gender as string || 'male';
+        prefs.partnerGender = userGender === 'male' ? 'Woman' : 'Man';
+      }
+    }
 
-    // 1. Fetch profiles from local JSON db
+    // 2. Fetch profiles from local JSON db
+    let allProfiles: SearchProfile[] = [];
     try {
       if (fs.existsSync(USERS_FILE)) {
         const fileData = fs.readFileSync(USERS_FILE, 'utf-8');
@@ -114,7 +131,7 @@ export async function GET(req: Request) {
       console.warn('Error reading profiles from local JSON db:', e);
     }
 
-    // 2. Fetch profiles from Postgres DB if available
+    // 3. Fetch profiles from Postgres DB if available
     if (hasPool) {
       try {
         await ensureProfilesTable();
@@ -124,24 +141,22 @@ export async function GET(req: Request) {
           ORDER BY created_at DESC
         `);
 
-        const pgProfiles: SearchProfile[] = rows.map((r) => ({
-          id: r.user_id || r.id,
-          name: r.display_name || 'Member',
-          age: r.age || 26,
-          height: r.height || "5'7\"",
-          religion: r.religion || 'Hindu',
-          motherTongue: r.mother_tongue || 'Hindi',
-          education: r.education || 'Graduate',
-          profession: r.profession || 'Professional',
-          city: r.city || 'Mumbai',
-          country: 'India',
-          maritalStatus: r.marital_status || 'Never Married',
-          gender: r.gender || 'Groom',
-          avatarUrl: r.avatar_url || '/images/default-avatar.png',
-          verified: r.verification_status === 'approved',
-          premium: resolveStatus(r.membership_tier, r.membership_expires_at).isPremium,
-          tier: resolveStatus(r.membership_tier, r.membership_expires_at).tier,
-          bio: r.bio || 'Verified Matrimonial Member.',
+        const pgProfiles: SearchProfile[] = rows.map((r) => toSearchProfile({
+          profileId: r.user_id,
+          display_name: r.display_name,
+          age: r.age,
+          height: r.height,
+          religion: r.religion,
+          motherTongue: r.mother_tongue,
+          education: r.education,
+          profession: r.profession,
+          city: r.city,
+          maritalStatus: r.marital_status,
+          gender: r.gender,
+          avatar_url: r.avatar_url,
+          verificationStatus: r.verification_status,
+          membershipTier: r.membership_tier,
+          membershipExpiresAt: r.membership_expires_at,
           isSuspended: !!r.is_suspended,
         }));
 
@@ -172,48 +187,113 @@ export async function GET(req: Request) {
       uniqueProfiles.push(p);
     }
 
-    // Filter profiles based on search criteria & robustly exclude viewer's own profile
-    const viewerExcludedIds = new Set<string>();
-    if (userId) viewerExcludedIds.add(userId.toLowerCase());
-    if (profileIdParam) viewerExcludedIds.add(profileIdParam);
-    if (userEmailParam) viewerExcludedIds.add(userEmailParam);
-    if (userMobileParam) viewerExcludedIds.add(userMobileParam);
+    // Convert to MatchCandidate for matching engine
+    const candidates: MatchCandidate[] = uniqueProfiles.map((p) => ({
+      id: p.id,
+      name: p.name,
+      age: p.age,
+      height: p.height,
+      religion: p.religion,
+      motherTongue: p.motherTongue,
+      education: p.education,
+      profession: p.profession,
+      city: p.city,
+      maritalStatus: p.maritalStatus,
+      gender: p.gender,
+      avatarUrl: p.avatarUrl,
+      createdAt: new Date().toISOString(),
+      premium: p.premium,
+      tier: p.tier,
+      rashi: '',
+      nakshatra: '',
+      manglik: '',
+      diet: '',
+      smoking: '',
+      drinking: '',
+    }));
 
-    const digitsOnlyUserId = userId.replace(/\D/g, '');
-    if (digitsOnlyUserId.length >= 10) viewerExcludedIds.add(digitsOnlyUserId);
+    // 3. Run matching algorithm with preferences
+    let matchedResults: Array<{ profile: SearchProfile; score: number; isEligible: boolean; breakdown: Record<string, number> }> = [];
 
-    const filtered = uniqueProfiles.filter((p) => {
-      const pId = (p.id || '').toLowerCase();
+    try {
+      const matched = findMatches(prefs, candidates, { viewer: { id: userId, gender: gender ? (['bride', 'woman', 'female', 'girl', 'women', 'ladies'].includes(gender.toLowerCase()) ? 'female' : 'male') : undefined } });
 
-      // Always exclude logged-in viewer
-      if (pId && viewerExcludedIds.has(pId)) {
-        return false;
-      }
+      // Convert matched results
+      matchedResults = matched.map((m) => ({
+        profile: {
+          id: m.profile.id,
+          name: m.profile.name,
+          age: Number(m.profile.age) || 26,
+          height: m.profile.height || "5'7\"",
+          religion: m.profile.religion || 'Hindu',
+          motherTongue: m.profile.motherTongue || 'Hindi',
+          education: m.profile.education || 'Graduate',
+          profession: m.profile.profession || 'Professional',
+          city: m.profile.city || 'Mumbai',
+          maritalStatus: m.profile.maritalStatus || 'Never Married',
+          gender: m.profile.gender || 'Groom',
+          avatarUrl: m.profile.avatarUrl || '/images/default-avatar.png',
+          verified: false,
+          premium: m.profile.premium,
+          tier: m.profile.tier,
+          bio: (m.profile as unknown as Record<string, unknown>).bio as string || '',
+          isSuspended: false,
+        },
+        score: m.score,
+        isEligible: m.isEligible,
+        breakdown: m.breakdown,
+      }));
+    } catch (matchError) {
+      console.warn('Matching engine error, falling back to filtered results:', matchError);
+      // Fall back to filtered results without scores
+      const filtered = uniqueProfiles.filter((p) => {
+        const pId = (p.id || '').toLowerCase();
+        if (pId && userId && pId.includes(userId.toLowerCase())) return false;
+        if (invisibleIds.has(p.id)) return false;
+        if (p.isSuspended) return false;
+        if (gender && !genderMatches(gender, p.gender)) return false;
+        if (p.age < minAge || p.age > maxAge) return false;
+        if (religion && religion !== 'Any' && p.religion.toLowerCase() !== religion.toLowerCase()) return false;
+        if (maritalStatus && maritalStatus !== 'Any' && p.maritalStatus.toLowerCase() !== maritalStatus.toLowerCase()) return false;
+        if (city && !p.city.toLowerCase().includes(city.toLowerCase())) return false;
+        if (motherTongue && motherTongue !== 'Any' && p.motherTongue && p.motherTongue.toLowerCase() !== motherTongue.toLowerCase()) return false;
+        if (query) {
+          const matchesQuery =
+            p.name.toLowerCase().includes(query) ||
+            p.id.toLowerCase().includes(query) ||
+            p.city.toLowerCase().includes(query) ||
+            p.profession.toLowerCase().includes(query) ||
+            p.religion.toLowerCase().includes(query);
+          if (!matchesQuery) return false;
+        }
+        return true;
+      });
 
-      if (invisibleIds.has(p.id)) return false;
-      if (p.isSuspended) return false;
-      if (gender && !genderMatches(gender, p.gender)) return false;
-      if (p.age < minAge || p.age > maxAge) return false;
-      if (religion && religion !== 'Any' && p.religion.toLowerCase() !== religion.toLowerCase()) return false;
-      if (maritalStatus && maritalStatus !== 'Any' && p.maritalStatus.toLowerCase() !== maritalStatus.toLowerCase()) return false;
-      if (city && !p.city.toLowerCase().includes(city.toLowerCase())) return false;
-      if (motherTongue && motherTongue !== 'Any' && p.motherTongue && p.motherTongue.toLowerCase() !== motherTongue.toLowerCase()) return false;
-      if (query) {
-        const matchesQuery =
-          p.name.toLowerCase().includes(query) ||
-          p.id.toLowerCase().includes(query) ||
-          p.city.toLowerCase().includes(query) ||
-          p.profession.toLowerCase().includes(query) ||
-          p.religion.toLowerCase().includes(query);
-        if (!matchesQuery) return false;
-      }
-      return true;
+      matchedResults = filtered.map((p) => ({
+        profile: p,
+        score: 50,
+        isEligible: true,
+        breakdown: {}
+      }));
+    }
+
+    // Sort by score (highest first)
+    matchedResults.sort((a, b) => b.score - a.score);
+
+    // Get just the profiles for the response
+    const searchProfiles = matchedResults.map((m) => m.profile);
+
+    // Build score map for UI
+    const scoreMap: Record<string, number> = {};
+    matchedResults.forEach((m) => {
+      scoreMap[m.profile.id] = m.score;
     });
 
     return NextResponse.json({
       success: true,
-      count: filtered.length,
-      profiles: filtered,
+      count: searchProfiles.length,
+      profiles: searchProfiles,
+      scores: scoreMap,
     });
   } catch (error) {
     console.error('Error handling search request:', error);

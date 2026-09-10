@@ -3,36 +3,36 @@ import { Check, Plus } from 'lucide-react';
 
 export default function MembershipPlans() {
   return (
-    <main className="flex-1 max-w-4xl font-sans">
-      <h1 className="text-3xl font-semibold text-[#253252] mb-8">Membership Plans</h1>
+    <div className="w-full font-sans">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Membership Plans</h1>
 
       {/* Benefits Box */}
-      <div className="border border-gray-300 p-6 mb-6">
-        <h3 className="text-red-500 text-[16px] mb-4">Benefits of a premium membership :</h3>
+      <div className="border border-gray-200 rounded-2xl p-6 mb-8 bg-slate-50">
+        <h3 className="text-amber-700 font-bold text-[16px] mb-4">Benefits of a Premium Membership:</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
           <div className="flex items-center gap-3">
-            <Check className="w-5 h-5 text-cyan-400 stroke-[3]" />
-            <span className="text-gray-500 text-sm">View verified contact details</span>
+            <Check className="w-5 h-5 text-emerald-600 stroke-[3]" />
+            <span className="text-gray-700 text-sm">View verified contact details</span>
           </div>
           <div className="flex items-center gap-3">
-            <Check className="w-5 h-5 text-cyan-400 stroke-[3]" />
-            <span className="text-gray-500 text-sm">Special offers from Partners</span>
+            <Check className="w-5 h-5 text-emerald-600 stroke-[3]" />
+            <span className="text-gray-700 text-sm">Special offers from verified partners</span>
           </div>
           <div className="flex items-center gap-3">
-            <Check className="w-5 h-5 text-cyan-400 stroke-[3]" />
-            <span className="text-gray-500 text-sm">Write Direct Messages to members</span>
+            <Check className="w-5 h-5 text-emerald-600 stroke-[3]" />
+            <span className="text-gray-700 text-sm">Write direct messages &amp; voice notes</span>
           </div>
           <div className="flex items-center gap-3">
-            <Check className="w-5 h-5 text-cyan-400 stroke-[3]" />
-            <span className="text-gray-500 text-sm">Discounts on Shaadi events</span>
+            <Check className="w-5 h-5 text-emerald-600 stroke-[3]" />
+            <span className="text-gray-700 text-sm">Discounts on Haldimehendi events</span>
           </div>
           <div className="flex items-center gap-3">
-            <Check className="w-5 h-5 text-cyan-400 stroke-[3]" />
-            <span className="text-gray-500 text-sm">Connect instantly via Shaadi Chat</span>
+            <Check className="w-5 h-5 text-emerald-600 stroke-[3]" />
+            <span className="text-gray-700 text-sm">Connect instantly via Haldimehendi Chat</span>
           </div>
           <div className="flex items-center gap-3">
-            <Check className="w-5 h-5 text-cyan-400 stroke-[3]" />
-            <span className="text-gray-500 text-sm">Quick Response Services</span>
+            <Check className="w-5 h-5 text-emerald-600 stroke-[3]" />
+            <span className="text-gray-700 text-sm">Priority customer support &amp; guidance</span>
           </div>
         </div>
       </div>
@@ -121,14 +121,14 @@ export default function MembershipPlans() {
       </div>
 
       {/* Call to Actions */}
-      <div className="flex flex-col items-center justify-center gap-5 mt-10">
-        <a href="#" className="text-[17px] text-gray-800 underline hover:text-gray-600 flex items-center pb-1">
-          Compare plans in detail <span className="text-[10px] ml-2 text-gray-400">▶</span>
+      <div className="flex flex-col items-center justify-center gap-4 mt-8">
+        <a href="/pricing" className="text-[15px] text-gray-700 underline hover:text-amber-700 flex items-center">
+          Compare plans in detail
         </a>
-        <button className="bg-[#00d0e4] text-black text-[16px] px-10 py-2.5 shadow-sm hover:bg-[#00bcd4] transition-colors">
+        <a href="/pricing" className="bg-[#d97706] hover:bg-[#b45309] text-white font-bold text-sm px-8 py-3 rounded-full shadow-sm transition-all text-center">
           Upgrade Now
-        </button>
+        </a>
       </div>
-    </main>
+    </div>
   );
 }

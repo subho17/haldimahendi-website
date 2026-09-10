@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
-import { Search, Loader2, MapPin, UserX, Crown } from "lucide-react";
+import { Search, Loader2, MapPin, UserX, Crown, Heart, Percent } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -28,6 +28,19 @@ interface SearchProfile {
   email?: string;
   verified?: boolean;
   premium?: boolean;
+  tier?: string;
+}
+
+interface MatchBreakdown {
+  religion?: number;
+  motherTongue?: number;
+  maritalStatus?: number;
+  age?: number;
+  height?: number;
+  city?: number;
+  education?: number;
+  profession?: number;
+  kundli?: number;
 }
 
 export default function SearchPage() {
@@ -44,6 +57,8 @@ export default function SearchPage() {
   const [city, setCity] = useState("");
 
   const [results, setResults] = useState<SearchProfile[]>([]);
+  const [scores, setScores] = useState<Record<string, number>>({});
+  const [breakdowns, setBreakdowns] = useState<Record<string, MatchBreakdown>>({});
   const [searched, setSearched] = useState(false);
   const [searching, setSearching] = useState(false);
 
@@ -81,8 +96,12 @@ export default function SearchPage() {
           return true;
         });
         setResults(safe);
+        setScores(data.scores || {});
+        setBreakdowns(data.breakdowns || {});
       } else {
         setResults([]);
+        setScores({});
+        setBreakdowns({});
       }
     } catch (e) {
       console.error("Search failed:", e);
@@ -242,63 +261,97 @@ export default function SearchPage() {
 
             {!searching && results.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {results.map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => router.push(`/profile/${encodeURIComponent(p.id)}?back=/search`)}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer"
-                  >
-                    <div>
-                      <div className="relative w-full h-48 bg-slate-100 overflow-hidden flex items-center justify-center">
-                        {p.premium && (
-                          <span className="absolute top-3 left-3 inline-flex items-center gap-1 z-10 text-[10px] font-black text-amber-900 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-1 rounded-full shadow-md border border-amber-200/70 uppercase">
-                            <Crown className="w-3 h-3" /> Premium
-                          </span>
-                        )}
-                        {p.avatarUrl && p.avatarUrl !== "/images/default-avatar.png" ? (
-                          <Image
-                            src={p.avatarUrl}
-                            alt={p.name}
-                            fill
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#d97706] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">
-                            {p.name.charAt(0)}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-4 sm:p-5">
-                        <div className="mb-3">
-                          <h3 className="font-bold text-gray-900 group-hover:text-[#d97706] transition-colors text-base flex items-center gap-1">
-                            <span>{p.name}</span>
-                            <span className="text-xs text-emerald-600 font-bold">✓</span>
-                          </h3>
-                          <p className="text-xs text-gray-400 font-semibold">ID: {p.id ? (p.id.startsWith("#") ? p.id : `#${p.id}`) : ""}</p>
-                        </div>
-
-                        <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100">
-                          <p><span className="font-bold text-gray-700">Age / Height:</span> {p.age} yrs, {p.height}</p>
-                          <p><span className="font-bold text-gray-700">Community:</span> {p.religion}, {p.motherTongue || "—"}</p>
-                          <p><span className="font-bold text-gray-700">Status:</span> {p.maritalStatus}</p>
-                          <p className="flex items-center gap-1"><MapPin className="w-3 h-3 text-gray-400" /> <span className="font-bold text-gray-700">Location:</span> {p.city}</p>
-                          <p><span className="font-bold text-gray-700">Profession:</span> {p.profession || p.education}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0" onClick={(e) => e.stopPropagation()}>
-                      <Link
-                        href={`/profile/${encodeURIComponent(p.id)}?back=/search`}
-                        className="block w-full py-2.5 px-3 rounded-xl bg-[#d97706] text-white text-xs font-bold shadow-xs hover:bg-[#b45309] transition-colors text-center cursor-pointer"
+{results.map((p) => {
+                    const score = scores[p.id] || 0;
+                    const breakdown = breakdowns[p.id];
+                    const scoreColor = score >= 80 ? 'bg-emerald-500' : score >= 60 ? 'bg-amber-500' : score >= 40 ? 'bg-orange-500' : 'bg-red-500';
+                    return (
+                      <div
+                        key={p.id}
+                        onClick={() => router.push(`/profile/${encodeURIComponent(p.id)}?back=/search`)}
+                        className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer"
                       >
-                        View Full Profile
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+                        <div>
+                          <div className="relative w-full h-48 bg-slate-100 overflow-hidden flex items-center justify-center">
+                            {/* Match Score Badge */}
+                            <div className="absolute top-3 right-3 z-10">
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black text-white ${scoreColor} shadow-md border border-white/70 uppercase`}>
+                                <Percent className="w-3 h-3" />
+                                {score}%
+                              </span>
+                            </div>
+                            {p.premium && (
+                              <span className="absolute top-3 left-3 inline-flex items-center gap-1 z-10 text-[10px] font-black text-amber-900 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-1 rounded-full shadow-md border border-amber-200/70 uppercase">
+                                <Crown className="w-3 h-3" /> Premium
+                              </span>
+                            )}
+                            {p.avatarUrl && p.avatarUrl !== "/images/default-avatar.png" ? (
+                              <Image
+                                src={p.avatarUrl}
+                                alt={p.name}
+                                fill
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#d97706] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">
+                                {p.name.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="p-4 sm:p-5">
+                            <div className="mb-3">
+                              <h3 className="font-bold text-gray-900 group-hover:text-[#d97706] transition-colors text-base flex items-center gap-1">
+                                <span>{p.name}</span>
+                                <span className="text-xs text-emerald-600 font-bold">✓</span>
+                              </h3>
+                              <p className="text-xs text-gray-400 font-semibold">ID: {p.id ? (p.id.startsWith("#") ? p.id : `#${p.id}`) : ""}</p>
+                            </div>
+
+                            {/* Match Breakdown */}
+                            {breakdown && Object.keys(breakdown).length > 0 && (
+                              <div className="mb-3 p-3 bg-gradient-to-r from-amber-50 to-rose-50 rounded-xl border border-amber-100">
+                                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 mb-2">
+                                  <Heart className="w-3 h-3" />
+                                  <span>Match Breakdown</span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                  {(() => {
+                                    const entries = Object.entries(breakdown);
+                                    const sorted = entries.sort((a, b) => b[1] - a[1]).slice(0, 6);
+                                    return sorted.map(([key, value]) => (
+                                      <div key={key} className="text-center p-1.5 bg-white/60 rounded-lg">
+                                        <div className="text-[10px] font-bold text-amber-700">{value}%</div>
+                                        <div className="text-[9px] text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
+                                      </div>
+                                    ));
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100">
+                              <p><span className="font-bold text-gray-700">Age / Height:</span> {p.age} yrs, {p.height}</p>
+                              <p><span className="font-bold text-gray-700">Community:</span> {p.religion}, {p.motherTongue || "—"}</p>
+                              <p><span className="font-bold text-gray-700">Status:</span> {p.maritalStatus}</p>
+                              <p className="flex items-center gap-1"><MapPin className="w-3 h-3 text-gray-400" /> <span className="font-bold text-gray-700">Location:</span> {p.city}</p>
+                              <p><span className="font-bold text-gray-700">Profession:</span> {p.profession || p.education}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0" onClick={(e) => e.stopPropagation()}>
+                          <Link
+                            href={`/profile/${encodeURIComponent(p.id)}?back=/search`}
+                            className="block w-full py-2.5 px-3 rounded-xl bg-[#d97706] text-white text-xs font-bold shadow-xs hover:bg-[#b45309] transition-colors text-center cursor-pointer"
+                          >
+                            View Full Profile
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </div>

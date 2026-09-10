@@ -12,8 +12,6 @@ const CREDIT_PACKAGES = [
 export default function ContactCredits({ userId }: { userId: string }) {
   const [credits, setCredits] = useState<number>(0);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
-  const [source, setSource] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -27,12 +25,9 @@ export default function ContactCredits({ userId }: { userId: string }) {
         if (data.success) {
           setCredits(data.credits || 0);
           setExpiresAt(data.expiresAt);
-          setSource(data.source);
         }
       } catch (e) {
         console.error('Failed to load credits:', e);
-      } finally {
-        setLoading(false);
       }
     };
     load();

@@ -389,8 +389,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
             type="button"
             onClick={onClose}
             aria-label="Close signup modal"
-            style={{ top: "-12px", right: "-12px" }}
-            className="absolute z-30 bg-white rounded-full p-1.5 sm:p-2 shadow-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center"
+            className="absolute -top-1 -right-1 z-30 bg-white rounded-full p-1.5 sm:p-2 shadow-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center"
           >
             <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import { pool, hasPool } from '@/lib/db';
 import { setCache, getCache } from '@/lib/cache';
 
@@ -34,7 +36,19 @@ export async function GET(req: Request) {
         : { rows: [] }
     ) as { rows: { gender: string }[] };
 
-    const viewerGender = viewerProfile.rows.length > 0 ? (viewerProfile.rows[0].gender || '').toLowerCase() : '';
+    let viewerGender = viewerProfile.rows.length > 0 ? (viewerProfile.rows[0].gender || '').toLowerCase() : '';
+    if (!viewerGender) {
+      try {
+        const usersFile = path.join(process.cwd(), 'scratch', 'users_db.json');
+        if (fs.existsSync(usersFile)) {
+          const users = JSON.parse(fs.readFileSync(usersFile, 'utf-8') || '[]');
+          const hit = users.find((u: { profileId?: string; mobileNumber?: string; email?: string; gender?: string }) =>
+            u.profileId === viewerId || u.mobileNumber === viewerId || u.email === viewerId
+          );
+          if (hit?.gender) viewerGender = hit.gender.toLowerCase();
+        }
+      } catch { }
+    }
 
     // 2. Get viewer's partner preference (who they are looking for)
     const prefRows = await (
@@ -68,18 +82,18 @@ export async function GET(req: Request) {
     // 3. Determine which gender to show in feed
     let filterTarget: 'male' | 'female' | null = null;
 
-    if (partnerGender && partnerGender !== 'both' && partnerGender !== 'any') {
-      if (['groom', 'man', 'male', 'boy', 'men'].includes(partnerGender)) {
-        filterTarget = 'male';
-      } else if (['bride', 'woman', 'female', 'girl', 'women'].includes(partnerGender)) {
-        filterTarget = 'female';
-      }
-    } else if (viewerGender) {
-      // Opposite gender if partner preference unset
+    if (viewerGender) {
+      // In matrimonial context, viewer's current profile gender drives opposite-gender matching
       if (['groom', 'man', 'male', 'boy', 'men'].includes(viewerGender)) {
         filterTarget = 'female';
       } else if (['bride', 'woman', 'female', 'girl', 'women'].includes(viewerGender)) {
         filterTarget = 'male';
+      }
+    } else if (partnerGender && partnerGender !== 'both' && partnerGender !== 'any') {
+      if (['groom', 'man', 'male', 'boy', 'men'].includes(partnerGender)) {
+        filterTarget = 'male';
+      } else if (['bride', 'woman', 'female', 'girl', 'women'].includes(partnerGender)) {
+        filterTarget = 'female';
       }
     }
 

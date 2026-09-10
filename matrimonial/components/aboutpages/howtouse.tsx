@@ -2,11 +2,11 @@ import React from 'react';
 
 export default function HowToUse() {
   return (
-    <main className="flex-1 max-w-4xl">
-      <h1 className="text-3xl font-semibold text-[#253252] mb-6">How to use Shaadi.com</h1>
+    <div className="w-full">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">How to use Haldimehendi</h1>
       
-      <p className="text-gray-700 leading-relaxed text-[16px] mb-12">
-        Finding your dream life partner on Shaadi.com is easy. All you need to do is explore, connect, and interact. Here are a few easy steps to help you make the most of your Shaadi.com experience:
+      <p className="text-gray-700 leading-relaxed text-[15px] sm:text-base mb-12">
+        Finding your life partner on Haldimehendi.com is simple, transparent, and enjoyable. All you need to do is explore, connect, and interact. Here are six easy steps to make the most of your journey:
       </p>
 
       {/* Step 1 */}
@@ -224,6 +224,6 @@ export default function HowToUse() {
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

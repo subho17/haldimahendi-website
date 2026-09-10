@@ -2,7 +2,9 @@
 
 import { useSyncExternalStore, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import SignupPage from "./SignupPage";
+import dynamic from "next/dynamic";
+
+const SignupPage = dynamic(() => import("./SignupPage"), { ssr: false });
 
 interface SignupModalProps {
   open: boolean;

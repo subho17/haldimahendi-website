@@ -30,7 +30,6 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   experimental: {
-    optimizePackageImports: ['lucide-react'],
     serverActions: {
       bodySizeLimit: '10mb',
     },

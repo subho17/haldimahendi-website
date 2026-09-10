@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ShieldCheck, ShieldAlert, Loader2, BadgeCheck, Upload, Camera, IdCard, CheckCircle2, X } from "lucide-react";
+import { ACCEPTED_IMAGE_TYPES, convertHeicToJpeg, isHeicFile } from "@/lib/imageUtils";
 
 type VerStatus = "none" | "pending" | "approved" | "rejected";
 
@@ -26,6 +27,8 @@ export default function VerificationCard({ userId, onStatusChange }: Verificatio
   const [idNumber, setIdNumber] = useState("");
   const [selfie, setSelfie] = useState<File | null>(null);
   const [document, setDocument] = useState<File | null>(null);
+  const [convertingSelfie, setConvertingSelfie] = useState(false);
+  const [convertingDocument, setConvertingDocument] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -53,8 +56,39 @@ export default function VerificationCard({ userId, onStatusChange }: Verificatio
     };
   }, [userId, onStatusChange]);
 
+  const handleFileSelect = async (file: File | null | undefined, field: "selfie" | "document") => {
+    if (!file) return;
+    setError("");
+    const isHeic = isHeicFile(file);
+    if (field === "selfie") {
+      if (isHeic) setConvertingSelfie(true);
+    } else {
+      if (isHeic) setConvertingDocument(true);
+    }
+
+    try {
+      const processed = await convertHeicToJpeg(file);
+      if (field === "selfie") {
+        setSelfie(processed);
+      } else {
+        setDocument(processed);
+      }
+    } catch (err) {
+      console.warn("Could not convert image, keeping original:", err);
+      if (field === "selfie") setSelfie(file);
+      else setDocument(file);
+    } finally {
+      if (field === "selfie") setConvertingSelfie(false);
+      else setConvertingDocument(false);
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (convertingSelfie || convertingDocument) {
+      setError("Please wait for images to finish processing.");
+      return;
+    }
     if (!idType || idNumber.trim().length < 4 || !selfie || !document) {
       setError("Please fill in all fields and upload both a selfie and an ID document.");
       return;
@@ -62,12 +96,21 @@ export default function VerificationCard({ userId, onStatusChange }: Verificatio
     setError("");
     setBusy(true);
     try {
+      let finalSelfie = selfie;
+      let finalDoc = document;
+      if (isHeicFile(finalSelfie)) {
+        finalSelfie = await convertHeicToJpeg(finalSelfie);
+      }
+      if (isHeicFile(finalDoc)) {
+        finalDoc = await convertHeicToJpeg(finalDoc);
+      }
+
       const form = new FormData();
       form.append("userId", userId);
       form.append("idType", idType);
       form.append("idNumber", idNumber.trim());
-      form.append("selfie", selfie);
-      form.append("document", document);
+      form.append("selfie", finalSelfie);
+      form.append("document", finalDoc);
       const res = await fetch("/api/verification", { method: "POST", body: form });
       const data = await res.json();
       if (data.success) {
@@ -190,38 +233,108 @@ export default function VerificationCard({ userId, onStatusChange }: Verificatio
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="space-y-1.5 cursor-pointer">
-              <span className="text-xs font-bold text-slate-700 block flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                 <Camera className="w-3.5 h-3.5 text-[#d97706]" /> Clear Selfie *
               </span>
-              <input type="file" accept="image/*" onChange={(e) => setSelfie(e.target.files?.[0] || null)} className="hidden" />
-              <span className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all ${selfie ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-dashed border-slate-300 text-slate-500 hover:border-[#d97706]"}`}>
-                {selfie ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Upload className="w-4 h-4" />}
-                {selfie ? selfie.name.slice(0, 28) : "Choose selfie image"}
+              <input
+                type="file"
+                accept={ACCEPTED_IMAGE_TYPES}
+                disabled={convertingSelfie}
+                onChange={(e) => {
+                  handleFileSelect(e.target.files?.[0], "selfie");
+                  e.target.value = "";
+                }}
+                className="hidden"
+              />
+              <span
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                  convertingSelfie
+                    ? "border-amber-300 bg-amber-50 text-amber-800"
+                    : selfie
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                    : "border-dashed border-slate-300 text-slate-500 hover:border-[#d97706]"
+                }`}
+              >
+                {convertingSelfie ? (
+                  <>
+                    <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
+                    <span>Optimizing HEIC...</span>
+                  </>
+                ) : selfie ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="truncate">{selfie.name.slice(0, 28)}</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    <span>Choose selfie image</span>
+                  </>
+                )}
               </span>
             </label>
             <label className="space-y-1.5 cursor-pointer">
-              <span className="text-xs font-bold text-slate-700 block flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                 <IdCard className="w-3.5 h-3.5 text-[#d97706]" /> ID Document (photo) *
               </span>
-              <input type="file" accept="image/*" onChange={(e) => setDocument(e.target.files?.[0] || null)} className="hidden" />
-              <span className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all ${document ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-dashed border-slate-300 text-slate-500 hover:border-[#d97706]"}`}>
-                {document ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Upload className="w-4 h-4" />}
-                {document ? document.name.slice(0, 28) : "Choose ID document image"}
+              <input
+                type="file"
+                accept={ACCEPTED_IMAGE_TYPES}
+                disabled={convertingDocument}
+                onChange={(e) => {
+                  handleFileSelect(e.target.files?.[0], "document");
+                  e.target.value = "";
+                }}
+                className="hidden"
+              />
+              <span
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                  convertingDocument
+                    ? "border-amber-300 bg-amber-50 text-amber-800"
+                    : document
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                    : "border-dashed border-slate-300 text-slate-500 hover:border-[#d97706]"
+                }`}
+              >
+                {convertingDocument ? (
+                  <>
+                    <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
+                    <span>Optimizing HEIC...</span>
+                  </>
+                ) : document ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="truncate">{document.name.slice(0, 28)}</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    <span>Choose ID document image</span>
+                  </>
+                )}
               </span>
             </label>
           </div>
 
           <p className="text-[11px] text-slate-400 font-medium">
-            Your documents are used only for identity verification and are never shown on your profile.
+            Your documents are used only for identity verification and are never shown on your profile. Supports JPG, PNG, and HEIC files.
           </p>
 
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || convertingSelfie || convertingDocument}
             className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-xs font-bold transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm"
           >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-            {busy ? "Submitting..." : "Submit for Verification"}
+            {busy || convertingSelfie || convertingDocument ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="w-4 h-4" />
+            )}
+            {busy
+              ? "Submitting..."
+              : convertingSelfie || convertingDocument
+              ? "Optimizing image..."
+              : "Submit for Verification"}
           </button>
         </form>
       )}

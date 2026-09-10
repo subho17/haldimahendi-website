@@ -111,13 +111,17 @@ export async function GET(req: Request) {
     }
 
     // ------------------------------------------------------------------
-    // Infer partnerGender from viewer's gender if not explicitly configured
+    // Infer/Align partnerGender from viewer's gender
     // ------------------------------------------------------------------
-    if (!prefs.partnerGender && viewer.gender) {
+    if (viewer.gender) {
       const vG = viewer.gender.toString().trim().toLowerCase();
-      if (['groom', 'man', 'male', 'boy', 'men', 'gents'].includes(vG)) {
+      const isViewerGroom = ['groom', 'man', 'male', 'boy', 'men', 'gents'].includes(vG);
+      const isViewerBride = ['bride', 'woman', 'female', 'girl', 'women', 'ladies'].includes(vG);
+      const curPref = (prefs.partnerGender || '').toLowerCase();
+
+      if (isViewerGroom && (!curPref || ['man', 'groom', 'male', 'boy'].includes(curPref))) {
         prefs.partnerGender = 'Woman';
-      } else if (['bride', 'woman', 'female', 'girl', 'women', 'ladies'].includes(vG)) {
+      } else if (isViewerBride && (!curPref || ['woman', 'bride', 'female', 'girl'].includes(curPref))) {
         prefs.partnerGender = 'Man';
       }
     }
