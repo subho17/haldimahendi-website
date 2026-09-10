@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+
+  /* Haldi & Mehendi Wedding Palette */
+  --haldi-gold: #d97706;
+  --haldi-hover: #b45309;
+  --haldi-light: #fef3c7;
+  
+  --mehendi-green: #15803d;
+  --mehendi-dark: #166534;
+  --mehendi-light: #f0fdf4;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff;
+  color: #111827;
+  overscroll-behavior-y: none;
+  scroll-behavior: smooth;
+}
+
+/* Ensure sticky elements snap seamlessly to top 0 */
+header {
+  margin-top: 0 !important;
+}
