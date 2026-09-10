@@ -345,15 +345,12 @@ export function findMatches(
   const viewerGender = genderBucket(opts?.viewer?.gender);
   const viewer = opts?.viewer;
 
-  // If the user's own gender is known, guarantee that matching targets the complementary opposite gender
-  // (e.g. Groom -> Woman/Bride, Bride -> Man/Groom). If partnerGender was unset or pointing
-  // to the same gender due to a recent role change, automatically realign to the opposite gender.
+  // If the user didn't say who they're looking for and we know their
+  // own gender, default to the opposite gender and exclude candidates
+  // of the same gender.
   const effectivePrefs: MatchPreferences = { ...prefs };
-  if (viewerGender !== 'unknown') {
-    const currentPrefBucket = genderBucket(effectivePrefs.partnerGender);
-    if (isUnset(effectivePrefs.partnerGender) || currentPrefBucket === viewerGender) {
-      effectivePrefs.partnerGender = viewerGender === 'male' ? 'Woman' : 'Man';
-    }
+  if (isUnset(effectivePrefs.partnerGender) && viewerGender !== 'unknown') {
+    effectivePrefs.partnerGender = viewerGender === 'male' ? 'Woman' : 'Man';
   }
 
   const results: MatchResult[] = [];

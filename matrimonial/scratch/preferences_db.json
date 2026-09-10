@@ -13,11 +13,13 @@
     "createdAt": "2026-09-05T11:46:53.945Z"
   },
   {
-    "userId": "2612",
-    "partnerGender": "Man",
+    "userId": "7320",
+    "partnerGender": "Woman",
     "ageMin": 21,
-    "ageMax": 40,
-    "updatedAt": "2026-09-10T10:47:11.313Z",
-    "createdAt": "2026-09-10T10:47:11.313Z"
+    "ageMax": 35,
+    "religion": "Any",
+    "maritalStatus": "Any",
+    "updatedAt": "2026-09-10T13:48:18.215Z",
+    "createdAt": "2026-09-10T13:48:18.215Z"
   }
 ]

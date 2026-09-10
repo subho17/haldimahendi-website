@@ -1,30 +1,111 @@
 {
   "notifications": [
     {
-      "id": "nt_1788956298794_hwf3",
-      "userId": "7320",
-      "actorId": "1382",
-      "type": "interest",
-      "title": "New Interest",
-      "message": "Shanu Kansal sent you an interest.",
+      "id": "nt_1789048873582_f62t",
+      "userId": "1382",
+      "actorId": "7320",
+      "type": "message",
+      "message": "Lion Gagan Kalra sent you (voice message)",
       "data": {
-        "profileId": "1382"
+        "conversationId": "30fd676c-5177-45ca-9821-97fcc6cb58fd",
+        "profileId": "7320",
+        "voiceDuration": "3"
       },
       "read": false,
-      "createdAt": "2026-09-09T12:18:18.794Z"
+      "createdAt": "2026-09-10T14:01:13.581Z"
     },
     {
-      "id": "nt_1788942306087_8bgw",
-      "userId": "user-3",
-      "actorId": "9389",
-      "type": "interest",
-      "title": "New Interest",
-      "message": "Member sent you an interest.",
+      "id": "nt_1789048745940_3xop",
+      "userId": "1382",
+      "actorId": "7320",
+      "type": "message",
+      "message": "Lion Gagan Kalra sent you (voice message)",
       "data": {
-        "profileId": "9389"
+        "conversationId": "30fd676c-5177-45ca-9821-97fcc6cb58fd",
+        "profileId": "7320",
+        "voiceDuration": "9"
       },
       "read": false,
-      "createdAt": "2026-09-09T08:25:06.087Z"
+      "createdAt": "2026-09-10T13:59:05.940Z"
+    },
+    {
+      "id": "nt_1789048676699_y7yw",
+      "userId": "2612",
+      "actorId": "7320",
+      "type": "message",
+      "message": "Lion Gagan Kalra sent you asc",
+      "data": {
+        "conversationId": "aa8b2aeb-c067-44a0-9883-19612aae69b1",
+        "profileId": "7320"
+      },
+      "read": false,
+      "createdAt": "2026-09-10T13:57:56.699Z"
+    },
+    {
+      "id": "nt_1789048489622_jiwz",
+      "userId": "7320",
+      "actorId": "2612",
+      "type": "message",
+      "message": "Aditi sent you (voice message)",
+      "data": {
+        "conversationId": "aa8b2aeb-c067-44a0-9883-19612aae69b1",
+        "profileId": "2612",
+        "voiceDuration": "5"
+      },
+      "read": true,
+      "createdAt": "2026-09-10T13:54:49.622Z"
+    },
+    {
+      "id": "nt_1789048166008_li70",
+      "userId": "1382",
+      "actorId": "7320",
+      "type": "message",
+      "message": "Lion Gagan Kalra sent you hi",
+      "data": {
+        "conversationId": "30fd676c-5177-45ca-9821-97fcc6cb58fd",
+        "profileId": "7320"
+      },
+      "read": false,
+      "createdAt": "2026-09-10T13:49:26.008Z"
+    },
+    {
+      "id": "nt_1789048112282_7vkj",
+      "userId": "2612",
+      "actorId": "7320",
+      "type": "message",
+      "message": "Lion Gagan Kalra sent you hi",
+      "data": {
+        "conversationId": "aa8b2aeb-c067-44a0-9883-19612aae69b1",
+        "profileId": "7320"
+      },
+      "read": false,
+      "createdAt": "2026-09-10T13:48:32.282Z"
+    },
+    {
+      "id": "nt_1789047974715_h4hw",
+      "userId": "7320",
+      "actorId": "2612",
+      "type": "message",
+      "message": "Aditi sent you test message from API",
+      "data": {
+        "conversationId": "aa8b2aeb-c067-44a0-9883-19612aae69b1",
+        "profileId": "2612"
+      },
+      "read": true,
+      "createdAt": "2026-09-10T13:46:14.715Z"
+    },
+    {
+      "id": "nt_1789047547486_6ex8",
+      "userId": "7320",
+      "actorId": "2612",
+      "type": "message",
+      "message": "Aditi sent you hi",
+      "data": {
+        "conversationId": "aa8b2aeb-c067-44a0-9883-19612aae69b1",
+        "profileId": "2612"
+      },
+      "read": true,
+      "createdAt": "2026-09-10T13:39:07.486Z"
     },
     {
       "id": "nt_1788432847582_24po",

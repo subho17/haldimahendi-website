@@ -431,16 +431,27 @@ export function ensureChatTables(): Promise<void> {
         sender_id       TEXT NOT NULL,
         recipient_id    TEXT NOT NULL,
         content         TEXT NOT NULL,
+        voice_url       TEXT,
+        voice_duration  NUMERIC,
         created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
         read_at         TIMESTAMPTZ
       )
     `);
+
+    // Add voice columns to existing tables (idempotent)
+    try {
+      await pool!.query(`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS voice_url TEXT`);
+      await pool!.query(`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS voice_duration NUMERIC`);
+    } catch (alterErr) {
+      console.warn('[DB] ALTER TABLE chat_messages voice columns:', alterErr);
+    }
 
     await pool!.query(`
       CREATE INDEX IF NOT EXISTS idx_chat_messages_conv
       ON chat_messages (conversation_id, created_at)
     `);
   })().catch((err) => {
+    console.error('[DB] ensureChatTables failed:', err);
     globalForDb.ensureChatPromise = undefined;
     throw err;
   });

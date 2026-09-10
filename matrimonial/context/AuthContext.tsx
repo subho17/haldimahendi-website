@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { useMounted } from "@/hooks/useMounted";
 import { is4DigitId, generateUnique4DigitId } from "@/lib/idGenerator";
 
@@ -190,8 +190,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAuthenticated = user !== null;
 
+  const value = useMemo(
+    () => ({ isAuthenticated, user, isLoading, login, logout }),
+    [isAuthenticated, user, isLoading, login, logout]
+  );
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, isLoading, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

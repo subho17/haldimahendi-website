@@ -1,174 +1,315 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { getSupabaseClient } from '@/lib/supabaseClient';
+"use client";
 
-/**
- * Hook for recording voice messages and uploading to Supabase Storage
- * 
- * Features:
- * - MediaRecorder with OGG format
- * - Duration tracking
- * - Automatic upload to Supabase
- * - Error handling
- * - Cleanup on unmount
- * 
- * Usage:
- * const { audioUrl, duration, isRecording, startRecording, stopRecording } = useVoiceMessage({
- *   conversationId: 'conv_123',
- *   senderId: 'user_456',
- *   recipientId: 'user_789',
- *   onMessageSend: (message) => { console.log(message); }
- * });
- */
+import { useState, useEffect, useRef, useCallback } from "react";
+
+function getSupportedMimeType(): string {
+  if (typeof window === "undefined" || !window.MediaRecorder) return "";
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/aac",
+    "audio/ogg;codecs=opus",
+    "audio/ogg",
+    "audio/wav",
+  ];
+  for (const mime of candidates) {
+    if (MediaRecorder.isTypeSupported(mime)) {
+      return mime;
+    }
+  }
+  return "";
+}
+
+export interface VoiceMessagePayload {
+  conversationId: string;
+  voiceUrl: string;
+  voiceDuration: number;
+}
+
+interface UseVoiceMessageOptions {
+  conversationId: string;
+  senderId: string;
+  recipientId: string;
+  onMessageSend: (message: VoiceMessagePayload) => void | Promise<void>;
+  maxDuration?: number; // seconds, default 120s
+}
+
 export function useVoiceMessage({
   conversationId,
   senderId,
   onMessageSend,
-  maxDuration = 60, // seconds
-  maxFileSize = 5 * 1024 * 1024, // 5MB
-}: {
-  conversationId: string;
-  senderId: string;
-  recipientId: string;
-  onMessageSend: (message: {
-    conversationId: string;
-    voiceUrl: string;
-    voiceDuration: number;
-  }) => void;
-  maxDuration?: number;
-  maxFileSize?: number;
-}) {
+  maxDuration = 120,
+}: UseVoiceMessageOptions) {
   const [isRecording, setIsRecording] = useState(false);
-  const [duration, setDuration] = useState(0);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [preview, setPreview] = useState<{
+    blob: Blob;
+    url: string;
+    duration: number;
+  } | null>(null);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const timeoutRef = useRef<NodeJS.Timeout | number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const mimeTypeRef = useRef<string>("");
+  const stopRecordingRef = useRef<((sendImmediately?: boolean) => void) | null>(null);
+
+  // Helper to release microphone access
+  const releaseStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch {
+          // ignore
+        }
+      });
+      streamRef.current = null;
+    }
+  }, []);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearTimer();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch {
+          // ignore
+        }
+      }
+      releaseStream();
+      if (preview?.url) {
+        URL.revokeObjectURL(preview.url);
+      }
+    };
+  }, [clearTimer, releaseStream, preview]);
+
+  // Upload a recorded audio blob to the server and trigger send callback
+  const uploadAndSend = useCallback(
+    async (blob: Blob, durationSec: number) => {
+      setIsUploading(true);
+      setError(null);
+
+      try {
+        const formData = new FormData();
+        const ext = mimeTypeRef.current.includes("mp4")
+          ? "mp4"
+          : mimeTypeRef.current.includes("ogg")
+          ? "ogg"
+          : mimeTypeRef.current.includes("wav")
+          ? "wav"
+          : "webm";
+        formData.append("file", blob, `voice_${Date.now()}.${ext}`);
+        formData.append("conversationId", conversationId);
+        formData.append("senderId", senderId);
+        formData.append("duration", String(Math.max(1, durationSec)));
+
+        const res = await fetch("/api/chat/upload-voice", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (data.success && data.voiceUrl) {
+          await onMessageSend({
+            conversationId,
+            voiceUrl: data.voiceUrl,
+            voiceDuration: data.voiceDuration || Math.max(1, durationSec),
+          });
+          if (preview?.url) {
+            URL.revokeObjectURL(preview.url);
+            setPreview(null);
+          }
+        } else {
+          setError(data.message || "Failed to upload voice message");
+        }
+      } catch (err) {
+        console.error("[useVoiceMessage] Upload failed:", err);
+        setError("Network error while sending voice message");
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [conversationId, senderId, onMessageSend, preview]
+  );
 
   // Start recording
   const startRecording = useCallback(async () => {
-    if (typeof window === 'undefined' || !window.MediaRecorder) {
-      setError('MediaRecorder not supported in this browser');
+    setError(null);
+    if (preview?.url) {
+      URL.revokeObjectURL(preview.url);
+      setPreview(null);
+    }
+
+    if (typeof window === "undefined" || !navigator?.mediaDevices?.getUserMedia) {
+      setError("Microphone recording is not supported in this browser");
       return;
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream, {
-        mimeType: 'audio/ogg',
-        audioBitsPerSecond: 128000,
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
+      streamRef.current = stream;
 
-      mediaRecorderRef.current.ondataavailable = (event: BlobEvent) => {
-        if (mediaRecorderRef.current?.state === 'inactive' && event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+      const mime = getSupportedMimeType();
+      mimeTypeRef.current = mime;
+      const options: MediaRecorderOptions = mime ? { mimeType: mime } : {};
+
+      const recorder = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data && e.data.size > 0) {
+          chunksRef.current.push(e.data);
         }
       };
 
-      mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/ogg' });
-        
-        if (audioBlob.size > maxFileSize) {
-          setError(`File too large: ${(audioBlob.size / 1024 / 1024).toFixed(1)}MB (max: 5MB)`);
-          audioChunksRef.current = [];
-          setIsRecording(false);
-          if (mediaRecorderRef.current) {
-            mediaRecorderRef.current.start();
-          }
-          return;
-        }
-
-        setError(null);
-        setDuration(0);
-        setAudioUrl(null);
-        
-        const fileName = `audio/${senderId}/${conversationId}/${Date.now()}.ogg`;
-        setIsRecording(true);
-
-        const supabase = getSupabaseClient();
-        if (!supabase) {
-          setError('Storage service unavailable');
-          setIsRecording(false);
-          return;
-        }
-
-        const { error: uploadError } = await supabase.storage
-          .from('chat-audio')
-          .upload(fileName, audioBlob, { contentType: 'audio/ogg' });
-
-        if (uploadError) {
-          setError(`Upload failed: ${uploadError.message}`);
-          audioChunksRef.current = [];
-          setIsRecording(false);
-          if (mediaRecorderRef.current) {
-            mediaRecorderRef.current.start();
-          }
-          return;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from('chat-audio')
-          .getPublicUrl(fileName);
-
-        const seconds = Math.round(
-          audioChunksRef.current.reduce((acc, chunk) => acc + chunk.size, 0) / 1000 / 8 / 128
-        );
-
-        onMessageSend({
-          conversationId,
-          voiceUrl: urlData.publicUrl,
-          voiceDuration: seconds > 0 ? seconds : 1,
-        });
-
-        audioChunksRef.current = [];
-        setIsRecording(false);
-        setAudioUrl(urlData.publicUrl);
-      };
-
-      mediaRecorderRef.current.start();
+      recorder.start(250); // Emit chunks every 250ms
+      startTimeRef.current = Date.now();
       setIsRecording(true);
+      setRecordingDuration(0);
 
-      timeoutRef.current = setTimeout(() => {
-        if (mediaRecorderRef.current) {
-          mediaRecorderRef.current.stop();
+      clearTimer();
+      timerRef.current = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        setRecordingDuration(elapsed);
+
+        if (elapsed >= maxDuration) {
+          // Auto stop when hitting max duration
+          stopRecordingRef.current?.(true);
         }
-      }, maxDuration * 1000);
-
-    } catch (err) {
-      console.error('Microphone access error:', err);
-      setError('Could not access microphone. Please allow permission.');
+      }, 500);
+    } catch (err: unknown) {
+      console.error("[useVoiceMessage] getUserMedia error:", err);
+      const isDenied = err instanceof DOMException && (err.name === "NotAllowedError" || err.name === "PermissionDeniedError");
+      setError(
+        isDenied
+          ? "Microphone access was denied. Please allow microphone permissions in your browser."
+          : "Unable to access microphone. Please check your audio input device."
+      );
+      releaseStream();
+      setIsRecording(false);
     }
-  }, [conversationId, senderId, maxDuration, maxFileSize, onMessageSend]);
+  }, [clearTimer, maxDuration, preview, releaseStream]);
 
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      setDuration(0);
-    }
-    setIsRecording(false);
-  }, []);
+  // Stop recording. If `sendImmediately` is true, sends directly; else creates a preview
+  const stopRecording = useCallback(
+    (sendImmediately = true) => {
+      clearTimer();
+      const recorder = mediaRecorderRef.current;
+      if (!recorder || recorder.state === "inactive") {
+        setIsRecording(false);
+        releaseStream();
+        return;
+      }
 
+      const finalDuration = Math.max(1, Math.floor((Date.now() - startTimeRef.current) / 1000));
+      setRecordingDuration(finalDuration);
+
+      recorder.onstop = () => {
+        const mime = mimeTypeRef.current || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type: mime });
+        chunksRef.current = [];
+        releaseStream();
+        setIsRecording(false);
+
+        if (blob.size === 0) {
+          setError("No audio was recorded.");
+          return;
+        }
+
+        if (sendImmediately) {
+          uploadAndSend(blob, finalDuration);
+        } else {
+          const localUrl = URL.createObjectURL(blob);
+          setPreview({ blob, url: localUrl, duration: finalDuration });
+        }
+      };
+
+      try {
+        recorder.stop();
+      } catch (err) {
+        console.warn("[useVoiceMessage] Error stopping recorder:", err);
+        releaseStream();
+        setIsRecording(false);
+      }
+    },
+    [clearTimer, releaseStream, uploadAndSend]
+  );
+
+  // Keep ref in sync with latest stopRecording
   useEffect(() => {
-    return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
+    stopRecordingRef.current = stopRecording;
+  }, [stopRecording]);
+
+  // Cancel recording and discard audio
+  const cancelRecording = useCallback(() => {
+    clearTimer();
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.onstop = null;
+      try {
+        recorder.stop();
+      } catch {
+        // ignore
       }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+    }
+    chunksRef.current = [];
+    releaseStream();
+    setIsRecording(false);
+    setRecordingDuration(0);
+    if (preview?.url) {
+      URL.revokeObjectURL(preview.url);
+      setPreview(null);
+    }
+  }, [clearTimer, preview, releaseStream]);
+
+  // Send the previewed audio
+  const sendPreview = useCallback(() => {
+    if (!preview) return;
+    uploadAndSend(preview.blob, preview.duration);
+  }, [preview, uploadAndSend]);
+
+  const discardPreview = useCallback(() => {
+    if (preview?.url) {
+      URL.revokeObjectURL(preview.url);
+      setPreview(null);
+    }
+  }, [preview]);
 
   return {
     isRecording,
-    duration,
-    audioUrl,
+    recordingDuration,
+    isUploading,
     error,
+    clearError: () => setError(null),
+    preview,
     startRecording,
     stopRecording,
+    cancelRecording,
+    sendPreview,
+    discardPreview,
   };
 }
+
+export default useVoiceMessage;

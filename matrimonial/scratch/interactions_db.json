@@ -1,20 +1,6 @@
 {
   "interests": [
     {
-      "id": "in_1788956298413_52bo",
-      "senderId": "1382",
-      "recipientId": "7320",
-      "status": "pending",
-      "createdAt": "2026-09-09T12:18:18.411Z"
-    },
-    {
-      "id": "in_1788942305577_ahw0",
-      "senderId": "9389",
-      "recipientId": "user-3",
-      "status": "pending",
-      "createdAt": "2026-09-09T08:25:05.575Z"
-    },
-    {
       "id": "in_1788432049228_6ukr",
       "senderId": "6409",
       "recipientId": "4829",

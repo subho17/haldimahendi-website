@@ -77,6 +77,8 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   sender_id       TEXT NOT NULL,
   recipient_id    TEXT NOT NULL,
   content         TEXT NOT NULL,
+  voice_url       TEXT,
+  voice_duration  NUMERIC,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   read_at         TIMESTAMPTZ
 );
