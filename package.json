@@ -8,15 +8,5 @@
     "start": "npm --prefix matrimonial run start",
     "lint": "npm --prefix matrimonial run lint",
     "test": "npm --prefix matrimonial run build"
-  },
-  "dependencies": {
-    "@prisma/client": "^7.9.1",
-    "bcryptjs": "^3.0.3",
-    "lucide-react": "^1.30.0",
-    "next-auth": "^5.0.0-beta.32",
-    "resend": "^6.18.1"
-  },
-  "devDependencies": {
-    "prisma": "^7.9.1"
   }
 }
