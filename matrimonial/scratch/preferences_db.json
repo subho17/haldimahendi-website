@@ -1,15 +1,12 @@
 [
   {
     "userId": "4829",
-    "partnerGender": "Bride",
+    "partnerGender": "Woman",
     "ageMin": 21,
     "ageMax": 35,
     "religion": "Any",
-    "motherTongue": "Hindi",
     "maritalStatus": "Any",
-    "city": "Delhi",
-    "education": "Any",
-    "updatedAt": "2026-09-05T11:46:53.945Z",
+    "updatedAt": "2026-09-11T10:40:58.754Z",
     "createdAt": "2026-09-05T11:46:53.945Z"
   },
   {
@@ -21,5 +18,25 @@
     "maritalStatus": "Any",
     "updatedAt": "2026-09-10T13:48:18.215Z",
     "createdAt": "2026-09-10T13:48:18.215Z"
+  },
+  {
+    "userId": "3273",
+    "partnerGender": "Woman",
+    "ageMin": 21,
+    "ageMax": 35,
+    "religion": "Any",
+    "maritalStatus": "Any",
+    "updatedAt": "2026-09-11T08:42:39.442Z",
+    "createdAt": "2026-09-11T08:41:47.229Z"
+  },
+  {
+    "userId": "1382",
+    "partnerGender": "Man",
+    "ageMin": 21,
+    "ageMax": 35,
+    "religion": "Any",
+    "maritalStatus": "Any",
+    "updatedAt": "2026-09-11T08:45:11.814Z",
+    "createdAt": "2026-09-11T08:45:11.814Z"
   }
 ]

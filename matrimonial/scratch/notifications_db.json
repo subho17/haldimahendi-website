@@ -1,6 +1,222 @@
 {
   "notifications": [
     {
+      "id": "nt_1789453831073_hpd6",
+      "userId": "1382",
+      "actorId": "3273",
+      "type": "message",
+      "message": "Prem User sent you hi",
+      "data": {
+        "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
+        "profileId": "3273"
+      },
+      "read": false,
+      "createdAt": "2026-09-15T06:30:31.073Z"
+    },
+    {
+      "id": "nt_1789384574911_061l",
+      "userId": "1382",
+      "actorId": "3273",
+      "type": "message",
+      "message": "Prem User sent you (voice message)",
+      "data": {
+        "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
+        "profileId": "3273",
+        "voiceDuration": "9"
+      },
+      "read": false,
+      "createdAt": "2026-09-14T11:16:14.911Z"
+    },
+    {
+      "id": "nt_1789130220796_htfa",
+      "userId": "3273",
+      "actorId": "1382",
+      "type": "message",
+      "message": "Shanu Kansal sent you dsfas",
+      "data": {
+        "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
+        "profileId": "1382"
+      },
+      "read": true,
+      "createdAt": "2026-09-11T12:37:00.796Z"
+    },
+    {
+      "id": "nt_1789126967514_r7jp",
+      "userId": "5057",
+      "actorId": "4829",
+      "type": "message",
+      "message": "Rahul Sharma sent you (voice message)",
+      "data": {
+        "conversationId": "6d50926a-a2a7-43ca-ae7c-30eceb2c6472",
+        "profileId": "4829",
+        "voiceDuration": "5"
+      },
+      "read": false,
+      "createdAt": "2026-09-11T11:42:47.514Z"
+    },
+    {
+      "id": "nt_1789126166193_dah9",
+      "userId": "5057",
+      "actorId": "4829",
+      "type": "message",
+      "message": "Rahul Sharma sent you (voice message)",
+      "data": {
+        "conversationId": "6d50926a-a2a7-43ca-ae7c-30eceb2c6472",
+        "profileId": "4829",
+        "voiceDuration": "120"
+      },
+      "read": false,
+      "createdAt": "2026-09-11T11:29:26.193Z"
+    },
+    {
+      "id": "nt_1789125213034_o4mu",
+      "userId": "5057",
+      "actorId": "4829",
+      "type": "message",
+      "message": "Rahul Sharma sent you (voice message)",
+      "data": {
+        "conversationId": "6d50926a-a2a7-43ca-ae7c-30eceb2c6472",
+        "profileId": "4829",
+        "voiceDuration": "1"
+      },
+      "read": false,
+      "createdAt": "2026-09-11T11:13:33.034Z"
+    },
+    {
+      "id": "nt_1789125074229_83qw",
+      "userId": "5057",
+      "actorId": "4829",
+      "type": "message",
+      "message": "Rahul Sharma sent you (voice message)",
+      "data": {
+        "conversationId": "6d50926a-a2a7-43ca-ae7c-30eceb2c6472",
+        "profileId": "4829",
+        "voiceDuration": "1"
+      },
+      "read": false,
+      "createdAt": "2026-09-11T11:11:14.229Z"
+    },
+    {
+      "id": "nt_1789124777958_lj70",
+      "userId": "5057",
+      "actorId": "4829",
+      "type": "message",
+      "message": "Rahul Sharma sent you (voice message)",
+      "data": {
+        "conversationId": "6d50926a-a2a7-43ca-ae7c-30eceb2c6472",
+        "profileId": "4829",
+        "voiceDuration": "1"
+      },
+      "read": false,
+      "createdAt": "2026-09-11T11:06:17.958Z"
+    },
+    {
+      "id": "nt_1789124576937_qppm",
+      "userId": "5057",
+      "actorId": "4829",
+      "type": "message",
+      "message": "Rahul Sharma sent you (voice message)",
+      "data": {
+        "conversationId": "6d50926a-a2a7-43ca-ae7c-30eceb2c6472",
+        "profileId": "4829",
+        "voiceDuration": "1"
+      },
+      "read": false,
+      "createdAt": "2026-09-11T11:02:56.937Z"
+    },
+    {
+      "id": "nt_1789116920562_40uo",
+      "userId": "1382",
+      "actorId": "3273",
+      "type": "message",
+      "message": "Prem User sent you hello",
+      "data": {
+        "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
+        "profileId": "3273"
+      },
+      "read": true,
+      "createdAt": "2026-09-11T08:55:20.562Z"
+    },
+    {
+      "id": "nt_1789116892524_bots",
+      "userId": "3273",
+      "actorId": "1382",
+      "type": "message",
+      "message": "Shanu Kansal sent you hi",
+      "data": {
+        "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
+        "profileId": "1382"
+      },
+      "read": true,
+      "createdAt": "2026-09-11T08:54:52.524Z"
+    },
+    {
+      "id": "nt_1789116426154_gclm",
+      "userId": "1382",
+      "actorId": "3273",
+      "type": "message",
+      "message": "Prem User sent you (voice message)",
+      "data": {
+        "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
+        "profileId": "3273",
+        "voiceDuration": "4"
+      },
+      "read": true,
+      "createdAt": "2026-09-11T08:47:06.154Z"
+    },
+    {
+      "id": "nt_1789116381336_qhrw",
+      "userId": "3273",
+      "actorId": "1382",
+      "type": "message",
+      "message": "Shanu Kansal sent you whats up ?",
+      "data": {
+        "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
+        "profileId": "1382"
+      },
+      "read": true,
+      "createdAt": "2026-09-11T08:46:21.336Z"
+    },
+    {
+      "id": "nt_1789116351328_xefi",
+      "userId": "1382",
+      "actorId": "3273",
+      "type": "message",
+      "message": "Prem User sent you hi shanu",
+      "data": {
+        "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
+        "profileId": "3273"
+      },
+      "read": true,
+      "createdAt": "2026-09-11T08:45:51.328Z"
+    },
+    {
+      "id": "nt_1789116333204_kv09",
+      "userId": "3273",
+      "actorId": "1382",
+      "type": "message",
+      "message": "Shanu Kansal sent you hi",
+      "data": {
+        "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
+        "profileId": "1382"
+      },
+      "read": true,
+      "createdAt": "2026-09-11T08:45:33.204Z"
+    },
+    {
+      "id": "nt_1789116114853_3hl5",
+      "userId": "1382",
+      "actorId": "3273",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "Prem User sent you an interest.",
+      "data": {
+        "profileId": "3273"
+      },
+      "read": true,
+      "createdAt": "2026-09-11T08:41:54.853Z"
+    },
+    {
       "id": "nt_1789048873582_f62t",
       "userId": "1382",
       "actorId": "7320",
@@ -11,7 +227,7 @@
         "profileId": "7320",
         "voiceDuration": "3"
       },
-      "read": false,
+      "read": true,
       "createdAt": "2026-09-10T14:01:13.581Z"
     },
     {
@@ -25,7 +241,7 @@
         "profileId": "7320",
         "voiceDuration": "9"
       },
-      "read": false,
+      "read": true,
       "createdAt": "2026-09-10T13:59:05.940Z"
     },
     {
@@ -65,7 +281,7 @@
         "conversationId": "30fd676c-5177-45ca-9821-97fcc6cb58fd",
         "profileId": "7320"
       },
-      "read": false,
+      "read": true,
       "createdAt": "2026-09-10T13:49:26.008Z"
     },
     {
@@ -212,7 +428,7 @@
       "data": {
         "profileId": "4829"
       },
-      "read": false,
+      "read": true,
       "createdAt": "2026-09-03T10:16:00.620Z"
     },
     {

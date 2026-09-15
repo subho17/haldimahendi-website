@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import {
   User,
   LogOut,
@@ -223,12 +224,11 @@ export default function AuthenticatedNavbar() {
     router.push(`/search?${params.toString()}`);
   };
 
-  // Load notifications + unread badge, polling every 30s.
+  // Load notifications + unread badge, with Supabase Realtime + polling fallback.
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     const load = async () => {
-      setNotifLoading(true);
       const now = Date.now();
       const fmt = (iso: string) => {
         try {
@@ -259,10 +259,32 @@ export default function AuthenticatedNavbar() {
       }
     };
     load();
-    const interval = setInterval(load, 30000);
+
+    // Polling fallback every 10s
+    const interval = setInterval(load, 10000);
+
+    // Supabase Realtime for instant notifications
+    let channel: { unsubscribe: () => Promise<unknown> } | null = null;
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        channel = supabase
+          .channel(`notif_${userId}`)
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+            () => { if (!cancelled) load(); }
+          )
+          .subscribe();
+      } catch {
+        // Realtime unavailable, polling only
+      }
+    }
+
     return () => {
       cancelled = true;
       clearInterval(interval);
+      if (channel) channel.unsubscribe().catch(() => undefined);
     };
   }, [userId]);
 

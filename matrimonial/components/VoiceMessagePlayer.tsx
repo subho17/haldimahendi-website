@@ -139,6 +139,8 @@ export function VoiceMessagePlayer({
         setIsLoading(false);
         onPlay?.();
       } catch (err) {
+        // AbortError is harmless — caused by re-render pausing audio during play()
+        if (err instanceof DOMException && err.name === "AbortError") return;
         console.warn("[VoiceMessagePlayer] Play failed:", err);
         setIsPlaying(false);
         setIsLoading(false);

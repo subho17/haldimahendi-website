@@ -272,6 +272,7 @@ export default function Testimonals() {
                       alt={story.coupleName}
                       fill
                       sizes="40px"
+                      loading={idx === 0 ? "eager" : "lazy"}
                       className="object-cover"
                     />
                   </div>

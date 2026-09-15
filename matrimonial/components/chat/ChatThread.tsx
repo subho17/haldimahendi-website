@@ -12,6 +12,7 @@ import {
   Square,
   X,
   AlertCircle,
+  ChevronLeft,
 } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useVoiceMessage } from "@/hooks/useVoiceMessage";
@@ -58,7 +59,26 @@ function formatDuration(sec: number): string {
 function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
   const byId = new Map<string, ChatMessage>();
   existing.forEach((m) => byId.set(m.id, m));
-  incoming.forEach((m) => byId.set(m.id, m));
+  incoming.forEach((m) => {
+    // If we already have this message by ID, skip
+    if (byId.has(m.id)) return;
+    // Deduplicate optimistic messages: if an incoming server message matches
+    // an optimistic (local_*) by content+sender within 10s, replace the optimistic
+    if (!m.id.startsWith("local_")) {
+      for (const [key, existingMsg] of byId) {
+        if (
+          key.startsWith("local_") &&
+          existingMsg.senderId === m.senderId &&
+          existingMsg.content === m.content &&
+          Math.abs(new Date(existingMsg.createdAt).getTime() - new Date(m.createdAt).getTime()) < 10000
+        ) {
+          byId.delete(key);
+          break;
+        }
+      }
+    }
+    byId.set(m.id, m);
+  });
   return [...byId.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
@@ -121,7 +141,7 @@ export default function ChatThread({
 
         const data = await res.json();
         if (data.success && data.message) {
-          setMessages((prev) => prev.map((m) => (m.id === optimistic.id ? data.message : m)));
+          setMessages((prev) => mergeMessages(prev.filter((m) => m.id !== optimistic.id), [data.message]));
           if (!sentRef.current) {
             sentRef.current = true;
             onSent?.();
@@ -136,7 +156,7 @@ export default function ChatThread({
         alert("Failed to send voice message. Please try again.");
       }
     },
-    [conversationId, userId, otherUserId, onSent]
+    [userId, otherUserId, onSent]
   );
 
   const {
@@ -157,6 +177,122 @@ export default function ChatThread({
     recipientId: otherUserId,
     onMessageSend: sendVoiceMessage,
   });
+
+  // Hold-to-record & pointer interactions
+  const [isHolding, setIsHolding] = useState(false);
+  const [slideCancelActive, setSlideCancelActive] = useState(false);
+  const pointerDownTimeRef = useRef<number>(0);
+  const holdStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isHoldActiveRef = useRef(false);
+  const cancelSlideRef = useRef(false);
+  const windowListenersCleanUpRef = useRef<(() => void) | null>(null);
+
+  // Clean up global pointer listeners on unmount
+  useEffect(() => {
+    return () => {
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+      if (windowListenersCleanUpRef.current) windowListenersCleanUpRef.current();
+    };
+  }, []);
+
+  const handleVoicePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      // Only respond to primary click / touch
+      if (e.button !== 0 && e.pointerType === "mouse") return;
+      if (sending || isUploading) return;
+
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+      if (windowListenersCleanUpRef.current) {
+        windowListenersCleanUpRef.current();
+        windowListenersCleanUpRef.current = null;
+      }
+
+      pointerDownTimeRef.current = Date.now();
+      holdStartPosRef.current = { x: e.clientX, y: e.clientY };
+      isHoldActiveRef.current = false;
+      cancelSlideRef.current = false;
+      setSlideCancelActive(false);
+
+      // Start recording immediately
+      startRecording();
+
+      // Detect hold threshold (500ms)
+      holdTimerRef.current = setTimeout(() => {
+        isHoldActiveRef.current = true;
+        setIsHolding(true);
+      }, 500);
+
+      const onPointerMove = (moveEvt: PointerEvent) => {
+        if (!holdStartPosRef.current || !isHoldActiveRef.current) return;
+        const deltaX = holdStartPosRef.current.x - moveEvt.clientX;
+        // Slide left 60px or more to cancel
+        if (deltaX > 60) {
+          cancelSlideRef.current = true;
+          setSlideCancelActive(true);
+        } else {
+          cancelSlideRef.current = false;
+          setSlideCancelActive(false);
+        }
+      };
+
+      const cleanupListeners = () => {
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+        window.removeEventListener("pointercancel", onPointerCancel);
+        windowListenersCleanUpRef.current = null;
+      };
+
+      const onPointerUp = () => {
+        cleanupListeners();
+        if (holdTimerRef.current) {
+          clearTimeout(holdTimerRef.current);
+          holdTimerRef.current = null;
+        }
+
+        const wasHolding = isHoldActiveRef.current;
+        const wasCancelled = cancelSlideRef.current;
+        const pressDuration = Date.now() - pointerDownTimeRef.current;
+
+        setIsHolding(false);
+        isHoldActiveRef.current = false;
+        setSlideCancelActive(false);
+        holdStartPosRef.current = null;
+
+        if (wasHolding) {
+          if (wasCancelled) {
+            cancelRecording();
+          } else if (pressDuration >= 1200) {
+            // Held and spoke for at least 1.2s -> send immediately
+            stopRecording(true);
+          }
+          // If held for less than 1.2s, we do not auto-send;
+          // user remains safely in hands-free recording mode.
+        }
+        // If it was a quick tap (<500ms), we do NOT send;
+        // hands-free recording mode remains open so user can speak and send when ready.
+      };
+
+      const onPointerCancel = () => {
+        cleanupListeners();
+        if (holdTimerRef.current) {
+          clearTimeout(holdTimerRef.current);
+          holdTimerRef.current = null;
+        }
+        setIsHolding(false);
+        isHoldActiveRef.current = false;
+        setSlideCancelActive(false);
+        holdStartPosRef.current = null;
+        cancelRecording();
+      };
+
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+      window.addEventListener("pointercancel", onPointerCancel);
+      windowListenersCleanUpRef.current = cleanupListeners;
+    },
+    [sending, isUploading, startRecording, stopRecording, cancelRecording]
+  );
 
   const loadMessages = useCallback(async () => {
     try {
@@ -280,7 +416,7 @@ export default function ChatThread({
       });
       const data = await res.json();
       if (data.success) {
-        setMessages((prev) => prev.map((m) => (m.id === optimistic.id ? data.message : m)));
+        setMessages((prev) => mergeMessages(prev.filter((m) => m.id !== optimistic.id), [data.message]));
         if (!sentRef.current) {
           sentRef.current = true;
           onSent?.();
@@ -446,68 +582,108 @@ export default function ChatThread({
 
         {/* State 1: Active Voice Recording Bar */}
         {isRecording ? (
-          <div className="flex items-center gap-2.5 w-full">
-            <div className="flex-1 flex items-center justify-between bg-red-50/90 border border-red-200 rounded-full px-4 py-2">
+          <div className="flex items-center gap-2.5 w-full animate-in fade-in duration-150">
+            <div
+              className={`flex-1 flex items-center justify-between border rounded-full px-4 py-2 transition-all shadow-xs ${
+                slideCancelActive
+                  ? "bg-red-100 border-red-300 text-red-700 shadow-inner"
+                  : "bg-red-50/90 border-red-200"
+              }`}
+            >
               {/* Blinking REC indicator & live timer */}
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="relative flex items-center justify-center w-3 h-3">
+                  <span
+                    className="absolute w-full h-full rounded-full animate-ping opacity-75"
+                    style={{ backgroundColor: "#ef4444" }}
+                  />
+                  <span
+                    className="relative w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: "#ef4444" }}
+                  />
                 </span>
-                <span className="text-xs font-bold text-red-600 tracking-wider">REC</span>
+                <span className="text-xs font-black tracking-wider" style={{ color: "#dc2626" }}>
+                  REC
+                </span>
                 <span className="text-xs font-mono font-bold text-gray-800 min-w-[36px]">
                   {formatDuration(recordingDuration)}
                 </span>
               </div>
 
-              {/* Sound wave visualizer animation */}
-              <div className="flex items-center gap-1 h-5 px-2">
-                {[45, 80, 100, 60, 90, 50, 85, 40].map((height, i) => (
+              {/* Sound wave visualizer animation with explicit pixel dimensions */}
+              <div className="flex items-center justify-center gap-1 h-6 px-3">
+                {[6, 12, 18, 10, 22, 14, 20, 8, 16, 10, 14, 8].map((pxHeight, i) => (
                   <span
                     key={i}
-                    className="w-1 bg-red-400 rounded-full animate-pulse"
+                    className="animate-pulse rounded-full"
                     style={{
-                      height: `${height}%`,
-                      animationDelay: `${i * 120}ms`,
-                      animationDuration: "700ms",
+                      display: "inline-block",
+                      width: "3px",
+                      height: `${pxHeight}px`,
+                      backgroundColor: "#ef4444",
+                      animationDelay: `${(i % 5) * 120}ms`,
+                      animationDuration: "600ms",
                     }}
                   />
                 ))}
               </div>
 
-              {/* Controls: Discard & Review */}
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={cancelRecording}
-                  className="p-1.5 text-gray-500 hover:text-red-600 rounded-full hover:bg-red-100 transition-colors cursor-pointer"
-                  title="Discard recording"
-                  aria-label="Discard recording"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => stopRecording(false)}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-gray-700 hover:text-gray-900 bg-white/80 hover:bg-white rounded-full border border-gray-200 shadow-2xs transition-colors cursor-pointer"
-                  title="Listen before sending"
-                  aria-label="Listen before sending"
-                >
-                  <Square className="w-3 h-3 fill-current text-gray-600" />
-                  <span>Review</span>
-                </button>
-              </div>
+              {/* Dynamic Action: Hold gesture instruction OR Hands-free controls */}
+              {isHolding ? (
+                <div className="flex items-center gap-1 text-xs font-semibold select-none">
+                  {slideCancelActive ? (
+                    <span className="text-red-600 font-bold flex items-center gap-1 animate-pulse">
+                      <Trash2 className="w-3.5 h-3.5" /> Release to cancel
+                    </span>
+                  ) : (
+                    <span className="text-gray-500 flex items-center gap-1">
+                      <ChevronLeft className="w-3.5 h-3.5 text-gray-400 animate-pulse" />
+                      <span className="hidden sm:inline">Slide left to cancel</span>
+                      <span className="sm:hidden">Slide to cancel</span>
+                      <span className="text-gray-300 mx-1">•</span>
+                      <span className="text-[#d97706] font-bold">Release to send</span>
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={cancelRecording}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
+                    title="Discard recording"
+                    aria-label="Discard recording"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Discard</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => stopRecording(false)}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-gray-700 hover:text-gray-900 bg-white/90 hover:bg-white rounded-full border border-gray-200 shadow-2xs transition-colors cursor-pointer"
+                    title="Listen before sending"
+                    aria-label="Listen before sending"
+                  >
+                    <Square className="w-3 h-3 fill-amber-600 text-amber-600" />
+                    <span>Review</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Send Voice Message Immediately Button */}
             <button
               type="button"
               onClick={() => stopRecording(true)}
-              className="shrink-0 w-10 h-10 rounded-full bg-[#d97706] hover:bg-[#b45309] text-white flex items-center justify-center shadow-xs active:scale-95 transition-all cursor-pointer"
+              className={`shrink-0 w-10 h-10 rounded-full text-white flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer ${
+                isHolding
+                  ? "bg-gradient-to-tr from-amber-600 to-amber-500 ring-4 ring-amber-200/70 animate-pulse"
+                  : "bg-[#d97706] hover:bg-[#b45309]"
+              }`}
               title="Send voice note"
               aria-label="Send voice note"
             >
-              <Send className="w-4.5 h-4.5" />
+              <Send className="w-4.5 h-4.5 ml-0.5" />
             </button>
           </div>
         ) : preview ? (
@@ -543,12 +719,12 @@ export default function ChatThread({
               {isUploading ? (
                 <Loader2 className="w-4.5 h-4.5 animate-spin" />
               ) : (
-                <Send className="w-4.5 h-4.5" />
+                <Send className="w-4.5 h-4.5 ml-0.5" />
               )}
             </button>
           </div>
         ) : (
-          /* State 3: Normal Text & Microphone Input Bar */
+          /* State 3: Normal Text & WhatsApp-style Dynamic Voice/Send Button */
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -556,41 +732,55 @@ export default function ChatThread({
             }}
             className="flex items-center gap-2 w-full"
           >
-            {/* Microphone button */}
-            <button
-              type="button"
-              onClick={startRecording}
-              disabled={sending || isUploading}
-              className="shrink-0 p-2.5 rounded-full bg-gray-100 text-gray-600 hover:text-[#d97706] hover:bg-amber-50 active:scale-95 transition-all cursor-pointer disabled:opacity-40"
-              aria-label="Record voice message"
-              title="Record voice message"
-            >
-              <Mic className="w-5 h-5" />
-            </button>
-
             {/* Text input */}
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type a message or press mic to record..."
+              placeholder="Type a message..."
               disabled={sending || isUploading}
               className="flex-1 px-4 py-2.5 rounded-full bg-gray-100 border border-transparent focus:border-[#d97706] focus:bg-white focus:outline-none text-sm text-gray-800 transition-all placeholder:text-gray-400"
             />
 
-            {/* Send button */}
-            <button
-              type="submit"
-              disabled={!input.trim() || sending || isUploading}
-              className="shrink-0 p-2.5 rounded-full bg-[#d97706] text-white hover:bg-[#b45309] disabled:opacity-30 disabled:hover:bg-[#d97706] transition-all active:scale-95 cursor-pointer disabled:cursor-not-allowed"
-              aria-label="Send message"
-              title="Send message"
-            >
-              {sending || isUploading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </button>
+            {/* Dynamic Action Button: Send button when typing, Voice Note button when empty */}
+            {input.trim().length > 0 ? (
+              <button
+                type="submit"
+                disabled={sending || isUploading}
+                className="shrink-0 w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 via-[#d97706] to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white flex items-center justify-center shadow-md active:scale-95 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
+                aria-label="Send message"
+                title="Send message"
+              >
+                {sending || isUploading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-4.5 h-4.5 ml-0.5" />
+                )}
+              </button>
+            ) : (
+              <div className="relative shrink-0 flex items-center justify-center">
+                {/* Voice Note Button with Amber Branded Gradient */}
+                <button
+                  type="button"
+                  onPointerDown={handleVoicePointerDown}
+                  onClick={(e) => {
+                    // Keyboard activation (Enter/Space on focused button)
+                    if (e.detail === 0) {
+                      startRecording();
+                    }
+                  }}
+                  disabled={sending || isUploading}
+                  className="relative shrink-0 w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 via-[#d97706] to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white flex items-center justify-center shadow-md hover:shadow-amber-500/30 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer disabled:opacity-40 select-none touch-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
+                  aria-label="Record voice note"
+                  title="Record voice note (Tap to record, hold to talk)"
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-4.5 h-4.5 animate-spin" />
+                  ) : (
+                    <Mic className="w-4.5 h-4.5 relative z-10 transition-transform duration-200" />
+                  )}
+                </button>
+              </div>
+            )}
           </form>
         )}
       </div>

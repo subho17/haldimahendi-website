@@ -233,8 +233,8 @@ export function useVoiceMessage({
         releaseStream();
         setIsRecording(false);
 
-        if (blob.size === 0) {
-          setError("No audio was recorded.");
+        if (blob.size < 500) {
+          setError("Voice recording was too short.");
           return;
         }
 
