@@ -12,6 +12,7 @@ export default function Celebrating30Years() {
           alt="Celebrating Milestones" 
           fill
           sizes="(max-width: 768px) 100vw, 850px"
+          loading="lazy"
           className="object-cover object-right"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#fdeadc] via-[#fdeadc]/90 to-transparent"></div>

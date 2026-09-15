@@ -88,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="theme-color" content="#166534" />
       </head>
-      <body className="min-h-screen flex flex-col bg-white text-[#111827] m-0 p-0">
+        <body className="min-h-screen flex flex-col bg-white text-[#111827] m-0 p-0 font-sans">
         <AuthProvider>
           <main className="flex-1 flex flex-col">{children}</main>
           <PWA />

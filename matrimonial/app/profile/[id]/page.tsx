@@ -324,7 +324,7 @@ export default function PublicProfilePage() {
 
               <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden border-2 border-slate-200 shadow-md bg-slate-100 flex items-center justify-center text-[#d97706] font-black text-5xl ring-2 ring-amber-100 shrink-0">
                 {profile.avatarUrl && profile.avatarUrl !== "/images/default-avatar.png" ? (
-                  <Image src={profile.avatarUrl} alt={formattedName} fill loading="eager" className="object-cover" />
+                  <Image src={profile.avatarUrl} alt={formattedName} fill loading="eager" sizes="176px" className="object-cover" />
                 ) : (
                   <span className="uppercase">{formattedName.charAt(0)}</span>
                 )}

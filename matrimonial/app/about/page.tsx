@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { 
@@ -19,19 +19,19 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
-import AboutUs from '@/components/aboutpages/aboutus';
-import LetterFromCEO from '@/components/aboutpages/letterfromceo';
-import MissionAndPromise from '@/components/aboutpages/mission&promises';
-import WeCare from '@/components/aboutpages/wecare';
-import Celebrating30Years from '@/components/aboutpages/celebrating30years';
-import HappyMarriages from '@/components/aboutpages/6csofhappymarriages';
-import Advantages from '@/components/aboutpages/advantages';
-import Awards from '@/components/aboutpages/awards';
-import TrueStories from '@/components/aboutpages/truestories';
-import HowToUse from '@/components/aboutpages/howtouse';
-import MembershipPlans from '@/components/aboutpages/membershipplan';
-import MoneyBackGuarantee from '@/components/aboutpages/moneybackgurantee';
-import Secure from '@/components/aboutpages/secure';
+const AboutUs = lazy(() => import('@/components/aboutpages/aboutus'));
+const LetterFromCEO = lazy(() => import('@/components/aboutpages/letterfromceo'));
+const MissionAndPromise = lazy(() => import('@/components/aboutpages/mission&promises'));
+const WeCare = lazy(() => import('@/components/aboutpages/wecare'));
+const Celebrating30Years = lazy(() => import('@/components/aboutpages/celebrating30years'));
+const HappyMarriages = lazy(() => import('@/components/aboutpages/6csofhappymarriages'));
+const Advantages = lazy(() => import('@/components/aboutpages/advantages'));
+const Awards = lazy(() => import('@/components/aboutpages/awards'));
+const TrueStories = lazy(() => import('@/components/aboutpages/truestories'));
+const HowToUse = lazy(() => import('@/components/aboutpages/howtouse'));
+const MembershipPlans = lazy(() => import('@/components/aboutpages/membershipplan'));
+const MoneyBackGuarantee = lazy(() => import('@/components/aboutpages/moneybackgurantee'));
+const Secure = lazy(() => import('@/components/aboutpages/secure'));
 
 const sidebarLinks = [
   { name: 'About Us', icon: Building2, id: 'aboutus' },
@@ -86,7 +86,7 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
 
       {/* Top Header Banner */}
@@ -168,7 +168,9 @@ export default function AboutPage() {
 
           {/* Main Content Viewport */}
           <div className="flex-1 min-w-0 w-full overflow-hidden animate-in fade-in duration-200">
-            {renderContent()}
+            <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d97706]"></div></div>}>
+              {renderContent()}
+            </Suspense>
           </div>
         </div>
       </main>

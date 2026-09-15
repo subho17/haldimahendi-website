@@ -792,7 +792,7 @@ My Haldimehendi
               >
                 <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-100 border border-white flex items-center justify-center text-red-800 font-bold overflow-hidden shadow-xs shrink-0" style={{ position: "relative" }}>
                   {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
-                    <Image src={userAvatar} alt={userName} width={32} height={32} className="w-full h-full object-cover" />
+                    <Image src={userAvatar} alt={userName} width={32} height={32} loading="eager" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-xs sm:text-sm font-extrabold text-[#d97706] uppercase">
                       {userName.charAt(0)}
@@ -811,7 +811,7 @@ My Haldimehendi
                   <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-3">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-red-50 flex items-center justify-center font-bold text-red-600 shrink-0" style={{ position: "relative" }}>
                       {userAvatar && userAvatar !== "/images/default-avatar.png" ? (
-                        <Image src={userAvatar} alt={userName} width={40} height={40} className="w-full h-full object-cover" />
+                        <Image src={userAvatar} alt={userName} width={40} height={40} loading="eager" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-sm font-extrabold text-[#d97706] uppercase">{userName.charAt(0)}</span>
                       )}

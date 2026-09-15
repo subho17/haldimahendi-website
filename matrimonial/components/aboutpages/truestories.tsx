@@ -51,6 +51,8 @@ export default function TrueStories() {
                   alt={s.name}
                   width={500}
                   height={500}
+                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, 400px"
                   className="w-full h-auto object-cover"
                 />
               </div>
@@ -77,6 +79,8 @@ export default function TrueStories() {
                   alt={s.name}
                   width={500}
                   height={500}
+                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, 400px"
                   className="w-full h-auto object-cover"
                 />
               </div>

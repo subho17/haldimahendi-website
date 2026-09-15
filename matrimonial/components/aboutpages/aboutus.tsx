@@ -12,6 +12,7 @@ export default function AboutUs() {
           alt="About Haldimehendi" 
           fill
           sizes="(max-width: 768px) 100vw, 850px"
+          loading="lazy"
           className="object-cover"
         />
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -35,13 +36,15 @@ export default function AboutUs() {
           </div>
           
           <div className="flex-1 w-full lg:w-auto relative rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white">
-            <Image 
-              src="/shaadi_mockup.png" 
-              alt="Haldimehendi Web Platform" 
-              width={600}
-              height={500}
-              className="w-full h-auto object-cover"
-            />
+        <Image 
+          src="/shaadi_mockup.png" 
+          alt="Haldimehendi Web Platform" 
+          width={600}
+          height={500}
+          loading="lazy"
+          sizes="(max-width: 768px) 100vw, 500px"
+          className="w-full h-auto object-cover"
+        />
           </div>
         </div>
 
@@ -52,6 +55,8 @@ export default function AboutUs() {
               alt="Haldimehendi Elite" 
               width={600}
               height={500}
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, 500px"
               className="w-full h-auto object-cover"
             />
           </div>
@@ -78,6 +83,8 @@ export default function AboutUs() {
               alt="Community Matrimony" 
               width={600}
               height={500}
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, 500px"
               className="w-full h-auto object-cover"
             />
           </div>
@@ -90,6 +97,8 @@ export default function AboutUs() {
               alt="Kundali & Compatibility" 
               width={600}
               height={500}
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, 500px"
               className="w-full h-auto object-cover"
             />
           </div>

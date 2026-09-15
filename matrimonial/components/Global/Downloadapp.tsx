@@ -55,10 +55,10 @@ export default function Downloadapp() {
               </div>
                {/* Phone Image area */}
                <div className="p-3 grid grid-cols-2 gap-2 h-full overflow-hidden bg-gray-50">
-                  <Image src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
-                  <Image src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
-                  <Image src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
-                  <Image src="https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <Image src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} loading="lazy" sizes="100px" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <Image src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} loading="lazy" sizes="100px" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <Image src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} loading="lazy" sizes="100px" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
+                  <Image src="https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=200&h=300" width={200} height={300} loading="lazy" sizes="100px" className="w-full h-32 object-cover rounded-xl shadow-sm" alt="Profile" />
                </div>
              </div>
           </div>
@@ -81,6 +81,7 @@ export default function Downloadapp() {
                   alt="Match profile" 
                   fill
                   sizes="(max-width: 768px) 400px, 600px"
+                  loading="lazy"
                   className="object-cover"
                 />
                 {/* Overlay text */}

@@ -12,6 +12,7 @@ export default function WeCare() {
           alt="We Care" 
           fill
           sizes="(max-width: 768px) 100vw, 850px"
+          loading="lazy"
           className="object-cover"
         />
       </div>

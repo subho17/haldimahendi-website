@@ -25,6 +25,8 @@ export default function Awards() {
             alt="Awards Ceremony" 
             width={500}
             height={350}
+            loading="lazy"
+            sizes="(max-width: 768px) 100vw, 500px"
             className="w-full h-auto object-cover"
           />
         </div>
@@ -37,6 +39,8 @@ export default function Awards() {
             alt="Gender Sensitivity Award" 
             width={500}
             height={350}
+            loading="lazy"
+            sizes="(max-width: 768px) 100vw, 500px"
             className="w-full h-auto object-cover"
           />
         </div>
@@ -65,6 +69,8 @@ export default function Awards() {
             alt="Data Operations Award" 
             width={500}
             height={350}
+            loading="lazy"
+            sizes="(max-width: 768px) 100vw, 500px"
             className="w-full h-auto object-cover"
           />
         </div>
@@ -77,6 +83,8 @@ export default function Awards() {
             alt="DevOps Award" 
             width={500}
             height={350}
+            loading="lazy"
+            sizes="(max-width: 768px) 100vw, 500px"
             className="w-full h-auto object-cover"
           />
         </div>
@@ -105,6 +113,8 @@ export default function Awards() {
             alt="AI Award" 
             width={500}
             height={350}
+            loading="lazy"
+            sizes="(max-width: 768px) 100vw, 500px"
             className="w-full h-auto object-cover"
           />
         </div>

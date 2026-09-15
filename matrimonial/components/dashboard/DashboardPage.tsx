@@ -317,13 +317,14 @@ export default function DashboardPage() {
                   <div>
                     <div className="relative w-full h-48 bg-slate-100 overflow-hidden flex items-center justify-center" style={{ position: "relative" }}>
                       {m.profile.avatarUrl && m.profile.avatarUrl !== "/images/default-avatar.png" ? (
-                        <Image
-                          src={m.profile.avatarUrl}
-                          alt={m.profile.name}
-                          fill
-                          sizes="200px"
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                  <Image
+                    src={m.profile.avatarUrl}
+                    alt={m.profile.name}
+                    fill
+                    sizes="200px"
+                    loading="lazy"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-tr from-rose-500 via-[#d97706] to-amber-500 flex items-center justify-center text-white font-black text-4xl shadow-inner group-hover:scale-105 transition-transform duration-300">
                           {m.profile.name[0]}

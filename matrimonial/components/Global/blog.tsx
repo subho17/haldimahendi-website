@@ -103,6 +103,7 @@ export default function Blog() {
                     alt={post.title} 
                     fill
                     sizes="(max-width: 768px) 280px, 340px"
+                    loading="lazy"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-bold text-[#15803d] border border-emerald-100 shadow-xs">

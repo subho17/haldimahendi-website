@@ -13,6 +13,7 @@ export default function MissionAndPromise() {
           alt="Haldimehendi Mission Banner" 
           fill
           sizes="(max-width: 768px) 100vw, 850px"
+          loading="lazy"
           className="object-cover object-right"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#f5efe9] via-[#f5efe9]/90 to-transparent"></div>
