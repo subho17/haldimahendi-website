@@ -28,6 +28,8 @@ export default function PhotosPage() {
   const [uploading, setUploading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [photoLimit, setPhotoLimit] = useState<number>(-1);
+  const [photosUsed, setPhotosUsed] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const userId = user?.profileId || user?.mobileNumber || user?.email || "";
@@ -36,7 +38,11 @@ export default function PhotosPage() {
     try {
       const res = await fetch(`/api/photos/upload?userId=${encodeURIComponent(userId)}`);
       const data = await res.json();
-      if (data.success) setPhotos(data.photos || []);
+      if (data.success) {
+        setPhotos(data.photos || []);
+        if (data.photoLimit !== undefined) setPhotoLimit(data.photoLimit);
+        if (data.photosUsed !== undefined) setPhotosUsed(data.photosUsed);
+      }
     } catch (e) {
       console.error("[Photos] Failed to load photos:", e);
     } finally {
@@ -54,7 +60,11 @@ export default function PhotosPage() {
         try {
           const res = await fetch(`/api/photos/upload?userId=${encodeURIComponent(userId)}`);
           const data = await res.json();
-          if (data.success) setPhotos(data.photos || []);
+          if (data.success) {
+            setPhotos(data.photos || []);
+            if (data.photoLimit !== undefined) setPhotoLimit(data.photoLimit);
+            if (data.photosUsed !== undefined) setPhotosUsed(data.photosUsed);
+          }
         } catch (e) {
           console.error("[Photos] Failed to load photos:", e);
         } finally {
@@ -67,6 +77,13 @@ export default function PhotosPage() {
   const uploadFiles = async (files: FileList | File[]) => {
     const validFiles = Array.from(files).filter((f) => isImageFile(f));
     if (validFiles.length === 0) return;
+
+    // Check if photo limit is reached before uploading
+    if (photoLimit !== -1 && photosUsed >= photoLimit) {
+      alert(`You've reached your photo limit (${photoLimit} photos). Upgrade your plan to upload more.`);
+      return;
+    }
+
     setUploading(true);
     try {
       const convertedFiles = await Promise.all(validFiles.map((f) => convertHeicToJpeg(f)));
@@ -80,7 +97,14 @@ export default function PhotosPage() {
           body: form,
         });
         const data = await res.json();
-        if (data.success) setPhotos(data.photos || []);
+        if (data.success) {
+          setPhotos(data.photos || []);
+          if (data.photoLimit !== undefined) setPhotoLimit(data.photoLimit);
+          if (data.photosUsed !== undefined) setPhotosUsed(data.photosUsed);
+        } else if (data.limitReached) {
+          alert(data.message || `Photo limit reached. Upgrade your plan to upload more.`);
+          break;
+        }
       }
     } catch (e) {
       console.error("[Photos] Upload failed:", e);
@@ -150,6 +174,27 @@ export default function PhotosPage() {
             Profiles with photos get up to 10x more responses. Your first photo becomes your profile photo.
           </p>
 
+          {/* Photo Limit Indicator */}
+          {photoLimit !== -1 && (
+            <div className="mt-4 max-w-xs mx-auto">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>{photosUsed} of {photoLimit} photos used</span>
+                <span>{Math.max(0, photoLimit - photosUsed)} remaining</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all ${photosUsed >= photoLimit ? 'bg-red-500' : 'bg-[#d97706]'}`}
+                  style={{ width: `${Math.min(100, (photosUsed / photoLimit) * 100)}%` }}
+                />
+              </div>
+              {photosUsed >= photoLimit && (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  Limit reached. <a href="/membership" className="underline font-bold hover:text-red-600">Upgrade plan</a> to upload more.
+                </p>
+              )}
+            </div>
+          )}
+
           {(!mounted || isLoading || !isAuthenticated) ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="w-8 h-8 text-[#d97706] animate-spin" />
@@ -169,19 +214,33 @@ export default function PhotosPage() {
               />
 
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  if (photoLimit !== -1 && photosUsed >= photoLimit) {
+                    alert(`You've reached your photo limit (${photoLimit} photos). Upgrade your plan to upload more.`);
+                    return;
+                  }
+                  fileInputRef.current?.click();
+                }}
                 onDragOver={(e) => {
                   e.preventDefault();
-                  setDragOver(true);
+                  if (photoLimit === -1 || photosUsed < photoLimit) setDragOver(true);
                 }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={(e) => {
                   e.preventDefault();
                   setDragOver(false);
+                  if (photoLimit !== -1 && photosUsed >= photoLimit) {
+                    alert(`You've reached your photo limit (${photoLimit} photos). Upgrade your plan to upload more.`);
+                    return;
+                  }
                   if (e.dataTransfer.files) uploadFiles(e.dataTransfer.files);
                 }}
-                className={`mt-8 p-8 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                  dragOver ? "border-[#d97706] bg-red-50/40" : "border-gray-200 bg-gray-50/50"
+                className={`mt-8 p-8 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-colors ${
+                  photoLimit !== -1 && photosUsed >= photoLimit
+                    ? "border-gray-200 bg-gray-100/50 cursor-not-allowed opacity-60"
+                    : dragOver
+                      ? "border-[#d97706] bg-red-50/40 cursor-pointer"
+                      : "border-gray-200 bg-gray-50/50 cursor-pointer"
                 }`}
               >
                 {uploading ? (

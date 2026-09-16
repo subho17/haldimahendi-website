@@ -13,6 +13,8 @@ import { buildProfileLookup } from '@/lib/profileLookup';
 import { isBlocked } from '@/lib/reportStore';
 import { notifyInterestEvent } from '@/lib/notificationStore';
 import { expandAllAliases } from '@/lib/userAliases';
+import { canSendInterest, recordInterestSent, canShortlist, recordShortlist, getUsageSummary } from '@/lib/usageStore';
+import { sendEmail, interestReceivedEmail, interestAcceptedEmail, shouldSendEmail } from '@/lib/emailService';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -29,10 +31,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, message: 'Missing userId parameter' }, { status: 400 });
     }
 
-    const [state, { received, sent }, lookup] = await Promise.all([
+    const [state, { received, sent }, lookup, usage] = await Promise.all([
       getSendState(userId),
       getInbox(userId),
       buildProfileLookup(),
+      getUsageSummary(userId),
     ]);
 
     const rawAccepted = [
@@ -62,6 +65,10 @@ export async function GET(req: Request) {
       acceptedIds: [...new Set(acceptedIds)],
       received: enrich(received, 'senderId'),
       sent: enrich(sent, 'recipientId'),
+      usage: {
+        interests: usage.interests,
+        shortlists: usage.shortlists,
+      },
     });
   } catch (e) {
     console.error('Error loading interests:', e);
@@ -106,15 +113,46 @@ export async function POST(req: Request) {
       }
     }
 
+    // Enforce membership plan limits for interests and shortlists
+    if (action === 'interest') {
+      const interestCheck = await canSendInterest(actorId);
+      if (!interestCheck.allowed) {
+        return NextResponse.json({
+          success: false,
+          message: `Monthly interest limit reached (${interestCheck.limit} sends/month). Upgrade your plan to send more interests.`,
+          limitReached: true,
+          limit: interestCheck.limit,
+          remaining: interestCheck.remaining,
+          upgradeRequired: interestCheck.upgradeRequired,
+        }, { status: 403 });
+      }
+    }
+
+    if (action === 'shortlist') {
+      const shortlistCheck = await canShortlist(actorId);
+      if (!shortlistCheck.allowed) {
+        return NextResponse.json({
+          success: false,
+          message: `Shortlist limit reached (${shortlistCheck.limit} max). Upgrade your plan for unlimited shortlisting.`,
+          limitReached: true,
+          limit: shortlistCheck.limit,
+          remaining: shortlistCheck.remaining,
+          upgradeRequired: shortlistCheck.upgradeRequired,
+        }, { status: 403 });
+      }
+    }
+
     switch (action) {
       case 'interest':
         await sendInterest(actorId, otherId);
+        await recordInterestSent(actorId);
         break;
       case 'unsend':
         await unsendInterest(actorId, otherId);
         break;
       case 'shortlist':
         await shortlistProfile(actorId, otherId);
+        await recordShortlist(actorId);
         break;
       case 'unshortlist':
         await unshortlistProfile(actorId, otherId);
@@ -132,12 +170,33 @@ export async function POST(req: Request) {
       try {
         const lookup = await buildProfileLookup();
         const actor = lookup.get(normalizeId(actorId));
+        const recipient = lookup.get(normalizeId(otherId));
         await notifyInterestEvent({
           actorId,
           actorName: actor?.name || 'A member',
           recipientId: otherId,
           action: action === 'interest' ? 'interest' : 'accept',
         });
+
+        // Send email notification
+        if (recipient?.email) {
+          const wantsEmail = await shouldSendEmail(otherId, 'interest');
+          if (wantsEmail) {
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com';
+            const actorProfileUrl = `${siteUrl}/profile/${actorId}`;
+            const chatUrl = `${siteUrl}/chat`;
+            
+            const emailData = action === 'interest'
+              ? interestReceivedEmail(actor?.name || 'A member', actorProfileUrl)
+              : interestAcceptedEmail(actor?.name || 'A member', chatUrl);
+            
+            await sendEmail({
+              to: recipient.email,
+              subject: emailData.subject,
+              html: emailData.html,
+            });
+          }
+        }
       } catch (e) {
         console.warn('[Interests] Failed to create notification:', e);
       }

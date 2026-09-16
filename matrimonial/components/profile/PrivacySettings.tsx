@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Eye, User, Phone, Mail, Shield, Info } from "lucide-react";
+import { Eye, User, Phone, Mail, Shield, Info, Bell } from "lucide-react";
 
 interface PrivacySettingsProps {
   userId: string;
@@ -39,6 +39,30 @@ const PRIVACY_OPTIONS = [
   },
 ];
 
+const EMAIL_NOTIFICATION_OPTIONS = [
+  {
+    key: 'email_interest',
+    label: 'Interest Notifications',
+    description: 'Get notified when someone sends or accepts your interest',
+    icon: Mail,
+    color: 'bg-pink-100 text-pink-700',
+  },
+  {
+    key: 'email_messages',
+    label: 'Message Notifications',
+    description: 'Get notified when you receive a new message',
+    icon: Mail,
+    color: 'bg-blue-100 text-blue-700',
+  },
+  {
+    key: 'email_matches',
+    label: 'Match Suggestions',
+    description: 'Get notified about new profile matches',
+    icon: Bell,
+    color: 'bg-amber-100 text-amber-700',
+  },
+];
+
 export default function PrivacySettings({ userId }: PrivacySettingsProps) {
   const [privacy, setPrivacy] = useState<Record<string, any /* eslint-disable-line @typescript-eslint/no-explicit-any */>>({
     hide_phone: false,
@@ -46,6 +70,9 @@ export default function PrivacySettings({ userId }: PrivacySettingsProps) {
     hide_surname: false,
     hide_photos: false,
     photo_privacy: 'public',
+    email_interest: true,
+    email_messages: true,
+    email_matches: true,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -145,6 +172,43 @@ export default function PrivacySettings({ userId }: PrivacySettingsProps) {
 
       <div className="space-y-4">
         {PRIVACY_OPTIONS.map(opt => (
+          <div key={opt.key} className="bg-white rounded-2xl border border-gray-100 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl ${opt.color}`}>
+                  <opt.icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">{opt.label}</h4>
+                  <p className="text-xs text-gray-500">{opt.description}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleToggle(opt.key, privacy[opt.key])}
+                disabled={saving}
+                className={`relative w-12 h-7 rounded-full transition-all ${
+                  privacy[opt.key]
+                    ? 'bg-[#d97706] after:translate-x-5'
+                    : 'bg-gray-200 after:translate-x-0'
+                } after:content-[""] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:shadow-sm after:transition-all`}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+        <div className="p-3 rounded-xl bg-blue-100">
+          <Bell className="w-6 h-6 text-blue-600" />
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900">Email Notifications</h3>
+          <p className="text-xs text-gray-500">Choose which emails you want to receive</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {EMAIL_NOTIFICATION_OPTIONS.map(opt => (
           <div key={opt.key} className="bg-white rounded-2xl border border-gray-100 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">

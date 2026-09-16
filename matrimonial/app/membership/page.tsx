@@ -216,10 +216,6 @@ export default function MembershipPage() {
   const [plans, setPlans] = useState<typeof MEMBERSHIP_PLANS>([]);
   const [selectedPlan, setSelectedPlan] = useState<typeof MEMBERSHIP_PLANS[number] | null>(null);
   const [step, setStep] = useState<"form" | "processing" | "success">("form");
-  const [cardName, setCardName] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number; finalPrice: number } | null>(null);
   const [couponError, setCouponError] = useState("");
@@ -256,21 +252,10 @@ export default function MembershipPage() {
   const openCheckout = (plan: typeof MEMBERSHIP_PLANS[number]) => {
     setFormError("");
     setMessage("");
-    setCardName("");
-    setCardNumber("");
-    setCardExpiry("");
-    setCardCvv("");
+    setCouponCode("");
+    setAppliedCoupon(null);
     setStep("form");
     setSelectedPlan(plan);
-  };
-
-  const formatCardNumber = (v: string) =>
-    v.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ");
-
-  const formatExpiryInput = (v: string) => {
-    const digits = v.replace(/\D/g, "").slice(0, 4);
-    if (digits.length <= 2) return digits;
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
   };
 
   const applyCoupon = async () => {
@@ -305,23 +290,46 @@ export default function MembershipPage() {
     setAppliedCoupon(null);
   };
 
-  const handlePay = async (e: React.FormEvent) => {
+  const handleApplyCouponAndUpgrade = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
+    setCouponError("");
     if (!selectedPlan) return;
-    if (!cardName.trim()) return setFormError("Please enter the name on the card.");
-    if (cardNumber.replace(/\D/g, "").length < 12) return setFormError("Please enter a valid card number.");
-    if (cardExpiry.length < 5) return setFormError("Please enter a valid expiry (MM/YY).");
-    if (cardCvv.length < 3) return setFormError("Please enter a valid CVV.");
 
-    setStep("processing");
-    await new Promise((r) => setTimeout(r, 1800));
+    // Validate coupon first
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
 
+    setValidatingCoupon(true);
     try {
+      const couponRes = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, planId: selectedPlan.id, userId }),
+      });
+      const couponData = await couponRes.json();
+
+      if (!couponData?.success) {
+        setCouponError(couponData?.message || "Invalid coupon code");
+        setValidatingCoupon(false);
+        return;
+      }
+
+      // Coupon valid — apply it and upgrade
+      setAppliedCoupon({
+        code: couponData.coupon.code,
+        discountAmount: couponData.discountAmount,
+        finalPrice: couponData.finalPrice,
+      });
+
+      setStep("processing");
+
       const res = await fetch("/api/membership", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, planId: selectedPlan.id, couponCode: appliedCoupon?.code || "" }),
+        body: JSON.stringify({ userId, planId: selectedPlan.id, couponCode: couponData.coupon.code }),
       });
       const data = await res.json();
       if (data?.success && data.membership) {
@@ -329,12 +337,14 @@ export default function MembershipPage() {
         setStep("success");
         setAppliedCoupon(null);
       } else {
-        setFormError(data?.message || "Payment failed. Please try again.");
+        setFormError(data?.message || "Upgrade failed. Please try again.");
         setStep("form");
       }
     } catch {
-      setFormError("Network error while processing payment. Please try again.");
+      setFormError("Network error. Please try again.");
       setStep("form");
+    } finally {
+      setValidatingCoupon(false);
     }
   };
 
@@ -490,19 +500,19 @@ export default function MembershipPage() {
             </div>
 
             <p className="text-center text-[11px] text-gray-400 mt-6">
-              Demo checkout — no real payment is processed. Prices are indicative and subject to change.
+              Enter a valid coupon code to activate premium membership. Prices are indicative and subject to change.
             </p>
           </>
         )}
       </main>
 
-      {/* Simulated Checkout Modal */}
+      {/* Coupon Upgrade Modal */}
       {selectedPlan && step !== "success" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-extrabold text-gray-900">
-                {step === "form" ? "Secure Checkout" : "Processing Payment"}
+                {step === "form" ? "Apply Coupon to Upgrade" : "Processing..."}
               </h3>
               <button
                 type="button"
@@ -524,7 +534,7 @@ export default function MembershipPage() {
                 <div className="text-right">
                   {appliedCoupon ? (
                     <>
-                      <p className="text-xl font-black text-emerald-600">₹{selectedPlan.price}</p>
+                      <p className="text-sm text-gray-400 line-through">{selectedPlan.price}</p>
                       <p className="text-[10px] text-emerald-600 font-semibold">−₹{appliedCoupon.discountAmount.toLocaleString()} with {appliedCoupon.code}</p>
                       <p className="text-xl font-black text-gray-900">₹{appliedCoupon.finalPrice.toLocaleString()}</p>
                       <p className="text-[10px] text-gray-400 font-semibold">incl. of all taxes</p>
@@ -540,60 +550,12 @@ export default function MembershipPage() {
             </div>
 
             {step === "form" ? (
-              <form onSubmit={handlePay} className="space-y-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 mb-1 uppercase tracking-wide">
-                    Name on Card
-                  </label>
-                  <input
-                    value={cardName}
-                    onChange={(e) => setCardName(e.target.value)}
-                    placeholder="Full name"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 mb-1 uppercase tracking-wide">
-                    Card Number
-                  </label>
-                  <input
-                    value={cardNumber}
-                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                    placeholder="4242 4242 4242 4242"
-                    inputMode="numeric"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 mb-1 uppercase tracking-wide">
-                      Expiry
-                    </label>
-                    <input
-                      value={cardExpiry}
-                      onChange={(e) => setCardExpiry(formatExpiryInput(e.target.value))}
-                      placeholder="MM/YY"
-                      inputMode="numeric"
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-600 mb-1 uppercase tracking-wide">
-                      CVV
-                    </label>
-                    <input
-                      value={cardCvv}
-                      onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                      placeholder="•••"
-                      type="password"
-                      inputMode="numeric"
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
-                    />
-                  </div>
-                </div>
-
+              <form onSubmit={handleApplyCouponAndUpgrade} className="space-y-4">
                 {/* Coupon Input */}
                 <div className="space-y-2">
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide">
+                    Enter Coupon Code to Get {selectedPlan.name} for Free
+                  </label>
                   {appliedCoupon ? (
                     <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200">
                       <div className="flex items-center gap-2">
@@ -616,8 +578,8 @@ export default function MembershipPage() {
                       <input
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        placeholder="Enter coupon code"
-                        className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40"
+                        placeholder="Enter coupon code (e.g., SAVE100)"
+                        className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/40 uppercase tracking-wider"
                       />
                       <button
                         type="button"
@@ -640,18 +602,21 @@ export default function MembershipPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-[#d97706] text-white text-sm font-bold shadow-md hover:bg-[#b45309] transition-colors cursor-pointer"
+                  disabled={!appliedCoupon}
+                  className="w-full py-3 rounded-xl bg-[#d97706] text-white text-sm font-bold shadow-md hover:bg-[#b45309] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {appliedCoupon ? `Pay ₹{selectedPlan.price} (₹{appliedCoupon.finalPrice.toLocaleString()} after discount)` : `Pay {selectedPlan.price}`}
+                  {appliedCoupon
+                    ? `Activate ${selectedPlan.name} (₹${appliedCoupon.finalPrice.toLocaleString()})`
+                    : "Enter a valid coupon to proceed"}
                 </button>
                 <p className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400 font-semibold">
-                  <Lock className="w-3 h-3" /> This is a demo checkout — no real payment is taken.
+                  <Tag className="w-3 h-3" /> Enter a valid coupon code to access premium features
                 </p>
               </form>
             ) : (
               <div className="py-8 flex flex-col items-center gap-3">
                 <div className="w-10 h-10 border-3 border-[#d97706] border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm font-bold text-gray-700">Authorizing payment…</p>
+                <p className="text-sm font-bold text-gray-700">Activating your membership...</p>
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { saveProfile } from '@/lib/otpStore';
 import { getSupabaseClient, DEFAULT_BUCKET } from '@/lib/supabaseClient';
+import { canUploadPhoto, recordPhotoUploaded, getUsageSummary } from '@/lib/usageStore';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 const PHOTOS_FILE = path.join(process.cwd(), 'scratch', 'photos_db.json');
@@ -48,7 +49,14 @@ export async function GET(req: Request) {
     }
 
     const userPhotos = photos.filter((p) => p.userId === userId);
-    return NextResponse.json({ success: true, photos: userPhotos });
+    const usage = await getUsageSummary(userId);
+    return NextResponse.json({
+      success: true,
+      photos: userPhotos,
+      photoLimit: usage.photos.limit,
+      photosUsed: usage.photos.used,
+      photosRemaining: usage.photos.remaining,
+    });
   } catch (error) {
     console.error('Error fetching photos:', error);
     return NextResponse.json({ success: false, message: 'Failed to fetch photos' }, { status: 500 });
@@ -131,6 +139,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Missing photoUrl parameter' }, { status: 400 });
     }
 
+    // Check photo upload limit based on membership plan
+    const photoCheck = await canUploadPhoto(userId);
+    if (!photoCheck.allowed) {
+      return NextResponse.json({
+        success: false,
+        message: `Photo limit reached (${photoCheck.limit} max). Upgrade your plan to upload more photos.`,
+        limitReached: true,
+        limit: photoCheck.limit,
+        upgradeRequired: photoCheck.upgradeRequired,
+      }, { status: 403 });
+    }
+
     ensurePhotosFile();
     let photos: PhotoRecord[] = [];
     try {
@@ -155,6 +175,9 @@ export async function POST(req: Request) {
 
     photos.unshift(newPhoto);
     fs.writeFileSync(PHOTOS_FILE, JSON.stringify(photos, null, 2));
+
+    // Record photo upload usage
+    await recordPhotoUploaded(userId);
 
     // Update avatarUrl in user profile
     if (newPhoto.isMain) {

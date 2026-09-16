@@ -224,6 +224,9 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_surname BOOLEAN DEFAULT FALSE;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_photos BOOLEAN DEFAULT FALSE;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_privacy TEXT DEFAULT 'public';
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email_interest BOOLEAN DEFAULT TRUE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email_messages BOOLEAN DEFAULT TRUE;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email_matches BOOLEAN DEFAULT TRUE;
       CREATE TABLE IF NOT EXISTS coupons (
         id TEXT PRIMARY KEY,
         code TEXT UNIQUE NOT NULL,

@@ -115,14 +115,20 @@ async function writePgCoupon(c: Coupon, isNew: boolean) {
 }
 
 export async function listCoupons(): Promise<Coupon[]> {
+  let pgCoupons: Coupon[] = [];
   if (hasPool) {
     try {
-      return await readPgCoupons();
+      pgCoupons = await readPgCoupons();
     } catch (e) {
       console.warn('[Coupon] PG list failed, fallback:', e);
     }
   }
-  return readFile().coupons;
+
+  const fileCoupons = readFile().coupons;
+
+  // Merge: prefer PG coupons if they exist, otherwise use file coupons
+  if (pgCoupons.length > 0) return pgCoupons;
+  return fileCoupons;
 }
 
 export async function getCouponByCode(code: string): Promise<Coupon | null> {

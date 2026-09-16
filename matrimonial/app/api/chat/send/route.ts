@@ -4,6 +4,7 @@ import { getConversationById, sendChatMessage } from '@/lib/chatStore';
 import { isBlocked } from '@/lib/reportStore';
 import { createNotification } from '@/lib/notificationStore';
 import { buildProfileLookup } from '@/lib/profileLookup';
+import { sendEmail, newMessageEmail, shouldSendEmail } from '@/lib/emailService';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -77,11 +78,28 @@ export async function POST(req: Request) {
     try {
       const lookup = await buildProfileLookup();
       const sender = lookup.get(senderId);
+      const recipient = lookup.get(recipientId);
       const preview = voiceUrl ? '(voice message)' : (content.slice(0, 80) || '(no text)');
       await createNotification(recipientId, 'message', `${sender?.name || 'A member'} sent you ${preview}`, {
         actorId: senderId,
         data: { conversationId, profileId: senderId, ...(voiceDuration !== undefined ? { voiceDuration: String(voiceDuration) } : {}) },
       });
+
+      // Send email notification for new message
+      if (recipient?.email && content) {
+        const wantsEmail = await shouldSendEmail(recipientId, 'messages');
+        if (wantsEmail) {
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com';
+          const chatUrl = `${siteUrl}/chat`;
+          const emailData = newMessageEmail(sender?.name || 'A member', content.slice(0, 100), chatUrl);
+          
+          await sendEmail({
+            to: recipient.email,
+            subject: emailData.subject,
+            html: emailData.html,
+          });
+        }
+      }
     } catch (e) {
       console.warn('[Chat] Failed to create message notification:', e);
     }

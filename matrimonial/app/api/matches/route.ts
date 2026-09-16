@@ -7,6 +7,7 @@ import { findMatches, type MatchCandidate, type MatchPreferences } from '@/lib/m
 import { getInvisibleIds } from '@/lib/reportStore';
 import { resolveStatus } from '@/lib/membershipStore';
 import { is4DigitId, generateUnique4DigitId } from '@/lib/idGenerator';
+import { getMatchLimit, recordMatchesReturned } from '@/lib/usageStore';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -316,17 +317,31 @@ export async function GET(req: Request) {
 
     if (!prefs.userId) prefs.userId = userId;
 
+    // Enforce daily match suggestion limit based on membership plan
+    const matchLimit = await getMatchLimit(userId);
+    const isLimited = matchLimit.limit !== -1;
+    const limitedMatches = isLimited ? eligible.slice(0, matchLimit.remaining) : eligible;
+    const limitedAllMatches = isLimited ? matches.slice(0, matchLimit.remaining) : matches;
+
+    // Record how many matches were returned today
+    if (limitedMatches.length > 0) {
+      await recordMatchesReturned(userId, limitedMatches.length);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Matches generated successfully',
       preferences: prefs,
       meta: {
         totalCandidates: visibleCandidates.length,
-        matches: totalEligible,
-        newCount,
+        matches: limitedMatches.length,
+        newCount: isLimited ? limitedMatches.filter((m) => m.isNew).length : newCount,
+        dailyLimit: matchLimit.limit,
+        dailyRemaining: isLimited ? Math.max(0, matchLimit.remaining - limitedMatches.length) : -1,
+        limitReached: isLimited && matchLimit.remaining <= 0,
       },
-      matches: eligible,
-      allMatches: matches,
+      matches: limitedMatches,
+      allMatches: limitedAllMatches,
     });
   } catch (e) {
     console.error('Error generating matches:', e);
