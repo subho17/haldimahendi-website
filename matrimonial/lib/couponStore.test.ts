@@ -35,7 +35,6 @@ import {
   getCouponByCode,
   validateCoupon,
   createCoupon,
-  recordCouponUsage,
 } from './couponStore';
 
 const sampleCoupons = [

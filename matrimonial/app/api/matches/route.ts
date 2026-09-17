@@ -312,7 +312,6 @@ export async function GET(req: Request) {
     const matches = findMatches(prefs, visibleCandidates, { viewer });
 
     const eligible = matches.filter((m) => m.isEligible);
-    const totalEligible = eligible.length;
     const newCount = eligible.filter((m) => m.isNew).length;
 
     if (!prefs.userId) prefs.userId = userId;

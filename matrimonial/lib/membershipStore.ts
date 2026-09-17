@@ -15,11 +15,18 @@ export interface MembershipPlan {
   features: string[];
   highlight: boolean;
   badgeLabel: string;
+  // Limits (-1 = unlimited)
   contactCredits: number;
   interestsPerMonth: number;
   shortlistLimit: number;
   profilePhotos: number;
   profileBoostsPerMonth: number;
+  profileViewsPerDay: number;
+  messagesPerDay: number;
+  canChat: boolean;
+  canViewFullProfile: boolean;
+  canSeeContactDetails: boolean;
+  // Features
   featuredProfile: boolean;
   horoscopeMatching: boolean;
   compatibilityScore: boolean;
@@ -44,7 +51,8 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     features: [
       "Create matrimonial profile",
       "Upload up to 3 photos",
-      "Browse profiles",
+      "Browse all profiles",
+      "View 10 profiles/day",
       "Receive interests",
       "Send 5 interests/month",
       "Shortlist up to 10 profiles",
@@ -58,6 +66,11 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     shortlistLimit: 10,
     profilePhotos: 3,
     profileBoostsPerMonth: 0,
+    profileViewsPerDay: 10,
+    messagesPerDay: 0,
+    canChat: false,
+    canViewFullProfile: false,
+    canSeeContactDetails: false,
     featuredProfile: false,
     horoscopeMatching: false,
     compatibilityScore: false,
@@ -79,14 +92,13 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     periodLabel: "/ month",
     features: [
       "Everything in Free",
-      "Profile verification",
-      "Advanced search filters",
-      "50 interests/month",
+      "View 50 profiles/day",
+      "Chat with matches",
+      "Send 50 interests/month",
       "View contact details (10/month)",
-      "Messaging with matches",
+      "Profile verification",
       "See who viewed you",
       "See who shortlisted you",
-      "Private photos",
       "20 daily match suggestions",
       "1 profile boost/month",
       "Email/WhatsApp alerts",
@@ -98,6 +110,11 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     shortlistLimit: 50,
     profilePhotos: 10,
     profileBoostsPerMonth: 1,
+    profileViewsPerDay: 50,
+    messagesPerDay: 20,
+    canChat: true,
+    canViewFullProfile: true,
+    canSeeContactDetails: false,
     featuredProfile: false,
     horoscopeMatching: false,
     compatibilityScore: false,
@@ -119,6 +136,8 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     periodLabel: "/ month",
     features: [
       "Everything in Silver",
+      "View unlimited profiles",
+      "Unlimited chat messaging",
       "Unlimited interests",
       "View contact details (50/month)",
       "Horoscope matching",
@@ -128,7 +147,6 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
       "3 profile boosts/month",
       "Featured profile",
       "Incognito browsing",
-      "Advanced privacy controls",
       "Unlimited shortlisting",
       "Priority support",
     ],
@@ -139,6 +157,11 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     shortlistLimit: -1,
     profilePhotos: 20,
     profileBoostsPerMonth: 3,
+    profileViewsPerDay: -1,
+    messagesPerDay: -1,
+    canChat: true,
+    canViewFullProfile: true,
+    canSeeContactDetails: true,
     featuredProfile: true,
     horoscopeMatching: true,
     compatibilityScore: true,
@@ -160,6 +183,8 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     periodLabel: "/ month",
     features: [
       "Everything in Gold",
+      "Unlimited profile views",
+      "Unlimited messaging",
       "Unlimited contact views",
       "Unlimited match suggestions",
       "10 profile boosts/month",
@@ -178,6 +203,11 @@ export const MEMBERSHIP_PLANS: MembershipPlan[] = [
     shortlistLimit: -1,
     profilePhotos: -1,
     profileBoostsPerMonth: 10,
+    profileViewsPerDay: -1,
+    messagesPerDay: -1,
+    canChat: true,
+    canViewFullProfile: true,
+    canSeeContactDetails: true,
     featuredProfile: true,
     horoscopeMatching: true,
     compatibilityScore: true,

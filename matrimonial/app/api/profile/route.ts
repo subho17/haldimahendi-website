@@ -4,6 +4,7 @@ import path from 'path';
 import { pool, hasPool, ensureProfilesTable } from '@/lib/db';
 import { resolveStatus, getMembership } from '@/lib/membershipStore';
 import { is4DigitId, generateUnique4DigitId, maskPhoneNumber } from '@/lib/idGenerator';
+import { canViewProfile, recordProfileView } from '@/lib/usageStore';
 
 const USERS_FILE = path.join(process.cwd(), 'scratch', 'users_db.json');
 
@@ -64,11 +65,29 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, message: 'Missing id parameter' }, { status: 400 });
     }
 
+    // Check if viewer can view this profile
+    const isSelf = viewerId && viewerId.toLowerCase() === id.toLowerCase();
+    if (viewerId && !isSelf) {
+      const viewCheck = await canViewProfile(viewerId);
+      if (!viewCheck.allowed) {
+        return NextResponse.json({
+          success: false,
+          message: 'Daily profile view limit reached. Upgrade to view more profiles.',
+          limit: viewCheck.limit,
+          remaining: 0,
+          upgradeRequired: viewCheck.upgradeRequired,
+        }, { status: 403 });
+      }
+    }
+
     // Contact details are premium-gated: only revealed to premium viewers or self.
     let viewerIsPremium = false;
+    let viewerPlan = null;
     if (viewerId) {
       try {
-        viewerIsPremium = (await getMembership(viewerId)).isPremium;
+        const status = await getMembership(viewerId);
+        viewerIsPremium = status.isPremium;
+        viewerPlan = status.plan;
       } catch {
         viewerIsPremium = false;
       }
@@ -91,13 +110,19 @@ export async function GET(req: Request) {
         );
         if (rows.length > 0) {
           const r = rows[0];
-          const isSelf = viewerId && (
+          const profileIsSelf = viewerId && (
             normalizeId(r.user_id).toLowerCase() === viewerId.toLowerCase() ||
             (r.mobile_number && r.mobile_number.replace(/\D/g, '') === viewerId.replace(/\D/g, ''))
           );
-          const revealContact = Boolean(isSelf || viewerIsPremium);
+          const revealContact = Boolean(profileIsSelf || (viewerPlan?.canSeeContactDetails ?? false));
           const mem = resolveStatus(r.membership_tier, r.membership_expires_at);
           const dob = r.dob instanceof Date ? r.dob.toISOString().slice(0, 10) : r.dob;
+
+          // Record profile view (if viewer is looking at someone else's profile)
+          if (viewerId && !profileIsSelf) {
+            await recordProfileView(viewerId);
+          }
+
           return NextResponse.json({
             success: true,
             profile: {

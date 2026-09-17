@@ -6,7 +6,7 @@
     "ageMax": 35,
     "religion": "Any",
     "maritalStatus": "Any",
-    "updatedAt": "2026-09-11T10:40:58.754Z",
+    "updatedAt": "2026-09-17T13:46:41.864Z",
     "createdAt": "2026-09-05T11:46:53.945Z"
   },
   {
@@ -22,11 +22,11 @@
   {
     "userId": "3273",
     "partnerGender": "Woman",
-    "ageMin": 21,
-    "ageMax": 35,
-    "religion": "Any",
-    "maritalStatus": "Any",
-    "updatedAt": "2026-09-16T06:23:10.182Z",
+    "ageMin": 18,
+    "ageMax": 26,
+    "religion": "Jain",
+    "maritalStatus": "Never Married",
+    "updatedAt": "2026-09-17T12:37:22.591Z",
     "createdAt": "2026-09-11T08:41:47.229Z"
   },
   {
@@ -38,5 +38,13 @@
     "maritalStatus": "Any",
     "updatedAt": "2026-09-11T08:45:11.814Z",
     "createdAt": "2026-09-11T08:45:11.814Z"
+  },
+  {
+    "userId": "8514",
+    "partnerGender": "Man",
+    "ageMin": 21,
+    "ageMax": 40,
+    "updatedAt": "2026-09-17T13:03:47.596Z",
+    "createdAt": "2026-09-17T13:03:47.596Z"
   }
 ]

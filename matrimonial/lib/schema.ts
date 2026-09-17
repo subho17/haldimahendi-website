@@ -152,10 +152,10 @@ export function generateArticleSchema(article: {
     image: article.image,
     publisher: {
       "@type": "Organization",
-      name: "Shaadi Matrimonial",
+      name: "HaldiMeHendi",
       logo: {
         "@type": "ImageObject",
-        url: "https://shaadi.example.com/icons/icon-192x192.png",
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://haldimehendi.com"}/icons/icon-192x192.png`,
       },
     },
     mainEntityOfPage: {

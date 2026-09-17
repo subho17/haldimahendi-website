@@ -5,6 +5,7 @@ import { isBlocked } from '@/lib/reportStore';
 import { createNotification } from '@/lib/notificationStore';
 import { buildProfileLookup } from '@/lib/profileLookup';
 import { sendEmail, newMessageEmail, shouldSendEmail } from '@/lib/emailService';
+import { canSendMessage, recordMessageSent } from '@/lib/usageStore';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -69,10 +70,28 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check chat permission and daily limit
+    const chatCheck = await canSendMessage(senderId);
+    if (!chatCheck.canChat) {
+      return NextResponse.json(
+        { success: false, message: 'Chat is available for Silver plan and above. Upgrade to start messaging.', upgradeRequired: true },
+        { status: 403 }
+      );
+    }
+    if (!chatCheck.allowed) {
+      return NextResponse.json(
+        { success: false, message: 'Daily message limit reached. Upgrade your plan for more messages.', limit: chatCheck.limit, remaining: 0, upgradeRequired: chatCheck.upgradeRequired },
+        { status: 403 }
+      );
+    }
+
     const message = await sendChatMessage(conversationId, senderId, recipientId, content, voiceUrl, voiceDuration);
     if (!message) {
       return NextResponse.json({ success: false, message: 'Failed to send message' }, { status: 500 });
     }
+
+    // Record message sent
+    await recordMessageSent(senderId);
 
     // In-app notification for the recipient (best-effort).
     try {

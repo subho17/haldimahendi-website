@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { pool, hasPool, ensureProfilesTable } from "@/lib/db";
 import { getMembership, MEMBERSHIP_PLANS, type MembershipTier } from "@/lib/membershipStore";
 
 const USAGE_FILE = path.join(process.cwd(), "scratch", "usage_db.json");
@@ -14,6 +13,10 @@ export interface UsageRecord {
   photosUploaded: number;
   matchesReturnedToday: number;
   matchesResetDate: string;
+  profileViewsToday: number;
+  profileViewsResetDate: string;
+  messagesSentToday: number;
+  messagesResetDate: string;
 }
 
 interface UsageDb {
@@ -58,6 +61,10 @@ function ensureRecord(db: UsageDb, userId: string): UsageRecord {
       photosUploaded: 0,
       matchesReturnedToday: 0,
       matchesResetDate: dayKey,
+      profileViewsToday: 0,
+      profileViewsResetDate: dayKey,
+      messagesSentToday: 0,
+      messagesResetDate: dayKey,
     };
   }
 
@@ -73,6 +80,14 @@ function ensureRecord(db: UsageDb, userId: string): UsageRecord {
   if (rec.matchesResetDate !== dayKey) {
     rec.matchesReturnedToday = 0;
     rec.matchesResetDate = dayKey;
+  }
+  if (rec.profileViewsResetDate !== dayKey) {
+    rec.profileViewsToday = 0;
+    rec.profileViewsResetDate = dayKey;
+  }
+  if (rec.messagesResetDate !== dayKey) {
+    rec.messagesSentToday = 0;
+    rec.messagesResetDate = dayKey;
   }
 
   return rec;
@@ -202,9 +217,74 @@ export async function recordMatchesReturned(userId: string, count: number): Prom
   writeUsageDb(db);
 }
 
+export async function canViewProfile(userId: string): Promise<{ allowed: boolean; remaining: number; limit: number; upgradeRequired: boolean }> {
+  const { tier } = await getMembership(userId);
+  const plan = MEMBERSHIP_PLANS.find((p) => p.tier === tier);
+  const limit = plan?.profileViewsPerDay ?? 10;
+
+  if (isUnlimited(limit)) {
+    return { allowed: true, remaining: -1, limit: -1, upgradeRequired: false };
+  }
+
+  const db = readUsageDb();
+  const rec = ensureRecord(db, userId);
+  writeUsageDb(db);
+
+  const remaining = limit - rec.profileViewsToday;
+  return {
+    allowed: remaining > 0,
+    remaining: Math.max(0, remaining),
+    limit,
+    upgradeRequired: remaining <= 0 && tier === "free",
+  };
+}
+
+export async function recordProfileView(userId: string): Promise<void> {
+  const db = readUsageDb();
+  const rec = ensureRecord(db, userId);
+  rec.profileViewsToday += 1;
+  writeUsageDb(db);
+}
+
+export async function canSendMessage(userId: string): Promise<{ allowed: boolean; remaining: number; limit: number; canChat: boolean; upgradeRequired: boolean }> {
+  const { tier } = await getMembership(userId);
+  const plan = MEMBERSHIP_PLANS.find((p) => p.tier === tier);
+  const canChat = plan?.canChat ?? false;
+  const limit = plan?.messagesPerDay ?? 0;
+
+  if (!canChat) {
+    return { allowed: false, remaining: 0, limit: 0, canChat: false, upgradeRequired: tier === "free" };
+  }
+
+  if (isUnlimited(limit)) {
+    return { allowed: true, remaining: -1, limit: -1, canChat: true, upgradeRequired: false };
+  }
+
+  const db = readUsageDb();
+  const rec = ensureRecord(db, userId);
+  writeUsageDb(db);
+
+  const remaining = limit - rec.messagesSentToday;
+  return {
+    allowed: remaining > 0,
+    remaining: Math.max(0, remaining),
+    limit,
+    canChat: true,
+    upgradeRequired: remaining <= 0 && tier === "free",
+  };
+}
+
+export async function recordMessageSent(userId: string): Promise<void> {
+  const db = readUsageDb();
+  const rec = ensureRecord(db, userId);
+  rec.messagesSentToday += 1;
+  writeUsageDb(db);
+}
+
 export async function getUsageSummary(userId: string) {
   const { tier, isPremium } = await getMembership(userId);
   const limits = getPlanLimits(tier);
+  const plan = MEMBERSHIP_PLANS.find((p) => p.tier === tier);
   const db = readUsageDb();
   const rec = ensureRecord(db, userId);
   writeUsageDb(db);
@@ -231,6 +311,17 @@ export async function getUsageSummary(userId: string) {
       used: rec.matchesReturnedToday,
       limit: limits.dailyMatchSuggestions,
       remaining: isUnlimited(limits.dailyMatchSuggestions) ? -1 : Math.max(0, limits.dailyMatchSuggestions - rec.matchesReturnedToday),
+    },
+    profileViews: {
+      used: rec.profileViewsToday,
+      limit: plan?.profileViewsPerDay ?? 10,
+      remaining: isUnlimited(plan?.profileViewsPerDay ?? 10) ? -1 : Math.max(0, (plan?.profileViewsPerDay ?? 10) - rec.profileViewsToday),
+    },
+    messages: {
+      used: rec.messagesSentToday,
+      limit: plan?.messagesPerDay ?? 0,
+      remaining: isUnlimited(plan?.messagesPerDay ?? 0) ? -1 : Math.max(0, (plan?.messagesPerDay ?? 0) - rec.messagesSentToday),
+      canChat: plan?.canChat ?? false,
     },
   };
 }

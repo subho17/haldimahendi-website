@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shaadi-matrimonial-v1';
+const CACHE_NAME = 'haldimehendi-v1';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

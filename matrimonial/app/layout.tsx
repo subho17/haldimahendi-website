@@ -4,7 +4,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import PWA from "@/components/PWA";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://haldimehendi.example.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://haldimehendi.com"),
   title: {
     default: "Haldimehendi - Find Your Perfect Life Partner",
     template: "%s | Haldimehendi",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://haldimehendi.example.com",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://haldimehendi.com",
     siteName: "Haldimehendi",
     title: "Haldimehendi - Find Your Perfect Life Partner",
     description: "India's trusted matrimonial platform for meaningful connections.",
