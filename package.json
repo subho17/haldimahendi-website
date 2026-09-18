@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix matrimonial run dev",
-    "build": "npm --prefix matrimonial run build",
+    "dev": "npm --prefix matrimonial install && npm --prefix matrimonial run dev",
+    "build": "npm --prefix matrimonial install && npm --prefix matrimonial run build",
     "start": "npm --prefix matrimonial run start",
     "lint": "npm --prefix matrimonial run lint",
-    "test": "npm --prefix matrimonial run build"
+    "test": "npm --prefix matrimonial run test"
   }
 }
