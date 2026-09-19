@@ -137,9 +137,9 @@
     "mobile_number": "7666666615",
     "email": "",
     "country": "India",
-    "createdAt": "2026-09-10T13:48:17.773Z",
-    "updatedAt": "2026-09-10T13:48:17.882Z",
-    "lastActiveAt": "2026-09-10T13:48:19.186Z"
+    "createdAt": "2026-09-19T06:23:46.292Z",
+    "updatedAt": "2026-09-19T06:23:46.391Z",
+    "lastActiveAt": "2026-09-19T06:23:47.530Z"
   },
   {
     "profileId": "1382",
@@ -157,7 +157,7 @@
     "country": "India",
     "createdAt": "2026-09-11T08:45:10.333Z",
     "updatedAt": "2026-09-11T08:45:10.629Z",
-    "lastActiveAt": "2026-09-11T08:54:41.781Z"
+    "lastActiveAt": "2026-09-18T07:44:59.435Z"
   },
   {
     "profileId": "9001",
@@ -384,7 +384,53 @@
     "email": "",
     "country": "India",
     "createdAt": "2026-09-17T13:03:46.197Z",
-    "updatedAt": "2026-09-17T13:03:46.558Z",
-    "lastActiveAt": "2026-09-17T13:47:10.170Z"
+    "updatedAt": "2026-09-19T06:20:00.668Z",
+    "lastActiveAt": "2026-09-19T06:22:07.380Z",
+    "membershipTier": "gold",
+    "membershipExpiresAt": "2026-10-19T06:20:00.513Z"
+  },
+  {
+    "name": "SUBHADEEP CHANDA",
+    "display_name": "SUBHADEEP CHANDA",
+    "mobileNumber": "9903797890",
+    "mobile_number": "9903797890",
+    "email": "subhadeepchanda45@gmail.com",
+    "avatarUrl": "https://ycaeelqanntvzzcvqilu.supabase.co/storage/v1/object/public/profile%20photos/avatars/1789799292645_k608pf_NEYMAR.jpg",
+    "avatar_url": "https://ycaeelqanntvzzcvqilu.supabase.co/storage/v1/object/public/profile%20photos/avatars/1789799292645_k608pf_NEYMAR.jpg",
+    "gender": "Bride",
+    "age": 25,
+    "height": "6'2\"",
+    "maritalStatus": "Never Married",
+    "religion": "Hindu",
+    "motherTongue": "Bengali",
+    "education": "B.Tech / B.E. / Engineering",
+    "profession": "Software Engineer / IT Professional",
+    "companyName": "",
+    "city": "kolkata",
+    "bio": "fwegewgsvdsvsdddvsdwvsddss",
+    "dob": "2026-09-09",
+    "birthTime": "12:58",
+    "birthPlace": "kolkata ",
+    "rashi": "Aries (Mesha)",
+    "nakshatra": "Dhanishta",
+    "manglik": "Yes",
+    "gotra": ".ujdbeowfbo",
+    "diet": "Vegetarian",
+    "smoking": "No",
+    "drinking": "No",
+    "disability": "None",
+    "fatherOccupation": "Other",
+    "motherOccupation": "Homemaker",
+    "siblings": "2",
+    "familyType": "Nuclear Family",
+    "familyValues": "Traditional",
+    "provider": "otp",
+    "profileId": "5669",
+    "updatedAt": "2026-09-19T06:37:00.843Z",
+    "createdAt": "2026-09-19T06:33:21.449Z",
+    "country": "India",
+    "lastActiveAt": "2026-09-19T11:36:59.673Z",
+    "membershipTier": "silver",
+    "membershipExpiresAt": "2026-10-19T06:37:00.650Z"
   }
 ]

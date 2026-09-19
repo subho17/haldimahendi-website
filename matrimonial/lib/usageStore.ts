@@ -202,6 +202,12 @@ export async function getMatchLimit(userId: string): Promise<{ limit: number; re
 
   const db = readUsageDb();
   const rec = ensureRecord(db, userId);
+
+  // Cap counter to tier limit (handles tier downgrades gracefully)
+  if (rec.matchesReturnedToday > limits.dailyMatchSuggestions) {
+    rec.matchesReturnedToday = 0;
+  }
+
   writeUsageDb(db);
 
   return {
@@ -214,6 +220,18 @@ export async function recordMatchesReturned(userId: string, count: number): Prom
   const db = readUsageDb();
   const rec = ensureRecord(db, userId);
   rec.matchesReturnedToday += count;
+  writeUsageDb(db);
+}
+
+export async function resetDailyMatchCounters(userId: string): Promise<void> {
+  const db = readUsageDb();
+  const rec = ensureRecord(db, userId);
+  rec.matchesReturnedToday = 0;
+  rec.matchesResetDate = getDayKey();
+  rec.profileViewsToday = 0;
+  rec.profileViewsResetDate = getDayKey();
+  rec.messagesSentToday = 0;
+  rec.messagesResetDate = getDayKey();
   writeUsageDb(db);
 }
 

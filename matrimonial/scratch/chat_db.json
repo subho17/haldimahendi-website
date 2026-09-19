@@ -39,7 +39,7 @@
       "content": "hi",
       "voiceUrl": "",
       "createdAt": "2026-09-10T13:49:25.845Z",
-      "readAt": null
+      "readAt": "2026-09-18T09:11:21.420Z"
     },
     {
       "id": "msg_1789048489463_fen7",
@@ -71,7 +71,7 @@
       "voiceUrl": "https://ycaeelqanntvzzcvqilu.supabase.co/storage/v1/object/public/profile%20photos/chat-audio/30fd676c-5177-45ca-9821-97fcc6cb58fd/voice_1789048742699_4tic2e.webm",
       "voiceDuration": 9,
       "createdAt": "2026-09-10T13:59:05.023Z",
-      "readAt": null
+      "readAt": "2026-09-18T09:11:21.420Z"
     },
     {
       "id": "msg_1789048873423_t0kt",
@@ -82,7 +82,7 @@
       "voiceUrl": "https://ycaeelqanntvzzcvqilu.supabase.co/storage/v1/object/public/profile%20photos/chat-audio/30fd676c-5177-45ca-9821-97fcc6cb58fd/voice_1789048871821_rlj0gx.webm",
       "voiceDuration": 3,
       "createdAt": "2026-09-10T14:01:13.423Z",
-      "readAt": null
+      "readAt": "2026-09-18T09:11:21.420Z"
     }
   ]
 }

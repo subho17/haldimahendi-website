@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { pool, hasPool, ensureProfilesTable } from "@/lib/db";
+import { resetDailyMatchCounters } from "@/lib/usageStore";
 
 export type MembershipTier = "free" | "silver" | "gold" | "platinum";
 
@@ -346,6 +347,8 @@ export async function upgradeMembership(
     } catch (e) {
       console.warn("Error downgrading membership in scratch:", e);
     }
+    // Reset daily counters on tier change
+    await resetDailyMatchCounters(id);
     return { success: true, membership: resolveStatus("free", null), message: "Downgraded to Free plan" };
   }
 
@@ -385,6 +388,9 @@ export async function upgradeMembership(
   } catch (e) {
     console.warn("Error upgrading membership in scratch:", e);
   }
+
+  // Reset daily counters on tier change
+  await resetDailyMatchCounters(id);
 
   return { success: true, membership: resolveStatus(tier, expiresAt), message: `Upgraded to ${plan.name}` };
 }

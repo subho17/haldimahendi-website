@@ -1,6 +1,46 @@
 {
   "notifications": [
     {
+      "id": "nt_1789799853250_a3aw",
+      "userId": "7320",
+      "actorId": "5669",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "SUBHADEEP CHANDA sent you an interest.",
+      "data": {
+        "profileId": "5669"
+      },
+      "read": false,
+      "createdAt": "2026-09-19T06:37:33.250Z"
+    },
+    {
+      "id": "nt_1789798903586_bud7",
+      "userId": "7320",
+      "actorId": "8514",
+      "type": "message",
+      "message": "Aditi sent you (voice message)",
+      "data": {
+        "conversationId": "78a408d6-a98f-451e-b973-4862bd63f875",
+        "profileId": "8514",
+        "voiceDuration": "8"
+      },
+      "read": true,
+      "createdAt": "2026-09-19T06:21:43.586Z"
+    },
+    {
+      "id": "nt_1789798850709_9ak9",
+      "userId": "7320",
+      "actorId": "8514",
+      "type": "message",
+      "message": "Aditi sent you HI",
+      "data": {
+        "conversationId": "78a408d6-a98f-451e-b973-4862bd63f875",
+        "profileId": "8514"
+      },
+      "read": true,
+      "createdAt": "2026-09-19T06:20:50.709Z"
+    },
+    {
       "id": "nt_1789650832321_5tfx",
       "userId": "3273",
       "actorId": "8514",
@@ -146,7 +186,7 @@
         "profileId": "3273",
         "voiceDuration": "4"
       },
-      "read": false,
+      "read": true,
       "createdAt": "2026-09-17T11:25:17.715Z"
     },
     {
@@ -159,7 +199,7 @@
         "conversationId": "9037bd03-f667-4410-ae5b-76ac56e85572",
         "profileId": "3273"
       },
-      "read": false,
+      "read": true,
       "createdAt": "2026-09-15T06:30:31.073Z"
     },
     {
@@ -173,7 +213,7 @@
         "profileId": "3273",
         "voiceDuration": "9"
       },
-      "read": false,
+      "read": true,
       "createdAt": "2026-09-14T11:16:14.911Z"
     },
     {

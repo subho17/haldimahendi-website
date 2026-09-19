@@ -24,6 +24,7 @@ export async function GET(req: Request) {
     const userMobileParam = normalizeId(searchParams.get('userMobile') || searchParams.get('mobile')).replace(/\D/g, '');
     const userEmailParam = normalizeId(searchParams.get('userEmail') || searchParams.get('email')).toLowerCase();
     const viewerGenderParam = normalizeId(searchParams.get('viewerGender') || searchParams.get('gender'));
+    const recordMode = searchParams.get('record') === 'true';
 
     if (!userId && !profileIdParam && !userMobileParam && !userEmailParam) {
       return NextResponse.json({ success: false, message: 'Missing userId parameter' }, { status: 400 });
@@ -322,8 +323,8 @@ export async function GET(req: Request) {
     const limitedMatches = isLimited ? eligible.slice(0, matchLimit.remaining) : eligible;
     const limitedAllMatches = isLimited ? matches.slice(0, matchLimit.remaining) : matches;
 
-    // Record how many matches were returned today
-    if (limitedMatches.length > 0) {
+    // Record how many matches were returned today (only when record=true)
+    if (limitedMatches.length > 0 && recordMode) {
       await recordMatchesReturned(userId, limitedMatches.length);
     }
 

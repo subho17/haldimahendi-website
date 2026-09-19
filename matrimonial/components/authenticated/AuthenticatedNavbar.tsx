@@ -228,6 +228,7 @@ export default function AuthenticatedNavbar() {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
+    let failCount = 0;
     const load = async () => {
       const now = Date.now();
       const fmt = (iso: string) => {
@@ -251,17 +252,22 @@ export default function AuthenticatedNavbar() {
             (data.notifications || []).map((n: NavNotification) => ({ ...n, timeLabel: fmt(n.createdAt) }))
           );
           setUnread(typeof data.unread === "number" ? data.unread : 0);
+          failCount = 0;
         }
-      } catch (e) {
-        console.error("Failed to load notifications:", e);
+      } catch {
+        failCount++;
+        if (!cancelled && failCount <= 2) console.error("Failed to load notifications (will retry)");
       } finally {
         if (!cancelled) setNotifLoading(false);
       }
     };
     load();
 
-    // Polling fallback every 10s
-    const interval = setInterval(load, 10000);
+    // Polling fallback every 30s (backoff on failures)
+    const interval = setInterval(() => {
+      if (failCount >= 5) return;
+      load();
+    }, 30000);
 
     // Supabase Realtime for instant notifications
     let channel: { unsubscribe: () => Promise<unknown> } | null = null;

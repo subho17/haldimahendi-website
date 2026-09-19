@@ -41,6 +41,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [newCount, setNewCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [limitReached, setLimitReached] = useState(false);
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
   const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
@@ -67,6 +68,7 @@ export default function MatchesPage() {
       if (mob) mParams.set("userMobile", mob);
       if (user?.email) mParams.set("userEmail", user.email);
       if (user?.gender) mParams.set("viewerGender", user.gender);
+      mParams.set("record", "true");
 
       Promise.all([
         fetch(`/api/matches?${mParams.toString()}`).then((r) => r.json()),
@@ -88,6 +90,7 @@ export default function MatchesPage() {
 
             setMatches(safeMatches);
             setNewCount(safeMatches.filter((m: MatchResult) => m.isNew).length);
+            setLimitReached(matchData.meta?.limitReached === true);
           }
           if (interestData.success) {
             loadInteractions(interestData);
@@ -158,17 +161,35 @@ export default function MatchesPage() {
           </div>
         ) : eligible.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-xs">
-            <Heart className="w-10 h-10 text-[#d97706] mx-auto mb-4" />
-            <h3 className="font-bold text-gray-900 text-lg mb-1">No matches found yet</h3>
-            <p className="text-sm text-gray-500 mb-5">
-              Widen your partner preferences or add more profile details to unlock matches.
-            </p>
-            <a
-              href="/preferences"
-              className="inline-block px-6 py-3 bg-[#d97706] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#b45309] cursor-pointer"
-            >
-              Adjust Preferences
-            </a>
+            {limitReached ? (
+              <>
+                <Crown className="w-10 h-10 text-[#d97706] mx-auto mb-4" />
+                <h3 className="font-bold text-gray-900 text-lg mb-1">Daily match limit reached</h3>
+                <p className="text-sm text-gray-500 mb-5">
+                  You&apos;ve seen all your matches for today. Upgrade your plan or come back tomorrow for more suggestions.
+                </p>
+                <a
+                  href="/membership"
+                  className="inline-block px-6 py-3 bg-[#d97706] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#b45309] cursor-pointer"
+                >
+                  Upgrade Plan
+                </a>
+              </>
+            ) : (
+              <>
+                <Heart className="w-10 h-10 text-[#d97706] mx-auto mb-4" />
+                <h3 className="font-bold text-gray-900 text-lg mb-1">No matches found yet</h3>
+                <p className="text-sm text-gray-500 mb-5">
+                  Widen your partner preferences or add more profile details to unlock matches.
+                </p>
+                <a
+                  href="/preferences"
+                  className="inline-block px-6 py-3 bg-[#d97706] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#b45309] cursor-pointer"
+                >
+                  Adjust Preferences
+                </a>
+              </>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

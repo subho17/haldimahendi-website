@@ -16,7 +16,7 @@
     "ageMax": 35,
     "religion": "Any",
     "maritalStatus": "Any",
-    "updatedAt": "2026-09-10T13:48:18.215Z",
+    "updatedAt": "2026-09-19T06:23:46.705Z",
     "createdAt": "2026-09-10T13:48:18.215Z"
   },
   {
@@ -44,7 +44,23 @@
     "partnerGender": "Man",
     "ageMin": 21,
     "ageMax": 40,
-    "updatedAt": "2026-09-17T13:03:47.596Z",
-    "createdAt": "2026-09-17T13:03:47.596Z"
+    "updatedAt": "2026-09-18T11:20:31.508Z",
+    "createdAt": "2026-09-17T13:03:47.596Z",
+    "heightMin": "2",
+    "heightMax": "3",
+    "religion": "Any",
+    "motherTongue": "hindi",
+    "maritalStatus": "Any",
+    "city": "kolkata"
+  },
+  {
+    "userId": "5669",
+    "partnerGender": "Man",
+    "ageMin": 21,
+    "ageMax": 35,
+    "updatedAt": "2026-09-19T10:41:45.104Z",
+    "createdAt": "2026-09-19T06:33:21.256Z",
+    "religion": "Any",
+    "maritalStatus": "Any"
   }
 ]

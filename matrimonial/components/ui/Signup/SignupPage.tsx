@@ -318,7 +318,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
             ageMin: 21,
             ageMax: 35,
           }),
-        }).catch(() => {});
+        }).catch(() => { });
       } else {
         login(profileData);
       }
@@ -378,9 +378,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   return (
     <div className={`w-full font-sans ${isModal ? "p-0" : "p-2 sm:p-4"}`}>
       <div
-        className={`bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/25 border border-slate-200/90 ${
-          isModal ? "p-4 sm:p-6" : "p-6 sm:p-8"
-        } w-full mx-auto text-left relative transition-all duration-300`}
+        className={`bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/25 border border-slate-200/90 ${isModal ? "p-4 sm:p-6" : "p-6 sm:p-8"
+          } w-full mx-auto text-left relative transition-all duration-300`}
         style={{ maxWidth: step === 3 ? "620px" : "480px" }}
       >
         {/* Close Button (anchored snugly to the top-right corner of the card) */}
@@ -709,11 +708,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                     <button
                       type="button"
                       onClick={() => setGender("Groom")}
-                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                        gender === "Groom"
+                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${gender === "Groom"
                           ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
                           : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       <span>🤵 Groom (Male)</span>
                     </button>
@@ -721,11 +719,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                     <button
                       type="button"
                       onClick={() => setGender("Bride")}
-                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                        gender === "Bride"
+                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${gender === "Bride"
                           ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
                           : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       <span>👰 Bride (Female)</span>
                     </button>
@@ -786,7 +783,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                       onChange={(e) => setMaritalStatus(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 outline-hidden focus:bg-white focus:border-[#d97706] cursor-pointer"
                     >
-                      <option value="">Select Marital Status</option>
+
                       <option value="Never Married">Never Married</option>
                       <option value="Divorced">Divorced</option>
                       <option value="Widowed">Widowed</option>
@@ -826,7 +823,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                         onChange={(e) => setReligion(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
-                        <option value="">Select Religion</option>
+                        <option value="">Hindu</option>
                         <option value="Hindu">Hindu</option>
                         <option value="Muslim">Muslim</option>
                         <option value="Christian">Christian</option>
@@ -863,12 +860,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                           !education
                             ? ""
                             : (EDUCATION_OPTIONS as readonly string[]).includes(education)
-                            ? education
-                            : education.toLowerCase().includes("b.com") || education.toLowerCase().includes("commerce")
-                            ? "B.Com / M.Com / Commerce"
-                            : education.toLowerCase().includes("eng") || education.toLowerCase().includes("b.tech")
-                            ? "B.Tech / B.E. / Engineering"
-                            : "Other"
+                              ? education
+                              : education.toLowerCase().includes("b.com") || education.toLowerCase().includes("commerce")
+                                ? "B.Com / M.Com / Commerce"
+                                : education.toLowerCase().includes("eng") || education.toLowerCase().includes("b.tech")
+                                  ? "B.Tech / B.E. / Engineering"
+                                  : "Other"
                         }
                         onChange={(e) => setEducation(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
@@ -890,10 +887,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                           !profession
                             ? ""
                             : (OCCUPATION_OPTIONS as readonly string[]).includes(profession)
-                            ? profession
-                            : (profession.toLowerCase().includes("founder") || profession.toLowerCase().includes("entrepreneur"))
-                            ? "Founder / Co-Founder / Entrepreneur"
-                            : "Other"
+                              ? profession
+                              : (profession.toLowerCase().includes("founder") || profession.toLowerCase().includes("entrepreneur"))
+                                ? "Founder / Co-Founder / Entrepreneur"
+                                : "Other"
                         }
                         onChange={(e) => {
                           const val = e.target.value;
@@ -916,19 +913,19 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                       {(profession === "Founder / Co-Founder / Entrepreneur" ||
                         profession === "Business Owner / Self-Employed" ||
                         profession.toLowerCase().includes("founder")) && (
-                        <div className="pt-1.5 animate-in fade-in duration-200">
-                          <label className="text-[11px] font-semibold text-slate-600 block mb-0.5">
-                            Company / Startup / Business Name <span className="text-slate-400 font-normal">(Optional)</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={companyName}
-                            onChange={(e) => setCompanyName(e.target.value)}
-                            placeholder="e.g. Acme Innovations, My Tech Studio"
-                            className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
-                          />
-                        </div>
-                      )}
+                          <div className="pt-1.5 animate-in fade-in duration-200">
+                            <label className="text-[11px] font-semibold text-slate-600 block mb-0.5">
+                              Company / Startup / Business Name <span className="text-slate-400 font-normal">(Optional)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={companyName}
+                              onChange={(e) => setCompanyName(e.target.value)}
+                              placeholder="e.g. Acme Innovations, My Tech Studio"
+                              className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all"
+                            />
+                          </div>
+                        )}
 
                       {/* If Other is selected: allow typing custom profession */}
                       {(profession === "Other" || (!((OCCUPATION_OPTIONS as readonly string[]).includes(profession)) && profession !== "")) && (
@@ -1038,7 +1035,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                         onChange={(e) => setManglik(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
-                        <option value="">Not sure / Skip</option>
+                        <option value="">No</option>
                         <option value="No">No</option>
                         <option value="Yes">Yes</option>
                         <option value="Anshik Manglik">Anshik Manglik</option>
@@ -1079,7 +1076,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                         onChange={(e) => setDiet(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
-                        <option value="">Select Diet</option>
+                        <option value="">Vegetarian</option>
                         <option value="Vegetarian">Vegetarian</option>
                         <option value="Eggetarian">Eggetarian</option>
                         <option value="Non-Vegetarian">Non-Vegetarian</option>
@@ -1096,7 +1093,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                         onChange={(e) => setSmoking(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
-                        <option value="">Select Smoking Habit</option>
+                        <option value="">No</option>
                         <option value="No">No</option>
                         <option value="Yes">Yes</option>
                         <option value="Occasionally">Occasionally</option>
@@ -1111,10 +1108,11 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                         onChange={(e) => setDrinking(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
                       >
-                        <option value="">Select Drinking Habit</option>
+                        <option value="">No</option>
                         <option value="No">No</option>
                         <option value="Yes">Yes</option>
-                        <option value="Socially">Socially</option>
+                        <option value="Occasionally">Occasionally</option>
+
                       </select>
                     </div>
 
