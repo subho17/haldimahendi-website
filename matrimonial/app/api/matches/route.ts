@@ -53,23 +53,22 @@ export async function GET(req: Request) {
     if (hasPool) {
       try {
         await ensureProfilesTable();
-        const { rows } = await pool!.query(`
-          SELECT id, user_id, mobile_number, email, gender, nakshatra, manglik
-          FROM profiles
-        `);
-        for (const r of rows) {
-          const rId = (r.id || '').toString().toLowerCase();
-          const rUserId = (r.user_id || '').toString().toLowerCase();
-          const rMob = (r.mobile_number || '').toString().replace(/\D/g, '');
-          const rEm = (r.email || '').toString().toLowerCase();
+        const ids = Array.from(viewerKeys).filter(Boolean);
+        if (ids.length > 0) {
+          const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ');
+          const { rows } = await pool!.query(`
+            SELECT id, user_id, mobile_number, email, gender, nakshatra, manglik
+            FROM profiles
+            WHERE user_id IN (${placeholders})
+               OR mobile_number IN (${placeholders})
+               OR lower(email) IN (${placeholders})
+          `, [...ids, ...ids, ...ids]);
+          for (const r of rows) {
+            const rId = (r.id || '').toString().toLowerCase();
+            const rUserId = (r.user_id || '').toString().toLowerCase();
+            const rMob = (r.mobile_number || '').toString().replace(/\D/g, '');
+            const rEm = (r.email || '').toString().toLowerCase();
 
-          const isViewer =
-            (rId && viewerKeys.has(rId)) ||
-            (rUserId && viewerKeys.has(rUserId)) ||
-            (rMob && viewerKeys.has(rMob)) ||
-            (rEm && viewerKeys.has(rEm));
-
-          if (isViewer) {
             if (rId) viewerKeys.add(rId);
             if (rUserId) viewerKeys.add(rUserId);
             if (rMob) viewerKeys.add(rMob);

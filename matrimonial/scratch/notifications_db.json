@@ -1,6 +1,19 @@
 {
   "notifications": [
     {
+      "id": "nt_1789819649534_a4ff",
+      "userId": "9003",
+      "actorId": "5669",
+      "type": "interest",
+      "title": "New Interest",
+      "message": "SUBHADEEP CHANDA sent you an interest.",
+      "data": {
+        "profileId": "5669"
+      },
+      "read": false,
+      "createdAt": "2026-09-19T12:07:29.534Z"
+    },
+    {
       "id": "nt_1789799853250_a3aw",
       "userId": "7320",
       "actorId": "5669",

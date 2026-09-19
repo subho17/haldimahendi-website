@@ -287,21 +287,6 @@ export default function ProfilePage() {
 
     login(updatedUser);
 
-    // Persist to backend (scratch + Postgres) so public profile & search reflect edits.
-    try {
-      await fetch("/api/user/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profileId: user?.profileId,
-          mobileNumber: user?.mobile_number || user?.mobileNumber || "",
-          ...updatedUser,
-        }),
-      });
-    } catch (err) {
-      console.error("Failed to persist profile:", err);
-    }
-
     setIsEditing(false);
     setSuccessMessage("Profile details updated successfully!");
     setTimeout(() => setSuccessMessage(""), 3500);
