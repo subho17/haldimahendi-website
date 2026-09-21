@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { saveOtp, checkSendAllowed, recordSend } from '@/lib/otpStore';
-import https from 'https';
 
 // SMS Provider Configuration
 const SMS_PROVIDER = (process.env.SMS_PROVIDER || 'smsmedia').toLowerCase().trim();
@@ -14,127 +13,71 @@ const SMS_MEDIA_TEMPLATE_ID = (process.env.SMS_TEMPLATE_ID || '17071720383258023
 const SMS_MEDIA_PE_ID = (process.env.SMS_PE_ID || '1401856260000019479').trim();
 const SMS_MESSAGE_TEMPLATE = (process.env.SMS_MESSAGE_TEMPLATE || 'Dear Member, Your client login account OTP is {#var#} It will expire in Five minutes. Do not share it with anyone. Thanks, -Webczar');
 
-// 2Factor.in Helper
-function send2FactorOtp(mobile: string, otp: string): Promise<{ success: boolean; data?: string }> {
-  return new Promise((resolve) => {
+const SMS_TIMEOUT = 15000;
+
+// Helper: fetch with timeout + retry
+async function fetchWithRetry(url: string, retries = 1): Promise<{ ok: boolean; status: number; body: string }> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
-      const apiKey = (process.env.OTP_API_KEY || '').trim();
-      const url = `https://2factor.in/API/V1/${apiKey}/SMS/${cleanMobile}/${otp}`;
-
-      const req = https.get(url, { timeout: 7000 }, (res) => {
-        let data = '';
-        res.on('data', (chunk) => (data += chunk));
-        res.on('end', () => {
-          console.log('[2FACTOR API RESPONSE]:', res.statusCode, data);
-          if (res.statusCode === 200 && data.includes('"Status":"Success"')) {
-            resolve({ success: true, data });
-          } else {
-            console.error('[2FACTOR API ERROR]:', data);
-            resolve({ success: false, data });
-          }
-        });
-      });
-
-      req.on('timeout', () => {
-        req.destroy();
-        console.error('[2FACTOR TIMEOUT]');
-        resolve({ success: false });
-      });
-
-      req.on('error', (err) => {
-        console.error('[2FACTOR EXCEPTION]:', err);
-        resolve({ success: false });
-      });
-
-      req.end();
-    } catch {
-      resolve({ success: false });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), SMS_TIMEOUT);
+      const res = await fetch(url, { signal: controller.signal, redirect: 'follow' });
+      clearTimeout(timer);
+      const body = await res.text();
+      return { ok: res.ok, status: res.status, body };
+    } catch (err: unknown) {
+      const isLast = attempt === retries;
+      const isRetryable = err instanceof Error && (err.name === 'AbortError' || err.message.includes('ECONNRESET') || err.message.includes('socket hang up'));
+      if (isLast || !isRetryable) {
+        console.error(`[SMS FETCH ERROR] attempt=${attempt + 1}`, err instanceof Error ? err.message : err);
+        return { ok: false, status: 0, body: '' };
+      }
+      await new Promise((r) => setTimeout(r, 1500));
     }
-  });
+  }
+  return { ok: false, status: 0, body: '' };
+}
+
+// 2Factor.in Helper
+async function send2FactorOtp(mobile: string, otp: string): Promise<{ success: boolean; data?: string }> {
+  const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
+  const apiKey = (process.env.OTP_API_KEY || '').trim();
+  const url = `https://2factor.in/API/V1/${apiKey}/SMS/${cleanMobile}/${otp}`;
+  const res = await fetchWithRetry(url);
+  console.log('[2FACTOR API RESPONSE]:', res.status, res.body);
+  if (res.ok && res.body.includes('"Status":"Success"')) {
+    return { success: true, data: res.body };
+  }
+  return { success: false, data: res.body };
 }
 
 // Fast2SMS API Helper
-function sendFast2SmsOtp(mobile: string, otp: string): Promise<{ success: boolean; data?: string }> {
-  return new Promise((resolve) => {
-    try {
-      const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
-      const apiKey = (process.env.OTP_API_KEY || '').trim();
-      const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${apiKey}&route=otp&variables_values=${otp}&numbers=${cleanMobile}`;
-
-      const req = https.get(url, { timeout: 7000 }, (res) => {
-        let data = '';
-        res.on('data', (chunk) => (data += chunk));
-        res.on('end', () => {
-          console.log('[FAST2SMS API RESPONSE]:', res.statusCode, data);
-          if (res.statusCode === 200 && data.includes('"return":true')) {
-            resolve({ success: true, data });
-          } else {
-            console.error('[FAST2SMS API ERROR]:', data);
-            resolve({ success: false, data });
-          }
-        });
-      });
-
-      req.on('timeout', () => {
-        req.destroy();
-        console.error('[FAST2SMS TIMEOUT]');
-        resolve({ success: false });
-      });
-
-      req.on('error', (err) => {
-        console.error('[FAST2SMS EXCEPTION]:', err);
-        resolve({ success: false });
-      });
-
-      req.end();
-    } catch {
-      resolve({ success: false });
-    }
-  });
+async function sendFast2SmsOtp(mobile: string, otp: string): Promise<{ success: boolean; data?: string }> {
+  const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
+  const apiKey = (process.env.OTP_API_KEY || '').trim();
+  const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${apiKey}&route=otp&variables_values=${otp}&numbers=${cleanMobile}`;
+  const res = await fetchWithRetry(url);
+  console.log('[FAST2SMS API RESPONSE]:', res.status, res.body);
+  if (res.ok && res.body.includes('"return":true')) {
+    return { success: true, data: res.body };
+  }
+  return { success: false, data: res.body };
 }
 
 // SMS Media Gateway Helper
-function sendSmsMediaOtp(mobile: string, otp: string): Promise<{ success: boolean; shootId?: string }> {
-  return new Promise((resolve) => {
-    try {
-      const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
-      const messageText = SMS_MESSAGE_TEMPLATE.replace('{#var#}', otp);
-      const encodedMessage = encodeURIComponent(messageText).replace(/%20/g, '+');
+async function sendSmsMediaOtp(mobile: string, otp: string): Promise<{ success: boolean; shootId?: string }> {
+  const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
+  const messageText = SMS_MESSAGE_TEMPLATE.replace('{#var#}', otp);
+  const encodedMessage = encodeURIComponent(messageText).replace(/%20/g, '+');
 
-      const url = `https://login.smsmedia.org/app/smsapi/index.php?key=${SMS_MEDIA_KEY}&campaign=${SMS_MEDIA_CAMPAIGN}&routeid=${SMS_MEDIA_ROUTE_ID}&type=text&contacts=${cleanMobile}&senderid=${SMS_MEDIA_SENDER_ID}&msg=${encodedMessage}&template_id=${SMS_MEDIA_TEMPLATE_ID}&pe_id=${SMS_MEDIA_PE_ID}`;
+  const url = `https://login.smsmedia.org/app/smsapi/index.php?key=${SMS_MEDIA_KEY}&campaign=${SMS_MEDIA_CAMPAIGN}&routeid=${SMS_MEDIA_ROUTE_ID}&type=text&contacts=${cleanMobile}&senderid=${SMS_MEDIA_SENDER_ID}&msg=${encodedMessage}&template_id=${SMS_MEDIA_TEMPLATE_ID}&pe_id=${SMS_MEDIA_PE_ID}`;
 
-      const req = https.get(url, { rejectUnauthorized: false, timeout: 7000 }, (res) => {
-        let data = '';
-        res.on('data', (chunk) => (data += chunk));
-        res.on('end', () => {
-          console.log('[SMS MEDIA API RESPONSE]:', res.statusCode, data);
-          if (res.statusCode === 200 && (data.includes('SMS-SHOOT-ID') || data.includes('SUCCESS') || data.includes('OK') || data.length > 5)) {
-            resolve({ success: true, shootId: data.trim() });
-          } else {
-            console.error('[SMS MEDIA API ERROR]:', data);
-            resolve({ success: false });
-          }
-        });
-      });
-
-      req.on('timeout', () => {
-        req.destroy();
-        console.error('[SMS MEDIA TIMEOUT]');
-        resolve({ success: false });
-      });
-
-      req.on('error', (err) => {
-        console.error('[SMS MEDIA REQUEST EXCEPTION]:', err);
-        resolve({ success: false });
-      });
-
-      req.end();
-    } catch (e) {
-      console.error('[SMS MEDIA UNCAUGHT EXCEPTION]:', e);
-      resolve({ success: false });
-    }
-  });
+  const res = await fetchWithRetry(url, 2);
+  console.log('[SMS MEDIA API RESPONSE]:', res.status, res.body);
+  if (res.ok && (res.body.includes('SMS-SHOOT-ID') || res.body.includes('SUCCESS') || res.body.includes('OK') || res.body.length > 5)) {
+    return { success: true, shootId: res.body.trim() };
+  }
+  return { success: false };
 }
 
 export async function POST(req: Request) {

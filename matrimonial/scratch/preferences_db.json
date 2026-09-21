@@ -16,7 +16,7 @@
     "ageMax": 35,
     "religion": "Any",
     "maritalStatus": "Any",
-    "updatedAt": "2026-09-19T06:23:46.705Z",
+    "updatedAt": "2026-09-21T08:18:09.609Z",
     "createdAt": "2026-09-10T13:48:18.215Z"
   },
   {
@@ -58,7 +58,7 @@
     "partnerGender": "Man",
     "ageMin": 21,
     "ageMax": 35,
-    "updatedAt": "2026-09-21T08:04:37.018Z",
+    "updatedAt": "2026-09-21T08:20:03.207Z",
     "createdAt": "2026-09-19T06:33:21.256Z",
     "religion": "Any",
     "maritalStatus": "Any"
