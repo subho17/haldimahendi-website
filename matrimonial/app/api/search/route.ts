@@ -105,20 +105,64 @@ export async function GET(req: Request) {
     const motherTongue = searchParams.get('motherTongue') || '';
     const query = (searchParams.get('q') || '').toLowerCase();
     const userId = (searchParams.get('userId') || '').trim();
+    const profileId = (searchParams.get('profileId') || '').trim();
+    const userMobile = (searchParams.get('userMobile') || searchParams.get('mobile') || '').trim().replace(/\D/g, '');
+    const userEmail = (searchParams.get('userEmail') || searchParams.get('email') || '').trim().toLowerCase();
     const invisibleIds = userId ? new Set(await getInvisibleIds(userId)) : new Set<string>();
 
-    // 1. Load user preferences for matching algorithm
+    // 1. Resolve viewer from Postgres for kundli scoring
+    const viewerKeys = new Set<string>();
+    if (userId) viewerKeys.add(userId.toLowerCase());
+    if (profileId) viewerKeys.add(profileId.toLowerCase());
+    if (userMobile) viewerKeys.add(userMobile);
+    if (userEmail) viewerKeys.add(userEmail);
+
+    const viewer: { id: string; gender?: string | null; nakshatra?: string | null; manglik?: string | boolean | null } = {
+      id: userId || profileId || userMobile || userEmail,
+      gender: gender ? (['bride', 'woman', 'female', 'girl', 'women', 'ladies'].includes(gender.toLowerCase()) ? 'female' : 'male') : null,
+    };
+
+    if (hasPool) {
+      try {
+        await ensureProfilesTable();
+        const ids = Array.from(viewerKeys).filter(Boolean);
+        if (ids.length > 0) {
+          const p1 = ids.map((_, i) => `$${i + 1}`).join(', ');
+          const p2 = ids.map((_, i) => `$${ids.length + i + 1}`).join(', ');
+          const p3 = ids.map((_, i) => `$${ids.length * 2 + i + 1}`).join(', ');
+          const { rows } = await pool!.query(`
+            SELECT id, user_id, mobile_number, email, gender, nakshatra, manglik
+            FROM profiles
+            WHERE user_id IN (${p1})
+               OR mobile_number IN (${p2})
+               OR lower(email) IN (${p3})
+          `, [...ids, ...ids, ...ids]);
+          for (const r of rows) {
+            if (r.gender && !viewer.gender) viewer.gender = r.gender;
+            if (r.nakshatra && !viewer.nakshatra) viewer.nakshatra = r.nakshatra;
+            if (r.manglik != null && viewer.manglik == null) viewer.manglik = r.manglik;
+          }
+        }
+      } catch (e) {
+        console.warn('Error resolving viewer profile for search:', e);
+      }
+    }
+
+    // 2. Load user preferences for matching algorithm
     let prefs: MatchPreferences = {};
     if (userId) {
       prefs = await loadPreferences(userId) || {};
-      // If preferences don't specify partnerGender, default based on user's gender
       if (!prefs.partnerGender) {
         const userGender = (prefs as Record<string, unknown>).gender as string || 'male';
         prefs.partnerGender = userGender === 'male' ? 'Woman' : 'Man';
       }
     }
 
-    // 2. Fetch profiles from local JSON db
+    // 3. Build gender filter for SQL
+    const normalizedSearchGender = normalizeGender(gender);
+    const genderCondition = normalizedSearchGender !== 'other' ? `AND lower(gender) IN (${normalizedSearchGender === 'male' ? "'man','male','groom','boy'" : "'woman','female','bride','girl'"})` : '';
+
+    // 4. Fetch profiles from local JSON db
     let allProfiles: SearchProfile[] = [];
     try {
       if (fs.existsSync(USERS_FILE)) {
@@ -131,13 +175,15 @@ export async function GET(req: Request) {
       console.warn('Error reading profiles from local JSON db:', e);
     }
 
-    // 3. Fetch profiles from Postgres DB if available
+    // 5. Fetch profiles from Postgres DB with gender pre-filter
     if (hasPool) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(`
           SELECT id, user_id, display_name, mobile_number, email, avatar_url, gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, verification_status, membership_tier, membership_expires_at, is_suspended
           FROM profiles
+          WHERE is_suspended IS NOT TRUE
+          ${genderCondition}
           ORDER BY created_at DESC
         `);
 
@@ -212,13 +258,12 @@ export async function GET(req: Request) {
       drinking: '',
     }));
 
-    // 3. Run matching algorithm with preferences
+    // 6. Run matching algorithm with preferences and full viewer context
     let matchedResults: Array<{ profile: SearchProfile; score: number; isEligible: boolean; breakdown: Record<string, number> }> = [];
 
     try {
-      const matched = findMatches(prefs, candidates, { viewer: { id: userId, gender: gender ? (['bride', 'woman', 'female', 'girl', 'women', 'ladies'].includes(gender.toLowerCase()) ? 'female' : 'male') : undefined } });
+      const matched = findMatches(prefs, candidates, { viewer });
 
-      // Convert matched results
       matchedResults = matched.map((m) => ({
         profile: {
           id: m.profile.id,
@@ -245,7 +290,6 @@ export async function GET(req: Request) {
       }));
     } catch (matchError) {
       console.warn('Matching engine error, falling back to filtered results:', matchError);
-      // Fall back to filtered results without scores
       const filtered = uniqueProfiles.filter((p) => {
         const pId = (p.id || '').toLowerCase();
         if (pId && userId && pId.includes(userId.toLowerCase())) return false;
@@ -289,11 +333,20 @@ export async function GET(req: Request) {
       scoreMap[m.profile.id] = m.score;
     });
 
+    // Build breakdown map for UI
+    const breakdownMap: Record<string, Record<string, number>> = {};
+    matchedResults.forEach((m) => {
+      if (Object.keys(m.breakdown).length > 0) {
+        breakdownMap[m.profile.id] = m.breakdown;
+      }
+    });
+
     return NextResponse.json({
       success: true,
       count: searchProfiles.length,
       profiles: searchProfiles,
       scores: scoreMap,
+      breakdowns: breakdownMap,
     });
   } catch (error) {
     console.error('Error handling search request:', error);

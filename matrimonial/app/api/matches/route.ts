@@ -55,13 +55,15 @@ export async function GET(req: Request) {
         await ensureProfilesTable();
         const ids = Array.from(viewerKeys).filter(Boolean);
         if (ids.length > 0) {
-          const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ');
+          const p1 = ids.map((_, i) => `$${i + 1}`).join(', ');
+          const p2 = ids.map((_, i) => `$${ids.length + i + 1}`).join(', ');
+          const p3 = ids.map((_, i) => `$${ids.length * 2 + i + 1}`).join(', ');
           const { rows } = await pool!.query(`
             SELECT id, user_id, mobile_number, email, gender, nakshatra, manglik
             FROM profiles
-            WHERE user_id IN (${placeholders})
-               OR mobile_number IN (${placeholders})
-               OR lower(email) IN (${placeholders})
+            WHERE user_id IN (${p1})
+               OR mobile_number IN (${p2})
+               OR lower(email) IN (${p3})
           `, [...ids, ...ids, ...ids]);
           for (const r of rows) {
             const rId = (r.id || '').toString().toLowerCase();

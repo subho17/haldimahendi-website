@@ -23,6 +23,8 @@ import {
   Mail,
   Users,
   X,
+  Zap,
+  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -36,6 +38,7 @@ import {
   FATHER_OCCUPATION_OPTIONS,
   MOTHER_OCCUPATION_OPTIONS,
 } from "@/lib/profileOptions";
+import AiBioModal from "@/components/profile/AiBioModal";
 
 interface SignupPageProps {
   onOpenLogin?: () => void;
@@ -120,6 +123,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // AI Bio Assistant state
+  const [isAiBioOpen, setIsAiBioOpen] = useState(false);
+  const [aiBioTone, setAiBioTone] = useState("balanced");
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -1226,18 +1233,81 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
             {profileStep === 5 && (
               <div className="space-y-3.5 animate-in slide-in-from-right-2 fade-in duration-300">
                 {/* About Myself (Bio) */}
-                <div className="bg-slate-50/50 p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-2">
-                  <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-[#d97706]" />
-                    <span>About Myself (Bio)</span>
-                  </label>
+                <div className="bg-slate-50/50 p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4 text-[#d97706]" />
+                      <span>About Myself (Bio)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("balanced");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-[#d97706] text-white text-xs font-extrabold shadow-2xs hover:from-amber-600 hover:to-[#b45309] cursor-pointer transition active:scale-95"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>✨ AI Bio Writer</span>
+                    </button>
+                  </div>
                   <textarea
-                    rows={2}
+                    rows={3}
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all leading-relaxed"
                     placeholder="Describe your interests, lifestyle, family, and partner expectations..."
                   />
+                  {/* Quick AI Presets */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      AI Presets:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("balanced");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-[#b45309] text-[11px] font-bold hover:bg-amber-100 cursor-pointer transition"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>Balanced</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("career");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-50 cursor-pointer transition"
+                    >
+                      <Briefcase className="w-3 h-3 text-slate-400" />
+                      <span>Career Focus</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("traditional");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-50 cursor-pointer transition"
+                    >
+                      <Users className="w-3 h-3 text-slate-400" />
+                      <span>Family Values</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("short");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-50 cursor-pointer transition"
+                    >
+                      <Zap className="w-3 h-3 text-slate-400" />
+                      <span>Short</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Password (optional, for password login later) */}
@@ -1370,6 +1440,29 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
             )}
           </div>
         )}
+
+        {/* AI Bio Writer Modal */}
+        <AiBioModal
+          isOpen={isAiBioOpen}
+          onClose={() => setIsAiBioOpen(false)}
+          onSelectBio={(newBio) => setBio(newBio)}
+          profile={{
+            name: displayName,
+            gender,
+            age,
+            profession,
+            companyName,
+            education,
+            city,
+            religion,
+            motherTongue,
+            maritalStatus,
+            familyValues,
+            diet,
+          }}
+          initialBio={bio}
+          initialTone={aiBioTone}
+        />
 
       </div>
     </div>

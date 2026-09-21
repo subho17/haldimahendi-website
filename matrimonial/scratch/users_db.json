@@ -426,11 +426,11 @@
     "familyValues": "Traditional",
     "provider": "otp",
     "profileId": "5669",
-    "updatedAt": "2026-09-19T12:15:20.768Z",
+    "updatedAt": "2026-09-21T06:25:08.328Z",
     "createdAt": "2026-09-19T06:33:21.449Z",
     "country": "India",
-    "lastActiveAt": "2026-09-19T12:14:56.501Z",
-    "membershipTier": "silver",
-    "membershipExpiresAt": "2026-10-19T06:37:00.650Z"
+    "lastActiveAt": "2026-09-21T06:27:08.392Z",
+    "membershipTier": "free",
+    "membershipExpiresAt": null
   }
 ]

@@ -31,6 +31,8 @@ import {
   Crown,
   Mail,
   Phone,
+  Zap,
+  Wand2,
 } from "lucide-react";
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
 import { useMounted } from "@/hooks/useMounted";
@@ -44,6 +46,7 @@ import {
   MOTHER_OCCUPATION_OPTIONS,
 } from "@/lib/profileOptions";
 import ComboboxInput from "@/components/ui/ComboboxInput";
+import AiBioModal from "@/components/profile/AiBioModal";
 const DEFAULT_AVATARS = [
   { label: "Female Avatar 1", url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250" },
   { label: "Male Avatar 1", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250" },
@@ -115,6 +118,10 @@ export default function ProfilePage() {
   const [smoking, setSmoking] = useState(() => user?.smoking || "");
   const [drinking, setDrinking] = useState(() => user?.drinking || "");
   const [disability, setDisability] = useState(() => user?.disability || "");
+
+  // AI Bio Assistant state
+  const [isAiBioOpen, setIsAiBioOpen] = useState(false);
+  const [aiBioTone, setAiBioTone] = useState("balanced");
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
@@ -1042,18 +1049,95 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Section 7: Bio */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-2">
-                  <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-[#d97706]" />
-                    <span>About Myself (Bio)</span>
-                  </label>
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-[#d97706]" />
+                      <span>About Myself (Bio)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("balanced");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-[#d97706] hover:from-amber-600 hover:to-[#b45309] text-white text-xs font-extrabold shadow-sm shadow-amber-500/20 active:scale-95 transition cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>✨ AI Bio Writer</span>
+                    </button>
+                  </div>
                   <textarea
                     rows={4}
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all leading-relaxed"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all leading-relaxed"
                     placeholder="Describe your personality, background, interests, and what you look for in a life partner..."
                   />
+
+                  {/* Quick AI Presets & Actions */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+                      AI Presets:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("balanced");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-[#b45309] text-[11px] font-bold hover:bg-amber-100 cursor-pointer transition"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>Balanced</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("career");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-100 cursor-pointer transition"
+                    >
+                      <Briefcase className="w-3 h-3 text-slate-400" />
+                      <span>Career Focus</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("traditional");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-100 cursor-pointer transition"
+                    >
+                      <Users className="w-3 h-3 text-slate-400" />
+                      <span>Family Values</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("short");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-100 cursor-pointer transition"
+                    >
+                      <Zap className="w-3 h-3 text-slate-400" />
+                      <span>Short & Crisp</span>
+                    </button>
+                    {bio && bio.trim().length > 5 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAiBioTone("balanced");
+                          setIsAiBioOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold hover:bg-rose-100 cursor-pointer transition"
+                      >
+                        <Wand2 className="w-3 h-3 text-rose-500" />
+                        <span>Polish Draft</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Form Action Controls */}
@@ -1081,13 +1165,45 @@ export default function ProfilePage() {
                 {/* About Myself Callout */}
                 <div className="relative bg-gradient-to-br from-rose-50/50 via-slate-50/80 to-white p-6 rounded-2xl border border-rose-100/70 shadow-2xs">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-[#d97706] rounded-l-2xl" />
-                  <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <User className="w-4 h-4 text-[#d97706]" />
-                    <span>About Myself</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal italic">
-                    {bio ? `“${bio}”` : <span className="text-slate-400 not-italic">No bio added yet. Click &quot;Edit Profile&quot; to write about yourself.</span>}
-                  </p>
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
+                      <User className="w-4 h-4 text-[#d97706]" />
+                      <span>About Myself</span>
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAiBioTone("balanced");
+                        setIsAiBioOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 border border-amber-200 text-[#b45309] text-xs font-extrabold shadow-2xs hover:bg-amber-50 cursor-pointer transition active:scale-95"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#d97706]" />
+                      <span>✨ AI Bio Writer</span>
+                    </button>
+                  </div>
+                  {bio ? (
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal italic">
+                      &ldquo;{bio}&rdquo;
+                    </p>
+                  ) : (
+                    <div className="space-y-3 pt-1">
+                      <p className="text-xs sm:text-sm text-slate-500 not-italic">
+                        No bio added yet. A well-crafted bio attracts 3x more matching responses!
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAiBioTone("balanced");
+                          setIsAiBioOpen(true);
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-xs font-bold shadow-md shadow-amber-500/20 cursor-pointer transition active:scale-95"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>Generate AI Bio Now</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Section 1: Basic Details Card Grid */}
@@ -1464,6 +1580,48 @@ export default function ProfilePage() {
         </div>
 
       </main>
+
+      {/* AI Bio Writer Modal */}
+      <AiBioModal
+        isOpen={isAiBioOpen}
+        onClose={() => setIsAiBioOpen(false)}
+        onSelectBio={(newBio) => {
+          setBio(newBio);
+          if (!isEditing) {
+            // In view mode, persist directly to user profile
+            const updatedUser = {
+              ...user,
+              bio: newBio,
+            };
+            login(updatedUser);
+            // Also persist to API
+            fetch("/api/user/save", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(updatedUser),
+            }).catch((err) => console.warn("Could not persist bio update:", err));
+            setSuccessMessage("AI Bio applied and saved to your profile!");
+            setTimeout(() => setSuccessMessage(""), 3500);
+          }
+        }}
+        profile={{
+          name: displayName,
+          gender,
+          age,
+          profession,
+          companyName: undefined,
+          education,
+          city,
+          country,
+          religion,
+          motherTongue,
+          maritalStatus,
+          familyValues,
+          diet,
+        }}
+        initialBio={bio}
+        initialTone={aiBioTone}
+      />
 
       <Footer />
     </div>
