@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { saveOtp, checkSendAllowed, recordSend } from '@/lib/otpStore';
+import https from 'https';
 
 // SMS Provider Configuration
 const SMS_PROVIDER = (process.env.SMS_PROVIDER || 'smsmedia').toLowerCase().trim();
@@ -15,27 +16,46 @@ const SMS_MESSAGE_TEMPLATE = (process.env.SMS_MESSAGE_TEMPLATE || 'Dear Member, 
 
 const SMS_TIMEOUT = 15000;
 
-// Helper: fetch with timeout + retry
-async function fetchWithRetry(url: string, retries = 1): Promise<{ ok: boolean; status: number; body: string }> {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), SMS_TIMEOUT);
-      const res = await fetch(url, { signal: controller.signal, redirect: 'follow' });
-      clearTimeout(timer);
-      const body = await res.text();
-      return { ok: res.ok, status: res.status, body };
-    } catch (err: unknown) {
-      const isLast = attempt === retries;
-      const isRetryable = err instanceof Error && (err.name === 'AbortError' || err.message.includes('ECONNRESET') || err.message.includes('socket hang up'));
-      if (isLast || !isRetryable) {
-        console.error(`[SMS FETCH ERROR] attempt=${attempt + 1}`, err instanceof Error ? err.message : err);
-        return { ok: false, status: 0, body: '' };
-      }
-      await new Promise((r) => setTimeout(r, 1500));
-    }
-  }
-  return { ok: false, status: 0, body: '' };
+// Helper: https.get with timeout + retry + rejectUnauthorized:false (required for SMS Media gateway SSL)
+function httpsGet(url: string, retries = 1): Promise<{ ok: boolean; status: number; body: string }> {
+  return new Promise((resolve) => {
+    let attempt = 0;
+
+    const makeRequest = () => {
+      const req = https.get(url, { rejectUnauthorized: false, timeout: SMS_TIMEOUT }, (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          resolve({ ok: res.statusCode === 200, status: res.statusCode || 0, body: data });
+        });
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        console.error(`[SMS TIMEOUT] attempt=${attempt + 1}`);
+        if (attempt < retries) {
+          attempt++;
+          setTimeout(makeRequest, 1500);
+        } else {
+          resolve({ ok: false, status: 0, body: '' });
+        }
+      });
+
+      req.on('error', (err) => {
+        console.error(`[SMS ERROR] attempt=${attempt + 1}:`, err.message);
+        if (attempt < retries && (err.message.includes('ECONNRESET') || err.message.includes('socket hang up'))) {
+          attempt++;
+          setTimeout(makeRequest, 1500);
+        } else {
+          resolve({ ok: false, status: 0, body: '' });
+        }
+      });
+
+      req.end();
+    };
+
+    makeRequest();
+  });
 }
 
 // 2Factor.in Helper
@@ -43,7 +63,7 @@ async function send2FactorOtp(mobile: string, otp: string): Promise<{ success: b
   const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
   const apiKey = (process.env.OTP_API_KEY || '').trim();
   const url = `https://2factor.in/API/V1/${apiKey}/SMS/${cleanMobile}/${otp}`;
-  const res = await fetchWithRetry(url);
+  const res = await httpsGet(url);
   console.log('[2FACTOR API RESPONSE]:', res.status, res.body);
   if (res.ok && res.body.includes('"Status":"Success"')) {
     return { success: true, data: res.body };
@@ -56,7 +76,7 @@ async function sendFast2SmsOtp(mobile: string, otp: string): Promise<{ success: 
   const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
   const apiKey = (process.env.OTP_API_KEY || '').trim();
   const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${apiKey}&route=otp&variables_values=${otp}&numbers=${cleanMobile}`;
-  const res = await fetchWithRetry(url);
+  const res = await httpsGet(url);
   console.log('[FAST2SMS API RESPONSE]:', res.status, res.body);
   if (res.ok && res.body.includes('"return":true')) {
     return { success: true, data: res.body };
@@ -72,7 +92,7 @@ async function sendSmsMediaOtp(mobile: string, otp: string): Promise<{ success: 
 
   const url = `https://login.smsmedia.org/app/smsapi/index.php?key=${SMS_MEDIA_KEY}&campaign=${SMS_MEDIA_CAMPAIGN}&routeid=${SMS_MEDIA_ROUTE_ID}&type=text&contacts=${cleanMobile}&senderid=${SMS_MEDIA_SENDER_ID}&msg=${encodedMessage}&template_id=${SMS_MEDIA_TEMPLATE_ID}&pe_id=${SMS_MEDIA_PE_ID}`;
 
-  const res = await fetchWithRetry(url, 2);
+  const res = await httpsGet(url, 2);
   console.log('[SMS MEDIA API RESPONSE]:', res.status, res.body);
   if (res.ok && (res.body.includes('SMS-SHOOT-ID') || res.body.includes('SUCCESS') || res.body.includes('OK') || res.body.length > 5)) {
     return { success: true, shootId: res.body.trim() };
@@ -128,6 +148,14 @@ export async function POST(req: Request) {
     }
 
     console.log(`[OTP SERVICE] Provider: ${SMS_PROVIDER} | Mobile +91${cleanMobile} | OTP ${otpCode} | SMS Delivered: ${smsResult.success}`);
+
+    if (!smsResult.success) {
+      console.error(`[OTP] SMS delivery FAILED for +91${cleanMobile}`);
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to send OTP via SMS. Please try again.',
+      });
+    }
 
     return NextResponse.json({
       success: true,
