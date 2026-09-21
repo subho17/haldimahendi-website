@@ -47,6 +47,9 @@ function generateSmartBios(
   const familyValues = profile.familyValues?.trim() || "Moderate";
   const cleanKeywords = keywords?.trim() || "";
 
+  // Helper: pick random item from array
+  const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
   // Contextual phrases
   const workPhrase = profession
     ? company
@@ -70,24 +73,41 @@ function generateSmartBios(
 
   const options: BioOption[] = [];
 
-  // 1. Balanced & Genuine (Warm, well-rounded, popular choice)
-  const balancedIntro = firstName
-    ? `Hello! I'm ${firstName}, ${workPhrase}${cityPhrase ? `, ${cityPhrase}` : ""}.`
-    : `Hello! I am a warm, easy-going person ${workPhrase}${cityPhrase ? `, currently ${cityPhrase}` : ""}.`;
+  // 1. Balanced & Genuine — randomized openings and phrasings
+  const balancedOpenings = [
+    firstName ? `Hi, I'm ${firstName} — ${workPhrase}${cityPhrase ? `, ${cityPhrase}` : ""}.` : `Hi! I'm a warm, grounded person ${workPhrase}${cityPhrase ? `, ${cityPhrase}` : ""}.`,
+    firstName ? `I'm ${firstName}, ${cityPhrase ? `living in ${city} and` : ""} ${workPhrase}.` : `I believe in balance — between ambition and the simple joys of life.`,
+    firstName ? `${firstName} here! ${workPhrase}${cityPhrase ? `, based in ${city}` : ""}.` : `A warm hello from someone who values genuine connections.`,
+  ];
+  const balancedMiddles = [
+    eduPhrase ? `With a foundation in ${education}, I strive for excellence at work while cherishing time with loved ones.` : `I believe in striking a healthy balance between professional growth and meaningful family time.`,
+    eduPhrase ? `My journey in ${education} has taught me the value of perseverance, and I bring that same energy to everything I do.` : `Every day I try to grow a little — in my career, in my relationships, and as a person.`,
+    eduPhrase ? `Having studied ${education}, I've developed a passion for learning and continuous improvement.` : `I'm someone who finds joy in both hard work and quiet moments at home.`,
+  ];
+  const balancedValues = [
+    `Raised with ${familyValues.toLowerCase()} values, I hold deep respect for our cultural traditions while embracing a progressive outlook.${customHighlightPhrase}`,
+    `Growing up in a ${familyValues.toLowerCase()} household taught me the importance of empathy, respect, and togetherness.${customHighlightPhrase}`,
+    `My roots in ${familyValues.toLowerCase()} family values have shaped who I am — someone who cherishes both tradition and growth.${customHighlightPhrase}`,
+  ];
+  const balancedPartners = [
+    isBride
+      ? `Seeking a thoughtful, genuine, and supportive partner to build a life filled with mutual respect, laughter, and companionship.`
+      : isGroom
+      ? `Looking for a caring, educated, and cheerful life partner who values family, companionship, and life's beautiful moments.`
+      : `Seeking a kind, honest, and supportive life companion to share meaningful experiences with.`,
+    isBride
+      ? `Hoping to find someone understanding, kind, and sincere — a true partner in every sense of the word.`
+      : isGroom
+      ? `Looking for a warm, caring, and family-oriented partner who believes in growing together through life's journey.`
+      : `Seeking someone who values genuine connection, mutual growth, and building something beautiful together.`,
+  ];
 
-  const balancedMiddle = eduPhrase
-    ? ` Having completed my ${education}, I value both professional aspirations and a peaceful personal life.`
-    : ` I believe in striking a healthy balance between ambitious professional aspirations and meaningful family time.`;
-
-  const balancedValues = ` Raised with ${familyValues.toLowerCase()} values, I have deep respect for our cultural roots while holding a progressive outlook towards life.${customHighlightPhrase}`;
-
-  const balancedPartner = isBride
-    ? ` Looking for an understanding, genuine, and supportive partner with whom I can build a joyful life filled with mutual respect, laughter, and friendship.`
-    : isGroom
-    ? ` Looking for an educated, caring, and cheerful life partner who values family, mutual companionship, and sharing life's beautiful moments together.`
-    : ` Looking for a kind, honest, and supportive life companion to share a meaningful and happy journey with.`;
-
-  const balancedBio = `${balancedIntro}${balancedMiddle}${balancedValues}${balancedPartner}`.trim();
+  const balancedBio = [
+    pick(balancedOpenings),
+    pick(balancedMiddles),
+    pick(balancedValues),
+    pick(balancedPartners),
+  ].join(" ").replace(/\s+/g, " ").trim();
   options.push({
     id: "option-balanced",
     tone: "Balanced & Genuine",
@@ -96,20 +116,34 @@ function generateSmartBios(
     wordCount: balancedBio.split(/\s+/).length,
   });
 
-  // 2. Modern & Career-Oriented (Ambitious, progressive, equal partnership)
-  const modernIntro = firstName
-    ? `I'm ${firstName} — an ambitious and forward-thinking individual ${workPhrase}${cityPhrase ? ` in ${city}` : ""}.`
-    : `An ambitious, goal-oriented professional ${workPhrase}${cityPhrase ? ` in ${city}` : ""}.`;
+  // 2. Modern & Career-Oriented — randomized
+  const modernOpenings = [
+    firstName ? `I'm ${firstName} — ambitious, driven, and passionate about making an impact.${cityPhrase ? ` Currently based in ${city}.` : ""}` : `An ambitious, goal-oriented individual ${workPhrase}${cityPhrase ? ` in ${city}` : ""}.`,
+    firstName ? `${firstName} here — ${workPhrase}${cityPhrase ? `, based in ${city}` : ""}, always chasing the next big idea.` : `${workPhrase}${cityPhrase ? ` in ${city}` : ""}, driven by purpose and a desire to make a difference.`,
+    firstName ? `I'm ${firstName}. ${cityPhrase ? `Living in ${city},` : ""} building a career I'm proud of while staying true to what matters.` : `Professionally driven, personally grounded — that's how I'd describe myself.`,
+  ];
+  const modernCareers = [
+    eduPhrase ? `Education in ${education} gave me the foundation; curiosity keeps me going.` : `I thrive on challenges and believe that continuous learning is the key to growth.`,
+    eduPhrase ? `My academic background in ${education} fuels my ambition to excel and innovate.` : `I'm someone who believes that growth comes from stepping outside your comfort zone.`,
+    eduPhrase ? `With ${education} under my belt, I approach every challenge with confidence and creativity.` : `Excellence at work isn't just a goal — it's a habit I've cultivated over years.`,
+  ];
+  const modernValues = [
+    `Beyond the professional grind, I cherish quiet weekends, deep conversations, and staying close to the people who matter.${customHighlightPhrase}`,
+    `Work drives me, but meaningful relationships and personal growth define who I truly am.${customHighlightPhrase}`,
+    `When I'm not working, you'll find me exploring new ideas, places, or simply enjoying good company.${customHighlightPhrase}`,
+  ];
+  const modernPartners = [
+    `Seeking a partner who is intellectually curious, progressive-minded, and believes in an equal, empowering partnership.`,
+    `Looking for someone who values independence, mutual respect, and building a partnership based on shared dreams.`,
+    `Hoping to find a progressive, confident, and kind partner who believes in growing together as equals.`,
+  ];
 
-  const modernCareer = eduPhrase
-    ? ` Education (${education}) and constant personal growth are very important to me.`
-    : ` Continuous learning and excellence in my career are deeply motivating for me.`;
-
-  const modernValues = ` While I am driven at work, I equally value quiet weekends, meaningful conversations, and staying grounded with loved ones.${customHighlightPhrase}`;
-
-  const modernPartner = ` Seeking a partner who is intellectually curious, progressive-minded, and believes in an equal, empowering partnership built on mutual respect and shared dreams.`;
-
-  const modernBio = `${modernIntro}${modernCareer}${modernValues}${modernPartner}`.trim();
+  const modernBio = [
+    pick(modernOpenings),
+    pick(modernCareers),
+    pick(modernValues),
+    pick(modernPartners),
+  ].join(" ").replace(/\s+/g, " ").trim();
   options.push({
     id: "option-career",
     tone: "Modern & Career-Driven",
@@ -118,24 +152,44 @@ function generateSmartBios(
     wordCount: modernBio.split(/\s+/).length,
   });
 
-  // 3. Traditional & Family-Centric (Respectful, close-knit, warm traditions)
-  const traditionalIntro = firstName
-    ? `Warm greetings! I am ${firstName}, ${cityPhrase ? `residing in ${city}` : ""}.`
-    : `Warm greetings!`;
+  // 3. Traditional & Family-Centric — randomized
+  const traditionalOpenings = [
+    firstName ? `Warm greetings! I'm ${firstName}${cityPhrase ? `, based in ${city}` : ""}.` : `Warm greetings from a humble, family-oriented soul.`,
+    firstName ? `${firstName} here — ${rootsPhrase}${cityPhrase ? `, living in ${city}` : ""}.` : `A respectful greeting to all who value tradition and family bonds.`,
+    firstName ? `I'm ${firstName}, ${cityPhrase ? `residing in ${city},` : ""} blessed with a loving family background.` : `With a heart rooted in tradition, I believe in the beauty of close-knit families.`,
+  ];
+  const traditionalFamilies = [
+    `I come from a loving family that has always emphasized respect for elders, cultural traditions, and togetherness.${customHighlightPhrase}`,
+    `Growing up in a family that values harmony and cultural heritage has made me who I am today.${customHighlightPhrase}`,
+    `My family has always been my anchor — teaching me the importance of love, respect, and staying connected to our roots.${customHighlightPhrase}`,
+  ];
+  const traditionalWorks = [
+    profession
+      ? `Professionally, I am ${workPhrase}${eduPhrase ? `, having completed my ${education}` : ""}, approaching life with gratitude and purpose.`
+      : `I believe in living a disciplined, cheerful, and purposeful life, guided by strong values.`,
+    profession
+      ? `I take pride in my work as ${profession}${eduPhrase ? `, building on my ${education}` : ""}, while keeping family at the center of everything.`
+      : `With a grounded approach to life, I find fulfillment in simplicity, honesty, and hard work.`,
+  ];
+  const traditionalPartners = [
+    isBride
+      ? `Seeking a well-mannered, family-oriented, and understanding groom who cherishes both tradition and modern aspirations.`
+      : isGroom
+      ? `Looking for a warm, cultured, and family-loving bride who values togetherness, respect, and mutual understanding.`
+      : `Seeking a companion who values family bonding, cultural integrity, and lifelong mutual care.`,
+    isBride
+      ? `Hoping to find a respectful, caring partner who believes in building a home filled with warmth and harmony.`
+      : isGroom
+      ? `Looking for a kind-hearted, family-loving partner who appreciates both tradition and the joys of modern life.`
+      : `Seeking someone who values deep connections, mutual respect, and creating a loving home together.`,
+  ];
 
-  const traditionalFamily = ` I come from a close-knit, loving family ${rootsPhrase}. I have been brought up with deep respect for elders, cultural values, and harmonious family traditions.`;
-
-  const traditionalWork = profession
-    ? ` Professionally, I am ${workPhrase}${eduPhrase ? ` after completing my ${education}` : ""}, keeping a grounded approach to life.`
-    : ` I believe in living a disciplined, cheerful, and purposeful life.`;
-
-  const traditionalPartner = isBride
-    ? ` Looking for a well-mannered, family-oriented, and understanding groom who cherishes family unity and traditional warmth alongside modern aspirations.${customHighlightPhrase}`
-    : isGroom
-    ? ` Looking for an affectionate, cultured, and family-loving bride who appreciates togetherness, mutual understanding, and warmth in a marriage.${customHighlightPhrase}`
-    : ` Looking for a companion who values family bonding, cultural integrity, and lifelong mutual care.${customHighlightPhrase}`;
-
-  const traditionalBio = `${traditionalIntro}${traditionalFamily}${traditionalWork}${traditionalPartner}`.trim();
+  const traditionalBio = [
+    pick(traditionalOpenings),
+    pick(traditionalFamilies),
+    pick(traditionalWorks),
+    pick(traditionalPartners),
+  ].join(" ").replace(/\s+/g, " ").trim();
   options.push({
     id: "option-traditional",
     tone: "Traditional & Family-Centric",
@@ -144,31 +198,53 @@ function generateSmartBios(
     wordCount: traditionalBio.split(/\s+/).length,
   });
 
-  // 4. Short & Crisp (Concise, high-impact)
-  const shortIntro = `${profession || "Professional"}${city ? ` based in ${city}` : ""}${education ? `, ${education}` : ""}.`;
-  const shortValues = ` Believer in simple living, high thinking, and strong family bonds.${cleanKeywords ? ` Passionate about ${cleanKeywords}.` : ""}`;
-  const shortPartner = ` Seeking an honest, understanding, and cheerful partner to embark on a beautiful lifelong journey together.`;
-  const shortBio = `${shortIntro}${shortValues}${shortPartner}`.trim();
+  // 4. Short & Crisp — randomized
+  const shortBios = [
+    `${profession || "Professional"}${city ? ` based in ${city}` : ""}${education ? `, ${education}` : ""}. Simple living, high thinking, and strong family bonds define me.${cleanKeywords ? ` Passionate about ${cleanKeywords}.` : ""} Seeking an honest, understanding partner for a beautiful journey ahead.`,
+    `${city ? `${city}-based` : "A dedicated"} ${profession || "professional"}${education ? ` with ${education}` : ""}. I believe in authenticity, growth, and meaningful connections.${cleanKeywords ? ` Love ${cleanKeywords}.` : ""} Looking for a genuine partner to share life's moments.`,
+    `${profession || "Professional"}${city ? ` in ${city}` : ""}. Grounded, family-first, and always learning.${cleanKeywords ? ` Enjoying ${cleanKeywords}.` : ""} Seeking a kind, cheerful partner for a lifelong partnership.`,
+  ];
+
+  // 5. Warm & Lifestyle — randomized
+  const lifestyleOpenings = [
+    firstName ? `Hey there! I'm ${firstName} — ${workPhrase}${city ? ` in ${city}` : ""}.` : `Hey! I'm someone who loves life, people, and new experiences.`,
+    firstName ? `${firstName} here! Life is an adventure, and I'm here to enjoy every bit of it.` : `A cheerful soul who believes every day is a chance to learn something new.`,
+    firstName ? `I'm ${firstName}. ${city ? `Based in ${city},` : ""} ${workPhrase}, and loving every moment.` : `Passionate about life, curious about the world, and always ready for the next adventure.`,
+  ];
+  const lifestyleHobbies = [
+    cleanKeywords
+      ? `When I'm not working, you'll find me immersed in ${cleanKeywords}.`
+      : `When I'm not working, I love exploring new places, trying new food, and spending quality time with family and friends.`,
+    cleanKeywords
+      ? `My world outside work revolves around ${cleanKeywords} — it keeps me grounded and inspired.`
+      : `I recharge by connecting with nature, enjoying good music, and sharing laughter with loved ones.`,
+    cleanKeywords
+      ? `Free time means ${cleanKeywords} for me — it's where I find my joy and energy.`
+      : `I believe in living fully — travel, food, music, and meaningful connections are my fuel.`,
+  ];
+  const lifestylePartners = [
+    `Looking for someone with a positive vibe, a great sense of humor, and an adventurous spirit to explore life together!`,
+    `Seeking a warm, fun-loving partner who believes in living life to the fullest and creating beautiful memories together.`,
+    `Hoping to find a cheerful, open-minded companion who's ready for life's adventures — big and small.`,
+  ];
+
+  const lifestyleBio = [
+    pick(lifestyleOpenings),
+    pick(lifestyleHobbies),
+    pick(lifestylePartners),
+  ].join(" ").replace(/\s+/g, " ").trim();
 
   // If user explicitly requested short or lifestyle tone, swap or append accordingly
   if (tone === "concise" || tone === "short") {
+    const shortBio = pick(shortBios);
     options.unshift({
       id: "option-short",
       tone: "Short & Crisp",
       badge: "Quick Read",
-      bio: shortBio,
-      wordCount: shortBio.split(/\s+/).length,
+      bio: shortBio.trim(),
+      wordCount: shortBio.trim().split(/\s+/).length,
     });
   } else if (tone === "lifestyle") {
-    const lifestyleIntro = firstName
-      ? `Hey there! I'm ${firstName}, ${workPhrase}${city ? ` in ${city}` : ""}.`
-      : `Hey there! I am an energetic, cheerful person ${workPhrase}.`;
-    const lifestyleHobby = cleanKeywords
-      ? ` Outside of work, my world revolves around ${cleanKeywords}.`
-      : ` Outside of work, I love exploring new places, good food, music, and spending quality time with family and friends.`;
-    const lifestylePartner = ` Looking for someone with a positive vibe, good sense of humor, and an adventurous spirit to explore life together hand-in-hand!`;
-    const lifestyleBio = `${lifestyleIntro}${lifestyleHobby}${lifestylePartner}`.trim();
-
     options.unshift({
       id: "option-lifestyle",
       tone: "Warm & Lifestyle",
@@ -178,8 +254,9 @@ function generateSmartBios(
     });
   }
 
-  // If there's an existing draft to polish
-  if (currentDraft && currentDraft.trim().length > 10) {
+  // If there's a genuine existing draft to polish (at least 3 words)
+  const words = currentDraft ? currentDraft.trim().split(/\s+/) : [];
+  if (currentDraft && words.length >= 3 && currentDraft.trim().length > 15) {
     const polishedText = polishText(currentDraft.trim());
     options.unshift({
       id: "option-polished",
@@ -220,49 +297,67 @@ export async function POST(req: NextRequest) {
       tone = "balanced",
       keywords = "",
       currentDraft = "",
+      attempt = 1,
     } = body;
 
-    // First try external LLM if available with short timeout
-    const apiKey = process.env.OPENAI_API_KEY || process.env.NVIDIA_API_KEY;
-    const isNvidia = !process.env.OPENAI_API_KEY && !!process.env.NVIDIA_API_KEY;
-    const baseUrl = isNvidia
-      ? (process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1")
-      : "https://api.openai.com/v1";
-    const model = isNvidia
-      ? (process.env.NVIDIA_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b")
-      : "gpt-4o-mini";
+    // Try external LLM if available — supports OpenAI, NVIDIA, and Gemini
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const nvidiaKey = process.env.NVIDIA_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const llmProvider = openaiKey ? 'openai' : nvidiaKey ? 'nvidia' : geminiKey ? 'gemini' : null;
 
-    if (apiKey) {
-      try {
-        const promptSystem = `You are an expert matrimonial profile consultant for HaldiMehendi. 
-Your task is to write 3 distinct, charming, culturally respectful, and authentic matrimonial bios in English for an Indian matrimonial platform.
-Rules:
-- Output valid JSON only, exactly matching this schema:
-  {
-    "options": [
-      {
-        "id": "opt1",
-        "tone": "Balanced & Genuine",
-        "badge": "Most Popular",
-        "bio": "string",
-        "wordCount": 50
-      },
-      {
-        "id": "opt2",
-        "tone": "Modern & Career-Driven",
-        "badge": "Progressive Outlook",
-        "bio": "string",
-        "wordCount": 55
-      },
-      {
-        "id": "opt3",
-        "tone": "Traditional & Family-Centric",
-        "badge": "Family & Heritage",
-        "bio": "string",
-        "wordCount": 60
-      }
-    ]
-  }
+    // Style variation instructions per attempt — each regeneration gets a fresh creative direction
+    const variationInstructions: Record<number, string> = {
+      1: `Write each bio with a WARM, CONVERSATIONAL tone — like talking to a friend. Use natural flowing sentences. Focus on emotional connection.`,
+      2: `Write each bio with a BOLD, CONFIDENT tone — highlight achievements, ambitions, and what makes this person stand out. Use strong, declarative sentences.`,
+      3: `Write each bio with a STORYTELLING approach — paint a picture of daily life, small moments, and what matters most. Use vivid, descriptive language.`,
+      4: `Write each bio with a MINIMALIST style — short punchy sentences, clean structure, powerful words. Less is more. Focus on impact.`,
+      5: `Write each bio with a POETIC, LITERARY tone — elegant phrasing, beautiful metaphors, sophisticated vocabulary. Make it feel like a personal essay.`,
+      6: `Write each bio with a HUMOROUS, WITTY approach — light-hearted, charming, personality-forward. Show character through subtle humor.`,
+      7: `Write each bio with a SPIRITUAL, VALUE-DRIVEN tone — emphasize inner qualities, life philosophy, and what truly matters in a partnership.`,
+      8: `Write each bio with an ADVENTUROUS, FREE-SPIRITED vibe — travel, exploration, trying new things, living life fully. Energetic and optimistic.`,
+    };
+    const styleHint = variationInstructions[attempt] || variationInstructions[((attempt - 1) % 8) + 1];
+
+    const promptSystem = `You are an expert matrimonial profile consultant for HaldiMehendi. 
+Your task is to write 3 DISTINCT, charming, culturally respectful, and authentic matrimonial bios in English for an Indian matrimonial platform.
+
+CRITICAL RULES FOR VARIATION:
+- Each regeneration MUST feel completely different from any previous version.
+- Vary the opening hook: sometimes a greeting, sometimes a statement, sometimes a question, sometimes a scene-setting line.
+- Vary sentence structure: mix short punchy sentences with longer flowing ones.
+- Vary the emotional angle: warmth, ambition, humor, storytelling, elegance — depending on the style.
+- NEVER repeat the same phrases, sentence patterns, or opening lines.
+- Each bio should feel like it was written by a different person.
+
+Style direction for this attempt: ${styleHint}
+
+Output valid JSON only, exactly matching this schema:
+{
+  "options": [
+    {
+      "id": "opt1",
+      "tone": "Balanced & Genuine",
+      "badge": "Most Popular",
+      "bio": "string",
+      "wordCount": 50
+    },
+    {
+      "id": "opt2",
+      "tone": "Modern & Career-Driven",
+      "badge": "Progressive Outlook",
+      "bio": "string",
+      "wordCount": 55
+    },
+    {
+      "id": "opt3",
+      "tone": "Traditional & Family-Centric",
+      "badge": "Family & Heritage",
+      "bio": "string",
+      "wordCount": 60
+    }
+  ]
+}
 - Keep each bio between 40 to 85 words.
 - Do NOT use cheesy or generic clichés.
 - Highlight candidate's education, profession, city, and family values naturally.
@@ -270,7 +365,7 @@ Rules:
 ${keywords ? `Include these personal interests/keywords: ${keywords}.` : ""}
 ${currentDraft ? `Current user draft to refine: "${currentDraft}".` : ""}`;
 
-        const userPrompt = `Profile details:
+    const userPrompt = `Profile details:
 Name: ${profile.name || "Not specified"}
 Gender: ${profile.gender || "Not specified"}
 Age: ${profile.age || "Not specified"}
@@ -283,34 +378,69 @@ Mother Tongue: ${profile.motherTongue || "Not specified"}
 Family Values: ${profile.familyValues || "Moderate"}
 Diet: ${profile.diet || "Not specified"}`;
 
+    if (llmProvider) {
+      try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        let aiContent = "";
 
-        const aiRes = await fetch(`${baseUrl}/chat/completions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: "system", content: promptSystem },
-              { role: "user", content: userPrompt },
-            ],
-            temperature: 0.7,
-            max_tokens: 650,
-          }),
-          signal: controller.signal,
-        });
+        if (llmProvider === 'gemini') {
+          // Gemini API — different format from OpenAI/NVIDIA
+          const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+          const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: `${promptSystem}\n\n${userPrompt}` }] }],
+                generationConfig: { temperature: 0.7 + Math.min(attempt * 0.05, 0.3), maxOutputTokens: 650 },
+              }),
+              signal: controller.signal,
+            }
+          );
+          clearTimeout(timeoutId);
+          if (geminiRes.ok) {
+            const data = await geminiRes.json();
+            aiContent = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+          }
+        } else {
+          // OpenAI or NVIDIA — same chat completions format
+          const isNvidia = llmProvider === 'nvidia';
+          const baseUrl = isNvidia
+            ? (process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1")
+            : "https://api.openai.com/v1";
+          const model = isNvidia
+            ? (process.env.NVIDIA_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b")
+            : "gpt-4o-mini";
+          const apiKey = isNvidia ? nvidiaKey : openaiKey;
 
-        clearTimeout(timeoutId);
+          const aiRes = await fetch(`${baseUrl}/chat/completions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: "system", content: promptSystem },
+                { role: "user", content: userPrompt },
+              ],
+              temperature: 0.7 + Math.min(attempt * 0.05, 0.3),
+              max_tokens: 650,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          if (aiRes.ok) {
+            const data = await aiRes.json();
+            aiContent = data.choices?.[0]?.message?.content?.trim() || "";
+          }
+        }
 
-        if (aiRes.ok) {
-          const data = await aiRes.json();
-          const content = data.choices?.[0]?.message?.content?.trim() || "";
-          // Extract JSON if wrapped in code blocks
-          const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (aiContent) {
+          const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
             if (Array.isArray(parsed.options) && parsed.options.length > 0) {
@@ -318,6 +448,7 @@ Diet: ${profile.diet || "Not specified"}`;
                 success: true,
                 options: parsed.options,
                 source: "ai",
+                provider: llmProvider,
               });
             }
           }
