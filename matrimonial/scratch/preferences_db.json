@@ -62,5 +62,13 @@
     "createdAt": "2026-09-19T06:33:21.256Z",
     "religion": "Any",
     "maritalStatus": "Any"
+  },
+  {
+    "userId": "3386",
+    "partnerGender": "Woman",
+    "ageMin": 18,
+    "ageMax": 35,
+    "updatedAt": "2026-09-21T12:09:31.059Z",
+    "createdAt": "2026-09-21T12:09:30.401Z"
   }
 ]

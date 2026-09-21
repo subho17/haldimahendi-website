@@ -13,9 +13,9 @@ const globalForDb = (globalThis as unknown as {
 });
 
 function createPool(): Pool | undefined {
-  let connectionString = process.env.DATABASE_URL;
+  let connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL || process.env.POSTGRES_PRISMA_URL;
   if (!connectionString) {
-    console.warn('[DB] DATABASE_URL not configured. Falling back to in-memory storage.');
+    console.warn('[DB] DATABASE_URL (or POSTGRES_URL) not configured. Falling back to in-memory storage.');
     return undefined;
   }
 

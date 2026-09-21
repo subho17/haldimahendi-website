@@ -1,19 +1,21 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-export const DEFAULT_BUCKET = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'profile photos';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '';
+export const DEFAULT_BUCKET = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || process.env.SUPABASE_BUCKET || 'profile photos';
 
 const globalForSupabase = globalThis as unknown as {
   supabaseClient: SupabaseClient | undefined;
 };
 
 export function getSupabaseClient(): SupabaseClient | null {
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const url = supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
+  const key = supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '';
+  if (!url || !key) {
     return null;
   }
   if (!globalForSupabase.supabaseClient) {
-    globalForSupabase.supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    globalForSupabase.supabaseClient = createClient(url, key, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,

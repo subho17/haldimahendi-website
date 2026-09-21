@@ -8,5 +8,8 @@
     "start": "npm --prefix matrimonial run start",
     "lint": "npm --prefix matrimonial run lint",
     "test": "npm --prefix matrimonial run test"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0"
   }
 }
