@@ -16,7 +16,7 @@ import {
   Edit2,
   BookOpen,
 } from "lucide-react";
-import { BioProfileData, BioOption } from "@/app/api/ai/bio/route";
+import { BioProfileData, BioOption } from "@/app/api/bio/route";
 
 interface AiBioModalProps {
   isOpen: boolean;
@@ -74,7 +74,7 @@ export default function AiBioModal({
       setEditingCardId(null);
 
       try {
-        const res = await fetch("/api/ai/bio", {
+        const res = await fetch("/api/bio", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
