@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
   Heart,
@@ -132,6 +132,36 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   const [error, setError] = useState("");
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [infoMessage, setInfoMessage] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (cooldown <= 0) {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+      cooldownTimerRef.current = null;
+      return;
+    }
+    if (cooldownTimerRef.current) return;
+    cooldownTimerRef.current = setInterval(() => {
+      setCooldown((c) => {
+        if (c <= 1) {
+          if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+          cooldownTimerRef.current = null;
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    };
+  }, [cooldown]);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    };
+  }, []);
 
   // Step 1: Check existing user & Send Real OTP via /api/otp/send
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -179,6 +209,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
 
       setStep(2);
       setInfoMessage(`OTP Sent to +91 ${cleaned}`);
+      setCooldown(60);
     } catch {
       setIsLoading(false);
       setError("Network error sending OTP. Please try again.");
@@ -360,22 +391,33 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
     setTimeout(() => setInfoMessage(""), 3000);
   };
 
-  // Resend OTP
+  // Resend OTP — respects server cooldown/rate-limit and shows actual result
   const handleResendOtp = async () => {
+    if (cooldown > 0) return;
     const cleaned = mobileNumber.replace(/\D/g, "");
     setError("");
     setInfoMessage("");
     setIsLoading(true);
 
     try {
-      await fetch("/api/otp/send", {
+      const res = await fetch("/api/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobileNumber: cleaned }),
       });
-
+      const data = await res.json();
       setIsLoading(false);
-      setInfoMessage(`OTP resent to +91 ${cleaned}`);
+      if (data.success) {
+        setInfoMessage(`OTP resent to +91 ${cleaned}`);
+        setCooldown(60);
+      } else {
+        setError(data.message || "Failed to resend OTP.");
+        if (data.message?.includes("wait") && typeof data.retryAfterSeconds === "number") {
+          setCooldown(data.retryAfterSeconds);
+        } else if (res.status === 429) {
+          setCooldown(60);
+        }
+      }
     } catch {
       setIsLoading(false);
       setError("Failed to resend OTP.");
@@ -572,10 +614,10 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
               <button
                 type="button"
                 onClick={handleResendOtp}
-                disabled={isLoading}
-                className="font-bold text-[#d97706] hover:underline cursor-pointer"
+                disabled={isLoading || cooldown > 0}
+                className="font-bold text-[#d97706] hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Resend OTP Code
+                {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend OTP Code"}
               </button>
               <button
                 type="button"

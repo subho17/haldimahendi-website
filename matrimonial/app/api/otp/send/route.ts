@@ -129,7 +129,7 @@ export async function POST(req: Request) {
           : sendCheck.reason === 'cooldown'
             ? `Please wait ${sendCheck.retryAfterSeconds}s before requesting another OTP.`
             : 'Too many OTP requests. Please try again in a few minutes.';
-      return NextResponse.json({ success: false, message }, { status: 429 });
+      return NextResponse.json({ success: false, message, retryAfterSeconds: sendCheck.retryAfterSeconds }, { status: 429 });
     }
 
     // Generate secure 4-digit OTP
