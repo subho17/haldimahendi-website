@@ -73,6 +73,7 @@ export default function AuthenticatedNavbar() {
   const [searchResults, setSearchResults] = useState<SearchResultProfile[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [matchCount, setMatchCount] = useState<number | null>(null);
+  const [membershipTier, setMembershipTier] = useState<string>("free");
 
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -80,6 +81,10 @@ export default function AuthenticatedNavbar() {
   const userName = user?.display_name || user?.name || "Shaadi Member";
   const userMobile = user?.mobile_number || user?.mobileNumber || "";
   const userId = user?.profileId || user?.mobile_number || user?.mobileNumber || user?.email || "";
+  const userGenderRaw = (user?.gender || "").toLowerCase();
+  const isUserBride = ["bride", "woman", "female", "girl"].includes(userGenderRaw);
+  const oppositeGender: "Bride" | "Groom" = isUserBride ? "Groom" : "Bride";
+  const isPremiumSearchAllowed = ["silver", "gold", "platinum"].includes((membershipTier || "free").toLowerCase());
 
   // Derive active main tab from the current pathname
   const activeMainTab: "dashboard" | "analytics" | "verifications" | "reports" | "members" | "coupons" | "matches" | "search" | "inbox" | "chat" | "my-haldimehendi" = pathname.includes("/matches")
@@ -118,6 +123,31 @@ export default function AuthenticatedNavbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Enforce membership gate: free users are locked to opposite gender
+  useEffect(() => {
+    if (!isPremiumSearchAllowed && selectedGender === "") {
+      setSelectedGender(oppositeGender);
+    }
+  }, [isPremiumSearchAllowed, oppositeGender, selectedGender]);
+
+  // Fetch membership tier for gating All Profiles
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/membership?userId=${encodeURIComponent(userId)}`);
+        const data = await res.json();
+        if (data.success && data.membership?.tier) {
+          setMembershipTier(data.membership.tier);
+        } else {
+          setMembershipTier("free");
+        }
+      } catch {
+        setMembershipTier("free");
+      }
+    })();
+  }, [userId]);
+
   // Fetch search results on query or filter changes
   const performSearch = useCallback(async () => {
     setIsSearching(true);
@@ -129,7 +159,8 @@ export default function AuthenticatedNavbar() {
       if (mobile) params.set("userMobile", mobile);
       if (user?.email) params.set("userEmail", user.email);
       if (searchQuery.trim()) params.set("q", searchQuery.trim());
-      if (selectedGender) params.set("gender", selectedGender);
+      const effectiveGender = isPremiumSearchAllowed ? selectedGender : oppositeGender;
+      if (effectiveGender) params.set("gender", effectiveGender);
       if (selectedReligion && selectedReligion !== "Any") params.set("religion", selectedReligion);
 
       const res = await fetch(`/api/search?${params.toString()}`);
@@ -161,7 +192,7 @@ export default function AuthenticatedNavbar() {
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, selectedGender, selectedReligion, userId, user]);
+  }, [searchQuery, selectedGender, selectedReligion, userId, user, isPremiumSearchAllowed, oppositeGender]);
 
   useEffect(() => {
     if (isSearchOpen) {
@@ -219,7 +250,8 @@ export default function AuthenticatedNavbar() {
     setIsSearchOpen(false);
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set("q", searchQuery.trim());
-    if (selectedGender) params.set("gender", selectedGender);
+    const effectiveGender = isPremiumSearchAllowed ? selectedGender : oppositeGender;
+    if (effectiveGender) params.set("gender", effectiveGender);
     if (selectedReligion && selectedReligion !== "Any") params.set("religion", selectedReligion);
     router.push(`/search?${params.toString()}`);
   };
@@ -472,20 +504,32 @@ My Haldimehendi
 
                     {/* Quick Filters Row */}
                     <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-600 bg-gray-50/70 p-3 rounded-2xl border border-gray-100">
-                      {/* Gender Selector */}
+                      {/* Gender Selector — gated: free users locked to opposite gender, Gold/Silver/Platinum unlock All */}
                       <div className="flex items-center gap-1.5">
                         <span className="font-extrabold text-gray-400 uppercase text-[10px] tracking-wider">Looking For:</span>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedGender(selectedGender === "" ? "Bride" : selectedGender === "Bride" ? "Groom" : "")}
-                          className={`px-3 py-1 rounded-xl font-bold transition text-xs cursor-pointer ${
-                            selectedGender === ""
-                              ? "bg-gray-200 text-gray-800"
-                              : "bg-[#d97706] text-white shadow-xs"
-                          }`}
-                        >
-                          {selectedGender === "" ? "All Profiles" : selectedGender === "Bride" ? "👰 Bride Profiles" : "🤵 Groom Profiles"}
-                        </button>
+                        {isPremiumSearchAllowed ? (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedGender(selectedGender === "" ? "Bride" : selectedGender === "Bride" ? "Groom" : "")}
+                            className={`px-3 py-1 rounded-xl font-bold transition text-xs cursor-pointer ${
+                              selectedGender === ""
+                                ? "bg-gray-200 text-gray-800"
+                                : "bg-[#d97706] text-white shadow-xs"
+                            }`}
+                            title="Gold/Silver: you can view all profiles"
+                          >
+                            {selectedGender === "" ? "All Profiles" : selectedGender === "Bride" ? "👰 Bride Profiles" : "🤵 Groom Profiles"}
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-3 py-1 rounded-xl font-bold text-xs bg-[#d97706] text-white shadow-xs">
+                              {oppositeGender === "Bride" ? "👰 Bride Profiles" : "🤵 Groom Profiles"}
+                            </span>
+                            <Link href="/membership" onClick={() => setIsSearchOpen(false)} className="text-[10px] font-bold text-[#d97706] hover:underline flex items-center gap-0.5">
+                              <Crown className="w-3 h-3" /> Upgrade to view All
+                            </Link>
+                          </div>
+                        )}
                       </div>
 
                       {/* Religion Selector */}
