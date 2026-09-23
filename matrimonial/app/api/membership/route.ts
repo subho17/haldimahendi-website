@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getMembership, upgradeMembership, MEMBERSHIP_PLANS } from "@/lib/membershipStore";
 import { validateCoupon, calculateDiscount, recordCouponUsage, getCouponByCode } from "@/lib/couponStore";
+import { sendPremiumEmail } from "@/lib/email";
+import { pool, hasPool } from "@/lib/db";
 
 function parsePrice(priceStr: string): number {
   return Number(priceStr.replace(/[^\d]/g, ''));
@@ -56,6 +58,22 @@ export async function POST(req: Request) {
         await recordCouponUsage(userId, coupon.id);
       }
     }
+
+    // Send premium confirmation email (fire-and-forget, lookup email/name)
+    (async () => {
+      try {
+        let email: string | null = null;
+        let name: string | null = null;
+        if (hasPool) {
+          const { rows } = await pool!.query(`SELECT email, display_name FROM profiles WHERE user_id = $1 OR mobile_number = $1 LIMIT 1`, [userId]);
+          if (rows[0]) { email = rows[0].email; name = rows[0].display_name; }
+        }
+        if (email) {
+          const plan = MEMBERSHIP_PLANS.find((p) => p.id === planId);
+          await sendPremiumEmail(email, name || 'Member', plan?.name || planId, result.membership.expiresAt);
+        }
+      } catch (e) { console.warn('[Premium Email] lookup/send failed:', e); }
+    })();
 
     return NextResponse.json({ success: true, membership: result.membership, message: result.message, coupon: couponRecord });
   } catch (e) {

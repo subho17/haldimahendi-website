@@ -6,6 +6,7 @@ import { hashPassword } from '@/lib/password';
 import { generateUnique4DigitId, is4DigitId } from "@/lib/idGenerator";
 import { savePreferences, loadPreferences } from '@/lib/prefsStore';
 import { invalidateCache } from '@/lib/cache';
+import { sendWelcomeEmail } from '@/lib/email';
 
 const USERS_FILE = path.join(process.cwd(), "scratch", "users_db.json");
 
@@ -219,6 +220,12 @@ export async function POST(req: Request) {
       }
     } catch (prefErr) {
       console.warn('Failed to update partner preferences on gender change:', prefErr);
+    }
+
+    // Send welcome email on new profile creation (fire-and-forget)
+    const isNewProfile = existingIndex < 0;
+    if (isNewProfile && updatedUser.email) {
+      sendWelcomeEmail(updatedUser.email, updatedUser.name || updatedUser.display_name || 'Member').catch((e) => console.warn('[Welcome Email] async failed:', e));
     }
 
     return NextResponse.json({
