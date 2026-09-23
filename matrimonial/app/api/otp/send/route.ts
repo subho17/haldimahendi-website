@@ -114,15 +114,20 @@ async function sendWhatsAppOtp(mobile: string, otp: string): Promise<{ success: 
   const url = `https://facesoft.in/sendMessage.php?AUTH_KEY=${encodedAuthKey}&instance_id=${encodeURIComponent(WHATSAPP_INSTANCE_ID)}&message=${encodedMessage}&phone=91${cleanMobile}`;
   const res = await httpsGet(url, 2);
   console.log('[WHATSAPP API RESPONSE]:', res.status, res.body);
-  // Facesoft returns JSON or text containing success/status; treat any 200 with body containing success/sent/Message queued as ok
-  const bodyLower = res.body.toLowerCase();
-  if (res.ok && (bodyLower.includes('success') || bodyLower.includes('sent') || bodyLower.includes('queued') || bodyLower.includes('message') || res.body.length > 5)) {
-    // If body contains error keywords, mark as failed
-    if (bodyLower.includes('error') && bodyLower.includes('fail') && !bodyLower.includes('success')) {
-      return { success: false, data: res.body };
-    }
-    return { success: true, data: res.body };
-  }
+  const body = res.body.trim();
+  const bodyLower = body.toLowerCase();
+  // Facesoft: 200 is HTTP accepted, but body code 100 = "Message Saved, WhatsApp message not delivered" = genuine failure
+  // Must parse body, not just HTTP status. Common success: "200,Message Sent" or contains "successfully sent"
+  const isNotDelivered = bodyLower.includes('not delivered') || bodyLower.includes('failed to deliver') || bodyLower.includes('undelivered');
+  const isCode100Failure = body.startsWith('100,') || bodyLower.startsWith('100,');
+  const hasError = bodyLower.includes('error') || bodyLower.includes('failed') || bodyLower.includes('failure');
+  if (!res.ok) return { success: false, data: res.body };
+  if (isNotDelivered || isCode100Failure) return { success: false, data: res.body };
+  if (hasError && !bodyLower.includes('success')) return { success: false, data: res.body };
+  // Only treat as success if body explicitly indicates sent/success/delivered (without "not")
+  const isExplicitSuccess = bodyLower.includes('successfully') || bodyLower.includes('message sent') || (bodyLower.includes('sent') && !isNotDelivered) || bodyLower.includes('delivered');
+  if (isExplicitSuccess) return { success: true, data: res.body };
+  // Unknown 200 body — treat as failure so caller can fall back to SMS (when provider=both)
   return { success: false, data: res.body };
 }
 
