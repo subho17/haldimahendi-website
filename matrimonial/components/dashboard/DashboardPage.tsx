@@ -39,6 +39,7 @@ interface DashboardStats {
   interestsSent: number;
   interestsAccepted: number;
   shortlisted: number;
+  profileViews: number;
 }
 
 export default function DashboardPage() {
@@ -56,6 +57,7 @@ export default function DashboardPage() {
     interestsSent: 0,
     interestsAccepted: 0,
     shortlisted: 0,
+    profileViews: 0,
   });
   const [recommended, setRecommended] = useState<MatchResult[]>([]);
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
@@ -106,10 +108,17 @@ export default function DashboardPage() {
         fetch(`/api/matches?${mParams.toString()}`).then((r) => r.json()),
         fetch(`/api/interests?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
         fetch(`/api/verification?userId=${encodeURIComponent(userId)}`).then((r) => r.json()),
+        fetch(`/api/profile/view?userId=${encodeURIComponent(userId)}`).then((r) => r.json()).catch(() => ({})),
       ])
-        .then(([matchData, interestData, verData]) => {
+        .then(([matchData, interestData, verData, viewData]) => {
           if (verData?.success && verData.verified) {
             setIsVerified(true);
+          }
+          if (viewData?.success && typeof viewData.views === "number") {
+            setStats((prev) => ({
+              ...prev,
+              profileViews: viewData.views,
+            }));
           }
           if (matchData.success) {
             const myProfileId = (user?.profileId || "").toLowerCase().trim();
@@ -192,7 +201,13 @@ export default function DashboardPage() {
 
   const statCards = [
     { label: "New Matches", value: String(stats.newMatches), sub: `${stats.newCount} new this week`, Icon: Heart, color: "text-[#d97706]" },
-    { label: "Profile Views", value: "48", sub: "↑ 12 this week", Icon: Eye, color: "text-cyan-600" },
+    {
+      label: "Profile Views",
+      value: String(stats.profileViews),
+      sub: stats.profileViews === 0 ? "0 this week" : `↑ ${stats.profileViews} this week`,
+      Icon: Eye,
+      color: "text-cyan-600",
+    },
     { label: "Interests Sent", value: String(stats.interestsSent), sub: `${stats.interestsAccepted} accepted`, Icon: UserCheck, color: "text-emerald-600" },
     { label: "Shortlisted", value: String(stats.shortlisted), sub: "Saved profiles", Icon: Sparkles, color: "text-amber-500" },
   ];
@@ -311,7 +326,17 @@ export default function DashboardPage() {
               {recommended.map((m) => (
                 <div
                   key={m.profile.id}
-                  onClick={() => router.push(`/profile/${encodeURIComponent(m.profile.id)}?back=/dashboard`)}
+                  onClick={() => {
+                    if (userId && m.profile.id && userId.toLowerCase() !== m.profile.id.toLowerCase()) {
+                      setStats((prev) => ({ ...prev, profileViews: prev.profileViews + 1 }));
+                      fetch("/api/profile/view", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ viewerId: userId, viewedId: m.profile.id }),
+                      }).catch(() => {});
+                    }
+                    router.push(`/profile/${encodeURIComponent(m.profile.id)}?back=/dashboard`);
+                  }}
                   className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer"
                 >
                   <div>

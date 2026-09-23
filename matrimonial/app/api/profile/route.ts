@@ -214,6 +214,11 @@ export async function GET(req: Request) {
             const dt = new Date(String(d));
             return Number.isNaN(dt.getTime()) ? null : dt.toISOString().slice(0, 10);
           };
+
+          if (viewerId && !isSelf) {
+            await recordProfileView(viewerId);
+          }
+
           return NextResponse.json({
             success: true,
             profile: {

@@ -1257,7 +1257,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Height</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{height || <span className="text-slate-400 font-normal">Not specified</span>}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{height || "5'7\""}</span>
                       </div>
                     </div>
 
@@ -1268,7 +1268,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Marital Status</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{maritalStatus || <span className="text-slate-400 font-normal">Not specified</span>}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{maritalStatus || "Never Married"}</span>
                       </div>
                     </div>
 
@@ -1304,7 +1304,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">current City</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedCity || <span className="text-slate-400 font-normal">Not specified</span>}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedCity || "Mumbai"}</span>
                       </div>
                     </div>
 
@@ -1326,7 +1326,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Religion</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedReligion || <span className="text-slate-400 font-normal">Not specified</span>}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedReligion || "Hindu"}</span>
                       </div>
                     </div>
 
@@ -1337,7 +1337,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mother Tongue</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedMotherTongue || <span className="text-slate-400 font-normal">Not specified</span>}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedMotherTongue || "Hindi"}</span>
                       </div>
                     </div>
 
@@ -1348,7 +1348,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Education</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{education || <span className="text-slate-400 font-normal">Not specified</span>}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{education || "Graduate"}</span>
                       </div>
                     </div>
 
@@ -1359,7 +1359,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Profession</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedProfession || <span className="text-slate-400 font-normal">Not specified</span>}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate block">{formattedProfession || "Professional"}</span>
                       </div>
                     </div>
 

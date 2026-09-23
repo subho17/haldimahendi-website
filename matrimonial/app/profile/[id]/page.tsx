@@ -98,6 +98,7 @@ export default function PublicProfilePage() {
 
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   const [loading, setLoading] = useState(true);
   const [interestSent, setInterestSent] = useState(false);
   const [interestReceived, setInterestReceived] = useState(false);
@@ -127,6 +128,8 @@ export default function PublicProfilePage() {
         .then(([profileData, interestData, blockData]) => {
           if (profileData.success && profileData.profile) {
             setProfile(profileData.profile);
+          } else if (profileData.upgradeRequired || profileData.limit !== undefined) {
+            setLimitReached(true);
             if (interestData.success) {
               const pId = profileData.profile.id;
               const isAccepted = (interestData.acceptedIds || []).includes(pId) || (interestData.acceptedIds || []).includes(profileId);
@@ -250,6 +253,28 @@ export default function PublicProfilePage() {
         <Navbar />
         <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-[#d97706] animate-spin" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (limitReached) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+        <Navbar />
+        <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <Crown className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-extrabold text-slate-900 mb-2">Daily profile view limit reached</h1>
+          <p className="text-xs text-slate-500 mb-6">You have viewed the maximum profiles allowed for your plan today. Upgrade to view more or come back tomorrow.</p>
+          <div className="flex items-center justify-center gap-3">
+            <a href="/membership" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#d97706] text-white text-xs font-bold shadow-md hover:bg-[#b45309] transition-all">
+              <Crown className="w-4 h-4" /> Upgrade Plan
+            </a>
+            <a href={back} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition-all">
+              <ArrowLeft className="w-4 h-4" /> Go Back
+            </a>
+          </div>
         </main>
         <Footer />
       </div>

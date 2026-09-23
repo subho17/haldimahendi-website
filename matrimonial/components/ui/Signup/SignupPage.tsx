@@ -74,18 +74,28 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   // Sub-step 1: Basic & Contact details
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATARS[0].url);
-  const [gender, setGender] = useState<"Bride" | "Groom">(() => {
+  const [lookingFor, setLookingFor] = useState<"Bride" | "Groom">(() => {
     if (initialData?.lookingFor) {
       const lf = initialData.lookingFor.toLowerCase();
-      if (lf.includes("woman") || lf.includes("bride") || lf.includes("female") || lf.includes("girl")) {
+      if (lf.includes("groom") || lf.includes("man") || lf.includes("male") || lf.includes("boy")) {
         return "Groom";
       }
-      if (lf.includes("man") || lf.includes("groom") || lf.includes("male") || lf.includes("boy")) {
+      if (lf.includes("bride") || lf.includes("woman") || lf.includes("female") || lf.includes("girl")) {
         return "Bride";
       }
     }
-    return "Groom";
+    return "Bride";
+  });
+  const gender = lookingFor === "Bride" ? "Groom" : "Bride";
+  const [hasUploadedPhoto, setHasUploadedPhoto] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(() => {
+    if (initialData?.lookingFor) {
+      const lf = initialData.lookingFor.toLowerCase();
+      if (lf.includes("groom") || lf.includes("man") || lf.includes("male") || lf.includes("boy")) {
+        return DEFAULT_AVATARS[0].url; // Bride looking for Groom
+      }
+    }
+    return DEFAULT_AVATARS[1].url; // Groom looking for Bride
   });
   const [age, setAge] = useState("");
   const [height, setHeight] = useState("");
@@ -365,6 +375,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
       avatarUrl: avatarUrl || DEFAULT_AVATARS[0].url,
       avatar_url: avatarUrl || DEFAULT_AVATARS[0].url,
       gender,
+      lookingFor,
+      partnerGender: lookingFor === "Bride" ? "Woman" : "Man",
       age: age ? Number(age) : 25,
       height: height || "5'7\"",
       maritalStatus: maritalStatus || "Never Married",
@@ -776,36 +788,49 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
             {profileStep === 1 && (
               <div className="space-y-3.5 animate-in slide-in-from-right-2 fade-in duration-300">
                 {/* Avatar Selector */}
-                <div className="flex flex-col items-center justify-center gap-2 mb-1">
+                <div className="flex flex-col items-center justify-center gap-2.5 mb-2">
                   <div className="relative group">
-                    <Image
-                      src={avatarUrl}
-                      alt="Profile Avatar"
-                      width={72}
-                      height={72}
-                      className="rounded-full object-cover border-2 border-amber-200 shadow-md"
-                    />
-                    <label className="absolute bottom-0 right-0 p-1.5 rounded-full bg-[#d97706] text-white cursor-pointer shadow-md hover:scale-105 transition">
-                      <Camera className="w-3.5 h-3.5" />
+                    <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-amber-200/90 shadow-xl ring-4 ring-amber-100/70 bg-gradient-to-tr from-amber-50 to-orange-50 relative flex items-center justify-center">
+                      <Image
+                        src={avatarUrl}
+                        alt="Profile Avatar"
+                        width={128}
+                        height={128}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <label
+                      title="Upload custom photo"
+                      className="absolute bottom-1 right-1 p-2.5 rounded-full bg-[#d97706] hover:bg-[#b45309] text-white cursor-pointer shadow-lg hover:scale-110 active:scale-95 transition-all border-2 border-white flex items-center justify-center"
+                    >
+                      <Camera className="w-4 h-4" />
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={handleFileUpload}
+                        onChange={(e) => {
+                          setHasUploadedPhoto(true);
+                          handleFileUpload(e);
+                        }}
                         className="hidden"
                       />
                     </label>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex items-center gap-2.5 mt-1">
                     {DEFAULT_AVATARS.map((av, idx) => (
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => setAvatarUrl(av.url)}
-                        className={`relative w-7 h-7 rounded-full overflow-hidden border-2 transition ${avatarUrl === av.url ? "border-[#d97706] scale-110 shadow-xs" : "border-slate-200 opacity-70"
+                        onClick={() => {
+                          setAvatarUrl(av.url);
+                          setHasUploadedPhoto(true);
+                        }}
+                        className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${avatarUrl === av.url
+                            ? "border-[#d97706] scale-110 ring-2 ring-amber-400/50 shadow-sm"
+                            : "border-slate-200 opacity-70 hover:opacity-100 hover:scale-105"
                           }`}
                       >
-                        <Image src={av.url} alt={av.label} width={28} height={28} className="w-full h-full object-cover" />
+                        <Image src={av.url} alt={av.label} width={40} height={40} className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
@@ -849,41 +874,44 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                   <span className="text-[10px] text-slate-400 block pl-1">Displayed on profile & used for account recovery</span>
                 </div>
 
-                {/* Profile Gender Choice */}
+                {/* Looking For Choice */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
-                      I Am Creating Profile For <span className="text-[#d97706]">*</span>
-                    </label>
-                    <span className="text-xs text-amber-700 font-semibold">
-                      Looking for: {gender === "Groom" ? "👰 Bride" : "🤵 Groom"}
-                    </span>
-                  </div>
+                  <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
+                    Looking For <span className="text-[#d97706]">*</span>
+                  </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setGender("Groom")}
-                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${gender === "Groom"
-                          ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
+                      onClick={() => {
+                        setLookingFor("Bride");
+                        if (!hasUploadedPhoto) setAvatarUrl(DEFAULT_AVATARS[1].url);
+                      }}
+                      className={`py-2.5 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${lookingFor === "Bride"
+                          ? "bg-amber-50 border-[#d97706] text-[#d97706] ring-2 ring-amber-500/20 shadow-xs"
                           : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                         }`}
                     >
-                      <span>🤵 Groom (Male)</span>
+                      <span className="text-base">👰</span>
+                      <span>Bride</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setGender("Bride")}
-                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${gender === "Bride"
-                          ? "bg-amber-50 border-[#d97706] text-[#d97706] shadow-2xs"
+                      onClick={() => {
+                        setLookingFor("Groom");
+                        if (!hasUploadedPhoto) setAvatarUrl(DEFAULT_AVATARS[0].url);
+                      }}
+                      className={`py-2.5 px-3 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${lookingFor === "Groom"
+                          ? "bg-amber-50 border-[#d97706] text-[#d97706] ring-2 ring-amber-500/20 shadow-xs"
                           : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                         }`}
                     >
-                      <span>👰 Bride (Female)</span>
+                      <span className="text-base">🤵</span>
+                      <span>Groom</span>
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-400">
-                    Matches will automatically show {gender === "Groom" ? "verified Brides (Women)" : "verified Grooms (Men)"}.
+                    Matches will automatically show verified {lookingFor === "Bride" ? "Brides (Women)" : "Grooms (Men)"}.
                   </p>
                 </div>
 

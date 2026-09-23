@@ -318,15 +318,17 @@ export async function GET(req: Request) {
 
     if (!prefs.userId) prefs.userId = userId;
 
-    // Enforce daily match suggestion limit based on membership plan
+    // Membership limits — profiles stay visible; opening is gated by profileViewsPerDay
     const matchLimit = await getMatchLimit(userId);
     const isLimited = matchLimit.limit !== -1;
-    const limitedMatches = isLimited ? eligible.slice(0, matchLimit.remaining) : eligible;
-    const limitedAllMatches = isLimited ? matches.slice(0, matchLimit.remaining) : matches;
+    const limitReached = isLimited && matchLimit.remaining <= 0;
+    // Always return full eligible so UI never hides profiles; banner + open-gate handles plan limits
+    const limitedMatches = eligible;
+    const limitedAllMatches = matches;
 
-    // Record how many matches were returned today (only when record=true)
-    if (limitedMatches.length > 0 && recordMode) {
-      await recordMatchesReturned(userId, limitedMatches.length);
+    // Record only when there is remaining quota
+    if (limitedMatches.length > 0 && recordMode && !limitReached) {
+      await recordMatchesReturned(userId, Math.min(limitedMatches.length, matchLimit.remaining));
     }
 
     return NextResponse.json({
@@ -336,10 +338,10 @@ export async function GET(req: Request) {
       meta: {
         totalCandidates: visibleCandidates.length,
         matches: limitedMatches.length,
-        newCount: isLimited ? limitedMatches.filter((m) => m.isNew).length : newCount,
+        newCount,
         dailyLimit: matchLimit.limit,
-        dailyRemaining: isLimited ? Math.max(0, matchLimit.remaining - limitedMatches.length) : -1,
-        limitReached: isLimited && matchLimit.remaining <= 0,
+        dailyRemaining: isLimited ? matchLimit.remaining : -1,
+        limitReached,
       },
       matches: limitedMatches,
       allMatches: limitedAllMatches,

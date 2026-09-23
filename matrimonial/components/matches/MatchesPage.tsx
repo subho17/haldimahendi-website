@@ -161,37 +161,34 @@ export default function MatchesPage() {
           </div>
         ) : eligible.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-xs">
-            {limitReached ? (
-              <>
-                <Crown className="w-10 h-10 text-[#d97706] mx-auto mb-4" />
-                <h3 className="font-bold text-gray-900 text-lg mb-1">Daily match limit reached</h3>
-                <p className="text-sm text-gray-500 mb-5">
-                  You&apos;ve seen all your matches for today. Upgrade your plan or come back tomorrow for more suggestions.
-                </p>
-                <a
-                  href="/membership"
-                  className="inline-block px-6 py-3 bg-[#d97706] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#b45309] cursor-pointer"
-                >
-                  Upgrade Plan
-                </a>
-              </>
-            ) : (
-              <>
-                <Heart className="w-10 h-10 text-[#d97706] mx-auto mb-4" />
-                <h3 className="font-bold text-gray-900 text-lg mb-1">No matches found yet</h3>
-                <p className="text-sm text-gray-500 mb-5">
-                  Widen your partner preferences or add more profile details to unlock matches.
-                </p>
-                <a
-                  href="/preferences"
-                  className="inline-block px-6 py-3 bg-[#d97706] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#b45309] cursor-pointer"
-                >
-                  Adjust Preferences
-                </a>
-              </>
-            )}
+            <Heart className="w-10 h-10 text-[#d97706] mx-auto mb-4" />
+            <h3 className="font-bold text-gray-900 text-lg mb-1">No matches found yet</h3>
+            <p className="text-sm text-gray-500 mb-5">
+              Widen your partner preferences or add more profile details to unlock matches.
+            </p>
+            <a
+              href="/preferences"
+              className="inline-block px-6 py-3 bg-[#d97706] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#b45309] cursor-pointer"
+            >
+              Adjust Preferences
+            </a>
           </div>
         ) : (
+          <>
+            {limitReached && (
+              <div className="mb-6 p-4 rounded-2xl border border-amber-200 bg-amber-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Crown className="w-8 h-8 text-amber-600 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-amber-900">Daily match suggestions limit reached</p>
+                    <p className="text-xs text-amber-800">Profiles remain visible. Opening full profiles is limited by your plan — upgrade to view more.</p>
+                  </div>
+                </div>
+                <a href="/membership" className="shrink-0 px-5 py-2.5 bg-[#d97706] text-white font-bold text-xs rounded-xl shadow-md hover:bg-[#b45309] cursor-pointer inline-flex items-center gap-1.5">
+                  <Crown className="w-4 h-4" /> Upgrade Plan
+                </a>
+              </div>
+            )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {eligible.map((m, idx) => (
               <div
@@ -330,6 +327,7 @@ export default function MatchesPage() {
               </div>
             ))}
           </div>
+          </>
         )}
       </main>
 

@@ -14,6 +14,7 @@ export interface UsageRecord {
   matchesReturnedToday: number;
   matchesResetDate: string;
   profileViewsToday: number;
+  totalProfileViews?: number;
   profileViewsResetDate: string;
   messagesSentToday: number;
   messagesResetDate: string;
@@ -62,6 +63,7 @@ function ensureRecord(db: UsageDb, userId: string): UsageRecord {
       matchesReturnedToday: 0,
       matchesResetDate: dayKey,
       profileViewsToday: 0,
+      totalProfileViews: 0,
       profileViewsResetDate: dayKey,
       messagesSentToday: 0,
       messagesResetDate: dayKey,
@@ -69,6 +71,9 @@ function ensureRecord(db: UsageDb, userId: string): UsageRecord {
   }
 
   const rec = db[userId];
+  if (rec.totalProfileViews === undefined) {
+    rec.totalProfileViews = 0;
+  }
   if (rec.interestsResetAt !== monthKey) {
     rec.interestsSent = 0;
     rec.interestsResetAt = monthKey;
@@ -257,11 +262,13 @@ export async function canViewProfile(userId: string): Promise<{ allowed: boolean
   };
 }
 
-export async function recordProfileView(userId: string): Promise<void> {
+export async function recordProfileView(userId: string): Promise<number> {
   const db = readUsageDb();
   const rec = ensureRecord(db, userId);
   rec.profileViewsToday += 1;
+  rec.totalProfileViews = (rec.totalProfileViews || 0) + 1;
   writeUsageDb(db);
+  return rec.totalProfileViews;
 }
 
 export async function canSendMessage(userId: string): Promise<{ allowed: boolean; remaining: number; limit: number; canChat: boolean; upgradeRequired: boolean }> {
@@ -332,6 +339,7 @@ export async function getUsageSummary(userId: string) {
     },
     profileViews: {
       used: rec.profileViewsToday,
+      total: rec.totalProfileViews ?? rec.profileViewsToday ?? 0,
       limit: plan?.profileViewsPerDay ?? 10,
       remaining: isUnlimited(plan?.profileViewsPerDay ?? 10) ? -1 : Math.max(0, (plan?.profileViewsPerDay ?? 10) - rec.profileViewsToday),
     },
