@@ -126,6 +126,7 @@ export default function AuthenticatedNavbar() {
   // Enforce membership gate: free users are locked to opposite gender
   useEffect(() => {
     if (!isPremiumSearchAllowed && selectedGender === "") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync of default gender for free tier
       setSelectedGender(oppositeGender);
     }
   }, [isPremiumSearchAllowed, oppositeGender, selectedGender]);

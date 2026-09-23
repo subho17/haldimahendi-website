@@ -1,4 +1,5 @@
 // db.js - Supabase connection helper for Hostinger Web App
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- Hostinger sample uses CJS
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
