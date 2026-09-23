@@ -120,6 +120,11 @@ export default function PublicProfilePage() {
       return;
     }
     if (mounted && isAuthenticated && profileId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setNotFound(false);
+      setLimitReached(false);
+      setProfile(null);
+      setLoading(true);
       Promise.all([
         fetch(`/api/profile?id=${encodeURIComponent(profileId)}${viewerId ? `&viewerId=${encodeURIComponent(viewerId)}` : ""}`).then((r) => r.json()),
         fetch(`/api/interests?userId=${encodeURIComponent(viewerId)}`).then((r) => r.json()),
@@ -128,9 +133,7 @@ export default function PublicProfilePage() {
         .then(([profileData, interestData, blockData]) => {
           if (profileData.success && profileData.profile) {
             setProfile(profileData.profile);
-          } else if (profileData.upgradeRequired || profileData.limit !== undefined) {
-            setLimitReached(true);
-            if (interestData.success) {
+            if (interestData?.success) {
               const pId = profileData.profile.id;
               const isAccepted = (interestData.acceptedIds || []).includes(pId) || (interestData.acceptedIds || []).includes(profileId);
               const isSent = (interestData.sentIds || []).includes(pId) || (interestData.sentIds || []).includes(profileId);
@@ -143,9 +146,11 @@ export default function PublicProfilePage() {
               setInterestReceived(isReceived && !isAccepted);
               setShortlisted((interestData.shortlistedIds || []).includes(pId) || (interestData.shortlistedIds || []).includes(profileId));
             }
-            if (blockData.success) {
+            if (blockData?.success) {
               setBlocked((blockData.blockedIds || []).includes(profileData.profile.id));
             }
+          } else if (profileData.upgradeRequired) {
+            setLimitReached(true);
           } else {
             setNotFound(true);
           }
@@ -263,17 +268,24 @@ export default function PublicProfilePage() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
         <Navbar />
-        <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <Crown className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-extrabold text-slate-900 mb-2">Daily profile view limit reached</h1>
-          <p className="text-xs text-slate-500 mb-6">You have viewed the maximum profiles allowed for your plan today. Upgrade to view more or come back tomorrow.</p>
-          <div className="flex items-center justify-center gap-3">
-            <a href="/membership" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#d97706] text-white text-xs font-bold shadow-md hover:bg-[#b45309] transition-all">
-              <Crown className="w-4 h-4" /> Upgrade Plan
-            </a>
-            <a href={back} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition-all">
-              <ArrowLeft className="w-4 h-4" /> Go Back
-            </a>
+        <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center relative">
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10" />
+          <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => router.push(back)}>
+            <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => router.push(back)} className="absolute -top-3 -right-3 bg-white rounded-full p-1.5 shadow-lg border border-gray-100 text-gray-600 hover:text-gray-900"><X className="w-5 h-5" /></button>
+              <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4"><Lock className="w-7 h-7 text-amber-600" /></div>
+              <h3 className="text-lg font-extrabold text-slate-900">Free limit reached</h3>
+              <p className="text-xs text-slate-500 mt-2">You have reached your free limit. Wait for 24 hours to view more profiles.</p>
+              <p className="text-[11px] text-slate-400 mt-1">You can still revisit profiles you have already viewed.</p>
+              <div className="flex gap-3 mt-6">
+                <a href="/membership" className="flex-1 py-3 rounded-xl bg-[#d97706] text-white font-bold text-xs text-center hover:bg-[#b45309]">Upgrade Plan</a>
+                <button onClick={() => router.push(back)} className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-xs hover:bg-slate-50">Go Back</button>
+              </div>
+            </div>
+          </div>
+          <div className="opacity-30 pointer-events-none">
+            <h1 className="text-2xl font-extrabold text-slate-900 mb-2">Profile Preview</h1>
+            <p className="text-xs text-slate-500">Upgrade to unlock full profile details.</p>
           </div>
         </main>
         <Footer />

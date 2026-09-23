@@ -61,24 +61,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = normalizeId(searchParams.get('id'));
     const viewerId = normalizeId(searchParams.get('viewerId'));
+    const checkOnly = searchParams.get('checkOnly') === '1';
     if (!id) {
       return NextResponse.json({ success: false, message: 'Missing id parameter' }, { status: 400 });
     }
 
-    // Check if viewer can view this profile
-    const isSelf = viewerId && viewerId.toLowerCase() === id.toLowerCase();
-    if (viewerId && !isSelf) {
-      const viewCheck = await canViewProfile(viewerId);
-      if (!viewCheck.allowed) {
-        return NextResponse.json({
-          success: false,
-          message: 'Daily profile view limit reached. Upgrade to view more profiles.',
-          limit: viewCheck.limit,
-          remaining: 0,
-          upgradeRequired: viewCheck.upgradeRequired,
-        }, { status: 403 });
-      }
-    }
+    // Self-check deferred until after DB fetch (ids may be uuid vs user_id) — limit enforced after profileIsSelf is known
 
     // Contact details are premium-gated: only revealed to premium viewers or self.
     let viewerIsPremium = false;
@@ -98,35 +86,49 @@ export async function GET(req: Request) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(
-          `SELECT user_id, display_name, email, avatar_url, mobile_number, gender, age, height, marital_status,
+          `SELECT id, user_id, display_name, email, avatar_url, mobile_number, gender, age, height, marital_status,
                   religion, mother_tongue, education, profession, city, country, bio, created_at,
                   verification_status, membership_tier, membership_expires_at,
                   dob, birth_time, birth_place, rashi, nakshatra, manglik, gotra,
                   father_occupation, mother_occupation, siblings, family_type, family_values,
                   diet, smoking, drinking, disability
            FROM profiles
-           WHERE user_id = $1 OR mobile_number = $1`,
+           WHERE id::text = $1 OR user_id = $1 OR mobile_number = $1`,
           [id]
         );
         if (rows.length > 0) {
           const r = rows[0];
           const profileIsSelf = viewerId && (
             normalizeId(r.user_id).toLowerCase() === viewerId.toLowerCase() ||
+            normalizeId((r as unknown as { id?: string }).id).toLowerCase() === viewerId.toLowerCase() ||
             (r.mobile_number && r.mobile_number.replace(/\D/g, '') === viewerId.replace(/\D/g, ''))
           );
           const revealContact = Boolean(profileIsSelf || (viewerPlan?.canSeeContactDetails ?? false));
           const mem = resolveStatus(r.membership_tier, r.membership_expires_at);
           const dob = r.dob instanceof Date ? r.dob.toISOString().slice(0, 10) : r.dob;
 
-          // Record profile view (if viewer is looking at someone else's profile)
+          // Enforce daily view limit only after accurate self-check — revisits allowed
           if (viewerId && !profileIsSelf) {
-            await recordProfileView(viewerId);
+            const viewCheck = await canViewProfile(viewerId, id);
+            if (!viewCheck.allowed) {
+              return NextResponse.json({
+                success: false,
+                message: 'You have reached your free limit. Wait for 24 hours to view more profiles.',
+                limit: viewCheck.limit,
+                remaining: 0,
+                upgradeRequired: viewCheck.upgradeRequired,
+              }, { status: 403 });
+            }
+            if (!checkOnly) await recordProfileView(viewerId, id);
+            else return NextResponse.json({ success: true, allowed: true } as unknown as { success: boolean });
+          } else if (checkOnly) {
+            return NextResponse.json({ success: true, allowed: true } as unknown as { success: boolean });
           }
 
           return NextResponse.json({
             success: true,
             profile: {
-              id: normalizeId(r.user_id),
+              id: normalizeId(r.user_id || (r as unknown as { id: string }).id),
               name: r.display_name || 'Member',
               age: r.age,
               height: r.height,
@@ -216,7 +218,20 @@ export async function GET(req: Request) {
           };
 
           if (viewerId && !isSelf) {
-            await recordProfileView(viewerId);
+            const viewCheck = await canViewProfile(viewerId, id);
+            if (!viewCheck.allowed) {
+              return NextResponse.json({
+                success: false,
+                message: 'You have reached your free limit. Wait for 24 hours to view more profiles.',
+                limit: viewCheck.limit,
+                remaining: 0,
+                upgradeRequired: viewCheck.upgradeRequired,
+              }, { status: 403 });
+            }
+            if (!checkOnly) await recordProfileView(viewerId, id);
+            else return NextResponse.json({ success: true, allowed: true } as unknown as { success: boolean });
+          } else if (checkOnly) {
+            return NextResponse.json({ success: true, allowed: true } as unknown as { success: boolean });
           }
 
           return NextResponse.json({

@@ -14,6 +14,7 @@ export interface UsageRecord {
   matchesReturnedToday: number;
   matchesResetDate: string;
   profileViewsToday: number;
+  profileViewsTodayIds: string[];
   totalProfileViews?: number;
   profileViewsResetDate: string;
   messagesSentToday: number;
@@ -63,7 +64,7 @@ function ensureRecord(db: UsageDb, userId: string): UsageRecord {
       matchesReturnedToday: 0,
       matchesResetDate: dayKey,
       profileViewsToday: 0,
-      totalProfileViews: 0,
+      profileViewsTodayIds: [],
       profileViewsResetDate: dayKey,
       messagesSentToday: 0,
       messagesResetDate: dayKey,
@@ -88,8 +89,10 @@ function ensureRecord(db: UsageDb, userId: string): UsageRecord {
   }
   if (rec.profileViewsResetDate !== dayKey) {
     rec.profileViewsToday = 0;
+    rec.profileViewsTodayIds = [];
     rec.profileViewsResetDate = dayKey;
   }
+  if (!Array.isArray(rec.profileViewsTodayIds)) rec.profileViewsTodayIds = [];
   if (rec.messagesResetDate !== dayKey) {
     rec.messagesSentToday = 0;
     rec.messagesResetDate = dayKey;
@@ -234,24 +237,30 @@ export async function resetDailyMatchCounters(userId: string): Promise<void> {
   rec.matchesReturnedToday = 0;
   rec.matchesResetDate = getDayKey();
   rec.profileViewsToday = 0;
+  rec.profileViewsTodayIds = [];
   rec.profileViewsResetDate = getDayKey();
   rec.messagesSentToday = 0;
   rec.messagesResetDate = getDayKey();
   writeUsageDb(db);
 }
 
-export async function canViewProfile(userId: string): Promise<{ allowed: boolean; remaining: number; limit: number; upgradeRequired: boolean }> {
+export async function canViewProfile(userId: string, targetId?: string): Promise<{ allowed: boolean; remaining: number; limit: number; upgradeRequired: boolean; visitedIds: string[] }> {
   const { tier } = await getMembership(userId);
   const plan = MEMBERSHIP_PLANS.find((p) => p.tier === tier);
   const limit = plan?.profileViewsPerDay ?? 10;
 
   if (isUnlimited(limit)) {
-    return { allowed: true, remaining: -1, limit: -1, upgradeRequired: false };
+    return { allowed: true, remaining: -1, limit: -1, upgradeRequired: false, visitedIds: [] };
   }
 
   const db = readUsageDb();
   const rec = ensureRecord(db, userId);
   writeUsageDb(db);
+
+  const norm = (v?: string) => (v || "").toLowerCase().trim();
+  if (targetId && rec.profileViewsTodayIds.some((x) => norm(x) === norm(targetId))) {
+    return { allowed: true, remaining: Math.max(0, limit - rec.profileViewsToday), limit, upgradeRequired: false, visitedIds: rec.profileViewsTodayIds };
+  }
 
   const remaining = limit - rec.profileViewsToday;
   return {
@@ -259,13 +268,26 @@ export async function canViewProfile(userId: string): Promise<{ allowed: boolean
     remaining: Math.max(0, remaining),
     limit,
     upgradeRequired: remaining <= 0 && tier === "free",
+    visitedIds: rec.profileViewsTodayIds,
   };
 }
 
-export async function recordProfileView(userId: string): Promise<number> {
+export async function recordProfileView(userId: string, targetId?: string): Promise<number> {
   const db = readUsageDb();
   const rec = ensureRecord(db, userId);
-  rec.profileViewsToday += 1;
+  const norm = (v?: string) => (v || "").toLowerCase().trim();
+  if (targetId) {
+    const tid = norm(targetId);
+    if (tid && !rec.profileViewsTodayIds.some((x) => norm(x) === tid)) {
+      rec.profileViewsTodayIds.push(targetId);
+      rec.profileViewsToday += 1;
+    } else if (!tid) {
+      rec.profileViewsToday += 1;
+    }
+    // revisits don't increment
+  } else {
+    rec.profileViewsToday += 1;
+  }
   rec.totalProfileViews = (rec.totalProfileViews || 0) + 1;
   writeUsageDb(db);
   return rec.totalProfileViews;

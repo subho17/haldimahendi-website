@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Filter, Loader2, Heart, Crown, CheckCircle2 } from "lucide-react";
+import { Filter, Loader2, Heart, Crown, CheckCircle2, X, Lock } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 
 interface MatchProfile {
@@ -46,6 +46,7 @@ export default function MatchesPage() {
   const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [limitPopup, setLimitPopup] = useState(false);
 
   const userId = user?.profileId || user?.mobileNumber || user?.email || "";
 
@@ -193,7 +194,16 @@ export default function MatchesPage() {
             {eligible.map((m, idx) => (
               <div
                 key={m.profile.id || idx}
-                onClick={() => router.push(`/profile/${encodeURIComponent(m.profile.id)}?back=/matches`)}
+                onClick={async () => {
+                  if (!userId) { router.push(`/profile/${encodeURIComponent(m.profile.id)}?back=/matches`); return; }
+                  try {
+                    const r = await fetch(`/api/profile?id=${encodeURIComponent(m.profile.id)}&viewerId=${encodeURIComponent(userId)}&checkOnly=1`);
+                    const d = await r.json();
+                    if (!d.success && d.upgradeRequired) { setLimitPopup(true); return; }
+                    if (!r.ok && d.upgradeRequired) { setLimitPopup(true); return; }
+                  } catch {}
+                  router.push(`/profile/${encodeURIComponent(m.profile.id)}?back=/matches`);
+                }}
                 className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer"
               >
                 <div>
@@ -330,6 +340,22 @@ export default function MatchesPage() {
           </>
         )}
       </main>
+
+      {limitPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setLimitPopup(false)}>
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setLimitPopup(false)} className="absolute -top-3 -right-3 bg-white rounded-full p-1.5 shadow-lg border border-gray-100 text-gray-600 hover:text-gray-900 cursor-pointer"><X className="w-5 h-5" /></button>
+            <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4"><Lock className="w-7 h-7 text-amber-600" /></div>
+            <h3 className="text-lg font-extrabold text-slate-900">Free limit reached</h3>
+            <p className="text-xs text-slate-500 mt-2">You have reached your free limit. Wait for 24 hours to view more profiles.</p>
+            <p className="text-[11px] text-slate-400 mt-1">You can still revisit profiles you have already viewed.</p>
+            <div className="flex gap-3 mt-6">
+              <a href="/membership" className="flex-1 py-3 rounded-xl bg-[#d97706] text-white font-bold text-xs text-center hover:bg-[#b45309]">Upgrade Plan</a>
+              <button onClick={() => setLimitPopup(false)} className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-xs hover:bg-slate-50">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
