@@ -14,6 +14,11 @@ const SMS_MEDIA_TEMPLATE_ID = (process.env.SMS_TEMPLATE_ID || '17071720383258023
 const SMS_MEDIA_PE_ID = (process.env.SMS_PE_ID || '1401856260000019479').trim();
 const SMS_MESSAGE_TEMPLATE = (process.env.SMS_MESSAGE_TEMPLATE || 'Dear Member, Your client login account OTP is {#var#} It will expire in Five minutes. Do not share it with anyone. Thanks, -Webczar');
 
+// WhatsApp (Facesoft) Settings — https://facesoft.in/sendMessage.php?AUTH_KEY=...&instance_id=...&message=...&phone=91...
+const WHATSAPP_AUTH_KEY = (process.env.WHATSAPP_AUTH_KEY || 'HM@9896675313').trim();
+const WHATSAPP_INSTANCE_ID = (process.env.WHATSAPP_INSTANCE_ID || '219209').trim();
+const WHATSAPP_MESSAGE_TEMPLATE = (process.env.WHATSAPP_MESSAGE_TEMPLATE || 'Dear Member, Your HaldiMehendi OTP is {#var#}. It will expire in 5 minutes. Do not share it. Thanks, -Webczar');
+
 const SMS_TIMEOUT = 15000;
 
 // Helper: https.get with timeout + retry + rejectUnauthorized:false (required for SMS Media gateway SSL)
@@ -100,6 +105,27 @@ async function sendSmsMediaOtp(mobile: string, otp: string): Promise<{ success: 
   return { success: false };
 }
 
+// WhatsApp (Facesoft) Gateway Helper — Text & OTP Message URL
+async function sendWhatsAppOtp(mobile: string, otp: string): Promise<{ success: boolean; data?: string }> {
+  const cleanMobile = mobile.replace(/\D/g, '').slice(-10);
+  const messageText = WHATSAPP_MESSAGE_TEMPLATE.replace('{#var#}', otp);
+  const encodedMessage = encodeURIComponent(messageText);
+  const encodedAuthKey = encodeURIComponent(WHATSAPP_AUTH_KEY);
+  const url = `https://facesoft.in/sendMessage.php?AUTH_KEY=${encodedAuthKey}&instance_id=${encodeURIComponent(WHATSAPP_INSTANCE_ID)}&message=${encodedMessage}&phone=91${cleanMobile}`;
+  const res = await httpsGet(url, 2);
+  console.log('[WHATSAPP API RESPONSE]:', res.status, res.body);
+  // Facesoft returns JSON or text containing success/status; treat any 200 with body containing success/sent/Message queued as ok
+  const bodyLower = res.body.toLowerCase();
+  if (res.ok && (bodyLower.includes('success') || bodyLower.includes('sent') || bodyLower.includes('queued') || bodyLower.includes('message') || res.body.length > 5)) {
+    // If body contains error keywords, mark as failed
+    if (bodyLower.includes('error') && bodyLower.includes('fail') && !bodyLower.includes('success')) {
+      return { success: false, data: res.body };
+    }
+    return { success: true, data: res.body };
+  }
+  return { success: false, data: res.body };
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -137,29 +163,43 @@ export async function POST(req: Request) {
     await saveOtp(cleanMobile, otpCode);
     await recordSend(cleanMobile);
 
-    // Dispatch SMS based on selected provider
-    let smsResult = { success: false };
+    // Dispatch OTP based on selected provider — whatsapp/facesoft uses Facesoft, others use SMS
+    let smsResult: { success: boolean; data?: string; shootId?: string } = { success: false };
+    let dispatchedVia = SMS_PROVIDER;
     if (SMS_PROVIDER === 'fast2sms') {
       smsResult = await sendFast2SmsOtp(cleanMobile, otpCode);
     } else if (SMS_PROVIDER === '2factor') {
       smsResult = await send2FactorOtp(cleanMobile, otpCode);
+    } else if (SMS_PROVIDER === 'whatsapp' || SMS_PROVIDER === 'facesoft' || SMS_PROVIDER === 'facesoft_whatsapp') {
+      smsResult = await sendWhatsAppOtp(cleanMobile, otpCode);
+      dispatchedVia = 'whatsapp';
+    } else if (SMS_PROVIDER === 'both' || SMS_PROVIDER === 'whatsapp_sms') {
+      // Try WhatsApp first, fall back to SMS on failure
+      const wa = await sendWhatsAppOtp(cleanMobile, otpCode);
+      if (wa.success) {
+        smsResult = wa;
+        dispatchedVia = 'whatsapp';
+      } else {
+        smsResult = await sendSmsMediaOtp(cleanMobile, otpCode);
+        dispatchedVia = 'smsmedia';
+      }
     } else {
       smsResult = await sendSmsMediaOtp(cleanMobile, otpCode);
     }
 
-    console.log(`[OTP SERVICE] Provider: ${SMS_PROVIDER} | Mobile +91${cleanMobile} | OTP ${otpCode} | SMS Delivered: ${smsResult.success}`);
+    console.log(`[OTP SERVICE] Provider: ${dispatchedVia} (config:${SMS_PROVIDER}) | Mobile +91${cleanMobile} | OTP ${otpCode} | Delivered: ${smsResult.success}`);
 
     if (!smsResult.success) {
-      console.error(`[OTP] SMS delivery FAILED for +91${cleanMobile}`);
+      console.error(`[OTP] Delivery FAILED for +91${cleanMobile} via ${dispatchedVia}`);
       return NextResponse.json({
         success: false,
-        message: 'Failed to send OTP via SMS. Please try again.',
+        message: dispatchedVia === 'whatsapp' ? 'Failed to send OTP via WhatsApp. Please try again.' : 'Failed to send OTP via SMS. Please try again.',
       });
     }
 
     return NextResponse.json({
       success: true,
-      message: `OTP code sent via SMS to +91 ${cleanMobile}!`,
+      message: `OTP code sent via ${dispatchedVia === 'whatsapp' ? 'WhatsApp' : 'SMS'} to +91 ${cleanMobile}!`,
     });
   } catch (err: unknown) {
     console.error('Failed to send OTP:', err);
