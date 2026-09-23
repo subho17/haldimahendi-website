@@ -68,6 +68,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   const [profileStep, setProfileStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
+  const [otpMethod, setOtpMethod] = useState<"mobile" | "email">("mobile");
+  const [otpEmail, setOtpEmail] = useState("");
 
   // Sub-step 1: Basic & Contact details
   const [displayName, setDisplayName] = useState("");
@@ -163,20 +165,56 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
     };
   }, []);
 
-  // Step 1: Check existing user & Send Real OTP via /api/otp/send
+  // Step 1: Check existing user & Send Real OTP via /api/otp/send or /api/otp/send-email
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleaned = mobileNumber.replace(/\D/g, "");
-    if (!cleaned || cleaned.length < 10) {
-      setError("Please enter a valid 10-digit mobile number.");
-      return;
-    }
     setError("");
     setIsExistingUser(false);
     setInfoMessage("");
     setIsLoading(true);
 
     try {
+      if (otpMethod === "email") {
+        const cleanEmail = otpEmail.trim().toLowerCase();
+        if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+          setIsLoading(false);
+          setError("Please enter a valid email address.");
+          return;
+        }
+        const checkRes = await fetch("/api/auth/check-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail }),
+        });
+        const checkData = await checkRes.json();
+        if (checkData.exists) {
+          setIsLoading(false);
+          setIsExistingUser(true);
+          setError(`Already registered! An account is already registered with ${cleanEmail}. Please sign in.`);
+          return;
+        }
+        const res = await fetch("/api/otp/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail }),
+        });
+        const data = await res.json();
+        setIsLoading(false);
+        if (!res.ok || !data.success) {
+          setError(data.message || "Failed to send OTP to email.");
+          return;
+        }
+        setStep(2);
+        setInfoMessage(`OTP Sent to ${cleanEmail}`);
+        setCooldown(60);
+        return;
+      }
+      const cleaned = mobileNumber.replace(/\D/g, "");
+      if (!cleaned || cleaned.length < 10) {
+        setIsLoading(false);
+        setError("Please enter a valid 10-digit mobile number.");
+        return;
+      }
       // 1. Check if user already exists
       const checkRes = await fetch("/api/auth/check-user", {
         method: "POST",
@@ -219,7 +257,6 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   // Step 2: Verify OTP & move to Profile Completion Step 3
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleaned = mobileNumber.replace(/\D/g, "");
     const cleanedOtp = otp.replace(/\D/g, "").trim();
     if (!cleanedOtp || cleanedOtp.length < 4) {
       setError("Please enter the 4-digit OTP code.");
@@ -230,6 +267,26 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
     setIsLoading(true);
 
     try {
+      if (otpMethod === "email") {
+        const cleanEmail = otpEmail.trim().toLowerCase();
+        const res = await fetch("/api/otp/verify-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail, otp: cleanedOtp }),
+        });
+        const data = await res.json();
+        setIsLoading(false);
+        if (!res.ok || !data.success) {
+          setError(data.message || "Invalid OTP code.");
+          return;
+        }
+        if (!email) setEmail(cleanEmail);
+        setStep(3);
+        setProfileStep(1);
+        setInfoMessage("Email verified! Complete your matrimonial profile to start matching.");
+        return;
+      }
+      const cleaned = mobileNumber.replace(/\D/g, "");
       const res = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -394,12 +451,31 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   // Resend OTP — respects server cooldown/rate-limit and shows actual result
   const handleResendOtp = async () => {
     if (cooldown > 0) return;
-    const cleaned = mobileNumber.replace(/\D/g, "");
     setError("");
     setInfoMessage("");
     setIsLoading(true);
 
     try {
+      if (otpMethod === "email") {
+        const cleanEmail = otpEmail.trim().toLowerCase();
+        const res = await fetch("/api/otp/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail }),
+        });
+        const data = await res.json();
+        setIsLoading(false);
+        if (data.success) {
+          setInfoMessage(`OTP resent to ${cleanEmail}`);
+          setCooldown(60);
+        } else {
+          setError(data.message || "Failed to resend OTP.");
+          if (data.message?.includes("wait") && typeof data.retryAfterSeconds === "number") setCooldown(data.retryAfterSeconds);
+          else if (res.status === 429) setCooldown(60);
+        }
+        return;
+      }
+      const cleaned = mobileNumber.replace(/\D/g, "");
       const res = await fetch("/api/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -448,7 +524,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-[#d97706] font-bold text-[11px] border border-amber-200/60">
             <Heart className="w-3.5 h-3.5 fill-[#d97706]" />
             <span>
-              {step === 1 && "Step 1 of 3 • Mobile Verification"}
+              {step === 1 && `Step 1 of 3 • ${otpMethod === "email" ? "Email" : "Mobile"} Verification`}
               {step === 2 && "Step 2 of 3 • OTP Confirmation"}
               {step === 3 && `Step 3 of 3 • Part ${profileStep} of 5: Profile Creation`}
             </span>
@@ -483,7 +559,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
         <div className="space-y-0.5 mb-3.5">
           <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
             {step === 1 && <span>Create Free Account ✨</span>}
-            {step === 2 && <span>Verify Mobile OTP 📱</span>}
+            {step === 2 && <span>{otpMethod === "email" ? "Verify Email OTP ✉️" : "Verify Mobile OTP 📱"}</span>}
             {step === 3 && profileStep === 1 && <span>Basic & Contact Details 👤</span>}
             {step === 3 && profileStep === 2 && <span>Location, Religion & Education 📍</span>}
             {step === 3 && profileStep === 3 && <span>Astrology & Horoscope (Kundli) ✨</span>}
@@ -491,8 +567,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
             {step === 3 && profileStep === 5 && <span>Account Security & Finish 🔒</span>}
           </h1>
           <p className="text-slate-500 text-xs sm:text-sm font-normal">
-            {step === 1 && "Enter your mobile number to get started with verified matchmaking."}
-            {step === 2 && `Enter the 4-digit code sent to +91 ${mobileNumber.replace(/\D/g, "")}.`}
+            {step === 1 && (otpMethod === "email" ? "Enter your email to receive a verification code." : "Enter your mobile number to get started with verified matchmaking.")}
+            {step === 2 && (otpMethod === "email" ? `Enter the 4-digit code sent to ${otpEmail}.` : `Enter the 4-digit code sent to +91 ${mobileNumber.replace(/\D/g, "")}.`)}
             {step === 3 && profileStep === 1 && "Add your name, email ID, and photo so other verified members can recognize you."}
             {step === 3 && profileStep === 2 && "Enter your location, community background, and educational qualifications."}
             {step === 3 && profileStep === 3 && "Used for kundli compatibility scoring and accurate astrological match calculation."}
@@ -543,25 +619,53 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
           </div>
         )}
 
-        {/* Step 1: Mobile Number Form */}
+        {/* Step 1: Mobile / Email OTP Toggle */}
         {step === 1 && (
           <form onSubmit={handleSendOtp} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
-                Mobile Number <span className="text-[#d97706]">*</span>
-              </label>
-              <div className="relative">
-                <Smartphone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="tel"
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#d97706] focus:ring-2 focus:ring-amber-500/10 outline-hidden transition placeholder:text-slate-400"
-                />
-              </div>
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
+              <button type="button" onClick={() => { setOtpMethod("mobile"); setError(""); }} className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${otpMethod === "mobile" ? "bg-[#d97706] text-white shadow" : "text-slate-600 hover:bg-white"}`}>
+                <Smartphone className="w-3.5 h-3.5" /> Mobile OTP
+              </button>
+              <button type="button" onClick={() => { setOtpMethod("email"); setError(""); }} className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${otpMethod === "email" ? "bg-[#d97706] text-white shadow" : "text-slate-600 hover:bg-white"}`}>
+                <Mail className="w-3.5 h-3.5" /> Email OTP
+              </button>
             </div>
+            {otpMethod === "mobile" ? (
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
+                  Mobile Number <span className="text-[#d97706]">*</span>
+                </label>
+                <div className="relative">
+                  <Smartphone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="tel"
+                    value={mobileNumber}
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    required
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#d97706] focus:ring-2 focus:ring-amber-500/10 outline-hidden transition placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
+                  Email Address <span className="text-[#d97706]">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="email"
+                    value={otpEmail}
+                    onChange={(e) => setOtpEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#d97706] focus:ring-2 focus:ring-amber-500/10 outline-hidden transition placeholder:text-slate-400"
+                  />
+                </div>
+                <span className="text-[11px] text-slate-400">OTP will be sent to your email (check spam).</span>
+              </div>
+            )}
 
             <button
               type="submit"
