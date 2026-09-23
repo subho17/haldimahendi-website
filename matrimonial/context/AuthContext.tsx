@@ -34,6 +34,7 @@ export interface UserProfile {
   birthTime?: string;
   birthPlace?: string;
   rashi?: string;
+  sunRashi?: string;
   nakshatra?: string;
   manglik?: string;
   gotra?: string;

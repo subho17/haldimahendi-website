@@ -54,6 +54,21 @@ export const RASHIS = [
   "Pisces (Meena)",
 ];
 
+export const SUN_RASHIS = [
+  "Aries (Mesha) - Sun",
+  "Taurus (Vrishabha) - Sun",
+  "Gemini (Mithuna) - Sun",
+  "Cancer (Karka) - Sun",
+  "Leo (Simha) - Sun",
+  "Virgo (Kanya) - Sun",
+  "Libra (Tula) - Sun",
+  "Scorpio (Vrishchika) - Sun",
+  "Sagittarius (Dhanu) - Sun",
+  "Capricorn (Makara) - Sun",
+  "Aquarius (Kumbha) - Sun",
+  "Pisces (Meena) - Sun",
+];
+
 const PLANET_FRIENDS: Record<string, string[]> = {
   sun: ["moon", "mars", "jupiter"],
   moon: ["sun", "mercury"],

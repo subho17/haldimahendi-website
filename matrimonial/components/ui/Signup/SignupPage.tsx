@@ -30,7 +30,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
-import { RASHIS, NAKSHATRAS } from "@/lib/kundli";
+import { RASHIS, SUN_RASHIS, NAKSHATRAS } from "@/lib/kundli";
 import {
   MOTHER_TONGUES,
   EDUCATION_OPTIONS,
@@ -105,6 +105,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   const [birthTime, setBirthTime] = useState("");
   const [birthPlace, setBirthPlace] = useState("");
   const [rashi, setRashi] = useState("");
+  const [sunRashi, setSunRashi] = useState("");
   const [nakshatra, setNakshatra] = useState("");
   const [manglik, setManglik] = useState("");
   const [gotra, setGotra] = useState("");
@@ -365,31 +366,32 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
       avatar_url: avatarUrl || DEFAULT_AVATARS[0].url,
       gender,
       age: age ? Number(age) : 25,
-      height: height || "",
-      maritalStatus: maritalStatus || "",
-      religion: religion || "",
-      motherTongue: motherTongue || "",
-      education: education || "",
-      profession: (profession === "Other" && customProfession.trim() ? customProfession.trim() : profession) || "",
+      height: height || "5'7\"",
+      maritalStatus: maritalStatus || "Never Married",
+      religion: religion || "Hindu",
+      motherTongue: motherTongue || "Hindi",
+      education: education || "Graduate",
+      profession: (profession === "Other" && customProfession.trim() ? customProfession.trim() : profession) || "Professional",
       companyName: companyName.trim() || "",
-      city: city || "",
-      bio: bio || "",
+      city: city || "Mumbai",
+      bio: bio || "Registered Member.",
       dob: dob || "",
       birthTime: birthTime || "",
       birthPlace: birthPlace || "",
       rashi: rashi || "",
+      sunRashi: sunRashi || "",
       nakshatra: nakshatra || "",
       manglik: manglik || "",
       gotra: gotra || "",
-      diet: diet || "",
-      smoking: smoking || "",
-      drinking: drinking || "",
-      disability: disability || "",
-      fatherOccupation: fatherOccupation || "",
-      motherOccupation: motherOccupation || "",
-      siblings: siblings || "",
-      familyType: familyType || "",
-      familyValues: familyValues || "",
+      diet: diet || "Not specified",
+      smoking: smoking || "Not specified",
+      drinking: drinking || "Not specified",
+      disability: disability || "None",
+      fatherOccupation: fatherOccupation || "Not specified",
+      motherOccupation: motherOccupation || "Not specified",
+      siblings: siblings || "Not specified",
+      familyType: familyType || "Nuclear",
+      familyValues: familyValues || "Moderate",
       provider: "otp" as const,
     };
 
@@ -1160,6 +1162,21 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                       >
                         <option value="">Select Rashi</option>
                         {RASHIS.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Sun Rashi (Sun Sign) */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700 block">Sun Rashi (Sun Sign)</label>
+                      <select
+                        value={sunRashi}
+                        onChange={(e) => setSunRashi(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select Sun Rashi</option>
+                        {SUN_RASHIS.map((r) => (
                           <option key={r} value={r}>{r}</option>
                         ))}
                       </select>

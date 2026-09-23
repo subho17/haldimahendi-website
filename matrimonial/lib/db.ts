@@ -194,8 +194,9 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS dob DATE;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_time TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_place TEXT;
-      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS rashi TEXT;
-      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS nakshatra TEXT;
+       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS rashi TEXT;
+       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS sun_rashi TEXT;
+       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS nakshatra TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS manglik TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gotra TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS father_occupation TEXT;
