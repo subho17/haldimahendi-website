@@ -64,6 +64,7 @@ export default function InboxPage() {
   useEffect(() => {
     const t = (searchParams?.get("tab") as TabKey) || null;
     if (t && ["received", "accepted", "sent", "shortlisted", "blocked"].includes(t) && t !== tab) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTab(t);
     }
   }, [searchParams, tab]);

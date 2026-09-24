@@ -113,6 +113,21 @@ export const MOTHER_OCCUPATION_OPTIONS = [
   "Other",
 ] as const;
 
+export const BUSINESS_CATEGORIES = [
+  "Retail / Trading Business",
+  "Manufacturing / Industrial Business",
+  "Real Estate / Construction Business",
+  "Hospitality / Hotel / Restaurant Business",
+  "Finance / Investment Business",
+  "IT / Startup / Tech Business",
+  "Agriculture / Farming Business",
+  "Education / Coaching Business",
+  "Healthcare / Medical Business",
+  "Transport / Logistics Business",
+  "Media / Entertainment Business",
+  "Other Business Category",
+] as const;
+
 export const INCOME_OPTIONS = [
   "No Income",
   "Under ₹3 Lakh",

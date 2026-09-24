@@ -38,6 +38,7 @@ import {
   FATHER_OCCUPATION_OPTIONS,
   MOTHER_OCCUPATION_OPTIONS,
   INCOME_OPTIONS,
+  BUSINESS_CATEGORIES,
 } from "@/lib/profileOptions";
 import AiBioModal from "@/components/profile/AiBioModal";
 
@@ -110,6 +111,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   const [profession, setProfession] = useState("");
   const [customProfession, setCustomProfession] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [businessCategory, setBusinessCategory] = useState("");
   const [income, setIncome] = useState("");
 
   // Sub-step 3: Astrology & Horoscope (Kundli)
@@ -395,6 +397,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
       motherTongue: motherTongue || "Hindi",
       education: education || "Graduate",
       profession: (profession === "Other" && customProfession.trim() ? customProfession.trim() : profession) || "Professional",
+      businessCategory: businessCategory || "",
       income: income || "",
       companyName: companyName.trim() || "",
       city: city || "Mumbai",
@@ -1140,6 +1143,25 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                             />
                           </div>
                         )}
+
+                      {/* If Business selected: show Business Category dropdown */}
+                      {(profession === "Business Owner / Entrepreneur" || profession.toLowerCase().includes("business")) && (
+                        <div className="pt-1.5 animate-in fade-in duration-200">
+                          <label className="text-[11px] font-semibold text-slate-600 block mb-0.5">
+                            Business Category <span className="text-slate-400 font-normal">(Select type)</span>
+                          </label>
+                          <select
+                            value={businessCategory}
+                            onChange={(e) => setBusinessCategory(e.target.value)}
+                            className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                          >
+                            <option value="">Select Business Category</option>
+                            {BUSINESS_CATEGORIES.map((cat) => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
 
                       {/* If Other is selected: allow typing custom profession */}
                       {(profession === "Other" || (!((OCCUPATION_OPTIONS as readonly string[]).includes(profession)) && profession !== "")) && (

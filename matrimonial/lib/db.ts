@@ -150,6 +150,7 @@ export function ensureProfilesTable(): Promise<void> {
         smoking        TEXT,
         drinking       TEXT,
         disability     TEXT,
+        business_category TEXT,
         -- Verification badges
         mobile_verified     BOOLEAN DEFAULT FALSE,
         email_verified      BOOLEAN DEFAULT FALSE,
@@ -209,6 +210,7 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS smoking TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS drinking TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS disability TEXT;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS business_category TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT FALSE;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mobile_verified BOOLEAN DEFAULT FALSE;

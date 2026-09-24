@@ -285,6 +285,7 @@ export type ProfileData = {
   smoking?: string;
   drinking?: string;
   disability?: string;
+  businessCategory?: string;
   email?: string;
 };
 
@@ -301,10 +302,10 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
         user_id, display_name, mobile_number, email, avatar_url, provider, provider_id,
         gender, age, height, marital_status, religion, mother_tongue, education, profession, income, city, bio,
         password_hash, password_salt, dob, birth_time, birth_place, rashi, sun_rashi, nakshatra, manglik, gotra,
-        father_occupation, mother_occupation, siblings, family_type, family_values, diet, smoking, drinking, disability,
+        father_occupation, mother_occupation, siblings, family_type, family_values, diet, smoking, drinking, disability, business_category,
         created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, now())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, now())
       ON CONFLICT (user_id) DO UPDATE
       SET display_name   = EXCLUDED.display_name,
           email          = EXCLUDED.email,
@@ -339,6 +340,7 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
           smoking        = EXCLUDED.smoking,
           drinking       = EXCLUDED.drinking,
           disability     = EXCLUDED.disability,
+          business_category = EXCLUDED.business_category,
           updated_at     = now()
     `, [
       profileData.userId,
@@ -378,6 +380,7 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
       profileData.smoking || null,
       profileData.drinking || null,
       profileData.disability || null,
+      profileData.businessCategory || null,
     ]);
   } catch (e) {
     console.warn('[DB] Failed to save profile to Postgres database:', e);

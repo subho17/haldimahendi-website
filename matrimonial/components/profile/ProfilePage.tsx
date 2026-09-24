@@ -44,6 +44,7 @@ import {
   OCCUPATION_OPTIONS,
   FATHER_OCCUPATION_OPTIONS,
   MOTHER_OCCUPATION_OPTIONS,
+  BUSINESS_CATEGORIES,
 } from "@/lib/profileOptions";
 import ComboboxInput from "@/components/ui/ComboboxInput";
 import AiBioModal from "@/components/profile/AiBioModal";
@@ -91,6 +92,7 @@ export default function ProfilePage() {
   const [motherTongue, setMotherTongue] = useState(() => user?.motherTongue || (user as { mother_tongue?: string })?.mother_tongue || "");
   const [education, setEducation] = useState(() => user?.education || "");
   const [profession, setProfession] = useState(() => user?.profession || "");
+  const [businessCategory, setBusinessCategory] = useState(() => (user as { businessCategory?: string; business_category?: string })?.businessCategory || (user as { business_category?: string })?.business_category || "");
   const [city, setCity] = useState(() => user?.city || "");
   const [country, setCountry] = useState(() => (user as { country?: string })?.country || "India");
   const [bio, setBio] = useState(() => user?.bio || "");
@@ -181,6 +183,7 @@ export default function ProfilePage() {
           if (p.motherTongue) setMotherTongue(p.motherTongue);
           if (p.education) setEducation(p.education);
           if (p.profession) setProfession(p.profession);
+          if ((p as { businessCategory?: string; business_category?: string }).businessCategory || (p as { business_category?: string }).business_category) setBusinessCategory((p as { businessCategory?: string; business_category?: string }).businessCategory || (p as { business_category?: string }).business_category || "");
           if (p.city) setCity(p.city);
           if (p.country) setCountry(p.country);
           if (p.bio) setBio(p.bio);
@@ -293,6 +296,8 @@ export default function ProfilePage() {
       motherTongue,
       education,
       profession,
+      businessCategory,
+      business_category: businessCategory,
       city,
       bio,
       dob,
@@ -806,6 +811,21 @@ export default function ProfilePage() {
                           </option>
                         ))}
                       </select>
+                      {(profession === "Business Owner / Entrepreneur" || profession.toLowerCase().includes("business")) && (
+                        <div className="pt-3">
+                          <label className="text-[11px] font-semibold text-slate-600 block mb-1">Business Category</label>
+                          <select
+                            value={businessCategory}
+                            onChange={(e) => setBusinessCategory(e.target.value)}
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden cursor-pointer"
+                          >
+                            <option value="">Select Business Category</option>
+                            {BUSINESS_CATEGORIES.map((cat) => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
 
                   </div>
