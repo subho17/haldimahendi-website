@@ -27,6 +27,9 @@ interface LoginPageProps {
 
 type LoginMode = "otp" | "password";
 
+// Temporarily disable OTP login — set to true to re-enable
+const OTP_ENABLED = false;
+
 export default function LoginPage({
   onOpenForgotPassword,
   onOpenSignup,
@@ -35,8 +38,7 @@ export default function LoginPage({
   const { login } = useAuth();
   const router = useRouter();
 
-  // Mode: OTP is the default because signup is OTP-based (no password is set).
-  const [mode, setMode] = useState<LoginMode>("otp");
+  const [mode, setMode] = useState<LoginMode>("password");
 
   // Password mode fields
   const [identifier, setIdentifier] = useState("");
@@ -242,43 +244,45 @@ export default function LoginPage({
             Member Login 👋
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm font-normal">
-            Welcome back! Sign in with OTP or password to access your profile.
+            Welcome back! Sign in with your password to access your profile.
           </p>
         </div>
 
-        {/* Mode Toggle */}
-        <div className="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl mb-5">
-          <button
-            type="button"
-            onClick={() => {
-              setMode("otp");
-              setError("");
-            }}
-            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              mode === "otp"
-                ? "bg-white text-[#d97706] shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <Smartphone className="w-4 h-4" />
-            Login with OTP
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode("password");
-              setError("");
-            }}
-            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              mode === "password"
-                ? "bg-white text-[#d97706] shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <Lock className="w-4 h-4" />
-            Login with Password
-          </button>
-        </div>
+        {/* Mode Toggle — OTP temporarily disabled */}
+        {OTP_ENABLED && (
+          <div className="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl mb-5">
+            <button
+              type="button"
+              onClick={() => {
+                setMode("otp");
+                setError("");
+              }}
+              className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                mode === "otp"
+                  ? "bg-white text-[#d97706] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Smartphone className="w-4 h-4" />
+              Login with OTP
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("password");
+                setError("");
+              }}
+              className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                mode === "password"
+                  ? "bg-white text-[#d97706] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Lock className="w-4 h-4" />
+              Login with Password
+            </button>
+          </div>
+        )}
 
         {/* Error Banner */}
         {error && (
@@ -288,7 +292,7 @@ export default function LoginPage({
           </div>
         )}
 
-        {mode === "otp" ? (
+        {OTP_ENABLED && mode === "otp" ? (
           <>
             {!isOtpSent ? (
               /* Step 1: Enter mobile & send OTP */
