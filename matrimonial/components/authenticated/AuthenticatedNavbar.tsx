@@ -286,10 +286,13 @@ export default function AuthenticatedNavbar() {
           );
           setUnread(typeof data.unread === "number" ? data.unread : 0);
           failCount = 0;
+        } else if (!cancelled && !data.success) {
+          // No error spam for empty/expected failures (e.g. no userId)
+          failCount++;
         }
       } catch {
         failCount++;
-        if (!cancelled && failCount <= 2) console.error("Failed to load notifications (will retry)");
+        if (!cancelled && failCount === 1) console.warn("[Notifications] load failed, retrying silently");
       } finally {
         if (!cancelled) setNotifLoading(false);
       }
