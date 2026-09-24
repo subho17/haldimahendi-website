@@ -219,7 +219,7 @@ export default function ProfilePage() {
     );
   }
 
-  // Handle Photo Upload (Direct to Supabase Storage)
+  // Handle Photo Upload (Direct to Supabase Storage) — optimistic + DB persist + cache bust
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -229,20 +229,39 @@ export default function ProfilePage() {
       return;
     }
 
+    // Optimistic preview
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarUrl(previewUrl);
     setIsUploading(true);
     setSuccessMessage("Uploading profile photo...");
 
     try {
       const uploadRes = await uploadImageToSupabase(file, "avatars");
-      const finalUrl = uploadRes.success && uploadRes.publicUrl ? uploadRes.publicUrl : URL.createObjectURL(file);
+      const rawUrl = uploadRes.success && uploadRes.publicUrl ? uploadRes.publicUrl : previewUrl;
+      // Cache-bust Next.js image
+      const finalUrl = rawUrl.includes('?') ? `${rawUrl}&v=${Date.now()}` : `${rawUrl}?v=${Date.now()}`;
+      const cleanUrl = rawUrl; // store clean URL in DB
 
       setAvatarUrl(finalUrl);
       login({
         ...user,
-        avatarUrl: finalUrl,
-        avatar_url: finalUrl,
-      });
-      setSuccessMessage("Profile photo updated successfully!");
+        avatarUrl: cleanUrl,
+        avatar_url: cleanUrl,
+      } as typeof user & { avatarUrl: string });
+
+      // Persist to DB immediately (avoids needing refresh)
+      const uid = user?.profileId || user?.mobile_number || user?.mobileNumber || user?.email || "";
+      if (uid && uploadRes.success) {
+        await fetch("/api/user/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profileId: uid, avatarUrl: cleanUrl, avatar_url: cleanUrl }),
+        }).catch(() => {});
+      }
+
+      setSuccessMessage(uploadRes.success ? "Profile photo updated successfully!" : "Photo set locally (Supabase upload failed — check bucket).");
+      // Revoke preview after real URL is set
+      if (uploadRes.success) URL.revokeObjectURL(previewUrl);
     } catch (err) {
       console.error("Upload error:", err);
       setSuccessMessage("Photo set successfully.");
