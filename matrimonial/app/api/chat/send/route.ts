@@ -5,7 +5,7 @@ import { isBlocked } from '@/lib/reportStore';
 import { createNotification } from '@/lib/notificationStore';
 import { buildProfileLookup } from '@/lib/profileLookup';
 import { sendEmail, newMessageEmail, shouldSendEmail } from '@/lib/emailService';
-import { canSendMessage, recordMessageSent } from '@/lib/usageStore';
+import { canSendMessage, recordMessageSent, canViewProfile } from '@/lib/usageStore';
 
 function normalizeId(v?: string | null): string {
   return (v || '').toString().trim();
@@ -68,6 +68,19 @@ export async function POST(req: Request) {
         { success: false, message: 'You cannot message this member.' },
         { status: 403 }
       );
+    }
+
+    // Free limit also blocks chat
+    const viewCheck = await canViewProfile(senderId);
+    if (!viewCheck.allowed && viewCheck.upgradeRequired) {
+      return NextResponse.json({
+        success: false,
+        message: 'You have reached your free limit. Wait for 24 hours to view more profiles.',
+        limitReached: true,
+        limit: viewCheck.limit,
+        remaining: 0,
+        upgradeRequired: true,
+      }, { status: 403 });
     }
 
     // Check chat permission and daily limit

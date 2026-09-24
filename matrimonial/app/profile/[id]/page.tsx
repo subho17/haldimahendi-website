@@ -177,6 +177,10 @@ export default function PublicProfilePage() {
         body: JSON.stringify({ actorId: viewerId, otherId: profile.id, action }),
       });
       const data = await res.json();
+      if (!data.success && data.upgradeRequired) {
+        setLimitReached(true);
+        return;
+      }
       if (data.success && data.state) {
         const isAccepted =
           (data.state.acceptedIds || []).includes(profile.id) ||

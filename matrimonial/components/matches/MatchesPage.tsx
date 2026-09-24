@@ -113,8 +113,14 @@ export default function MatchesPage() {
         body: JSON.stringify({ actorId: userId, otherId: profileId, action }),
       });
       const data = await res.json();
+      if (!data.success && data.upgradeRequired) {
+        setLimitPopup(true);
+        return;
+      }
       if (data.success && data.state) {
         loadInteractions(data.state);
+      } else if (!data.success) {
+        alert(data.message || "Something went wrong");
       }
     } catch (e) {
       console.error("Interaction failed:", e);

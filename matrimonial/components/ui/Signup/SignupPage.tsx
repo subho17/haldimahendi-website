@@ -194,16 +194,22 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
           setError("Please enter a valid email address.");
           return;
         }
+        const cleanedMobile = mobileNumber.replace(/\D/g, "");
+        if (!cleanedMobile || cleanedMobile.length < 10) {
+          setIsLoading(false);
+          setError("Please enter a valid 10-digit mobile number for your profile.");
+          return;
+        }
         const checkRes = await fetch("/api/auth/check-user", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: cleanEmail }),
+          body: JSON.stringify({ email: cleanEmail, mobileNumber: cleanedMobile }),
         });
         const checkData = await checkRes.json();
         if (checkData.exists) {
           setIsLoading(false);
           setIsExistingUser(true);
-          setError(`Already registered! An account is already registered with ${cleanEmail}. Please sign in.`);
+          setError(`Already registered! An account is already registered with ${cleanEmail} or +91 ${cleanedMobile}. Please sign in.`);
           return;
         }
         const res = await fetch("/api/otp/send-email", {
@@ -366,14 +372,15 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
     }
 
     const cleanedMobile = mobileNumber.replace(/\D/g, "");
-    const finalDisplayName = displayName.trim() || (email ? email.split("@")[0] : `Member (${cleanedMobile.slice(-4)})`);
+    const effectiveEmail = (email.trim() || otpEmail.trim()).toLowerCase();
+    const finalDisplayName = displayName.trim() || (effectiveEmail ? effectiveEmail.split("@")[0] : `Member (${cleanedMobile.slice(-4)})`);
 
     const profileData = {
       name: finalDisplayName,
       display_name: finalDisplayName,
       mobileNumber: cleanedMobile,
       mobile_number: cleanedMobile,
-      email: email.trim().toLowerCase(),
+      email: effectiveEmail,
       avatarUrl: avatarUrl || DEFAULT_AVATARS[0].url,
       avatar_url: avatarUrl || DEFAULT_AVATARS[0].url,
       gender,
@@ -665,22 +672,41 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                 </div>
               </div>
             ) : (
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
-                  Email Address <span className="text-[#d97706]">*</span>
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="email"
-                    value={otpEmail}
-                    onChange={(e) => setOtpEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#d97706] focus:ring-2 focus:ring-amber-500/10 outline-hidden transition placeholder:text-slate-400"
-                  />
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
+                    Email Address <span className="text-[#d97706]">*</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="email"
+                      value={otpEmail}
+                      onChange={(e) => setOtpEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#d97706] focus:ring-2 focus:ring-amber-500/10 outline-hidden transition placeholder:text-slate-400"
+                    />
+                  </div>
+                  <span className="text-[11px] text-slate-400">OTP will be sent to your email (check spam).</span>
                 </div>
-                <span className="text-[11px] text-slate-400">OTP will be sent to your email (check spam).</span>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
+                    Mobile Number <span className="text-[#d97706]">*</span>
+                  </label>
+                  <div className="relative">
+                    <Smartphone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="tel"
+                      value={mobileNumber}
+                      onChange={(e) => setMobileNumber(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      required
+                      className="w-full pl-10 pr-4 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#d97706] focus:ring-2 focus:ring-amber-500/10 outline-hidden transition placeholder:text-slate-400"
+                    />
+                  </div>
+                  <span className="text-[11px] text-slate-400">Required for profile contact & verification.</span>
+                </div>
               </div>
             )}
 

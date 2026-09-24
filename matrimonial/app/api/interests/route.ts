@@ -13,7 +13,7 @@ import { buildProfileLookup } from '@/lib/profileLookup';
 import { isBlocked } from '@/lib/reportStore';
 import { notifyInterestEvent } from '@/lib/notificationStore';
 import { expandAllAliases } from '@/lib/userAliases';
-import { canSendInterest, recordInterestSent, canShortlist, recordShortlist, getUsageSummary } from '@/lib/usageStore';
+import { canSendInterest, recordInterestSent, canShortlist, recordShortlist, getUsageSummary, canViewProfile } from '@/lib/usageStore';
 import { sendEmail, interestReceivedEmail, interestAcceptedEmail, shouldSendEmail } from '@/lib/emailService';
 
 function normalizeId(v?: string | null): string {
@@ -110,6 +110,21 @@ export async function POST(req: Request) {
           { success: false, message: 'You cannot interact with this member.' },
           { status: 403 }
         );
+      }
+    }
+
+    // Free limit: once profile view quota exhausted, block new interests too (revisits still allowed via profile view logic, but interests are new actions)
+    if (action === 'interest') {
+      const viewCheck = await canViewProfile(actorId);
+      if (!viewCheck.allowed && viewCheck.upgradeRequired) {
+        return NextResponse.json({
+          success: false,
+          message: 'You have reached your free limit. Wait for 24 hours to view more profiles.',
+          limitReached: true,
+          limit: viewCheck.limit,
+          remaining: 0,
+          upgradeRequired: true,
+        }, { status: 403 });
       }
     }
 

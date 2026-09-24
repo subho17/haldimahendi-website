@@ -119,8 +119,24 @@ export async function GET(req: Request) {
                 upgradeRequired: viewCheck.upgradeRequired,
               }, { status: 403 });
             }
-            if (!checkOnly) await recordProfileView(viewerId, id);
-            else return NextResponse.json({ success: true, allowed: true } as unknown as { success: boolean });
+            if (!checkOnly) {
+              await recordProfileView(viewerId, id);
+              if (hasPool) {
+                try {
+                  const targetId = normalizeId(r.user_id || (r as unknown as { id?: string }).id || id);
+                  await pool!.query(
+                    'INSERT INTO profile_views (viewer_id, viewed_profile_id) VALUES ($1, $2)',
+                    [viewerId, targetId]
+                  );
+                  await pool!.query(
+                    'UPDATE profiles SET profile_views = COALESCE(profile_views, 0) + 1 WHERE user_id = $1 OR id::text = $1',
+                    [targetId]
+                  );
+                } catch (e) {
+                  console.warn('Error recording view in postgres:', e);
+                }
+              }
+            } else return NextResponse.json({ success: true, allowed: true } as unknown as { success: boolean });
           } else if (checkOnly) {
             return NextResponse.json({ success: true, allowed: true } as unknown as { success: boolean });
           }
