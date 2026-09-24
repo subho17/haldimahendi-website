@@ -200,17 +200,18 @@ export default function DashboardPage() {
   }
 
   const statCards = [
-    { label: "New Matches", value: String(stats.newMatches), sub: `${stats.newCount} new this week`, Icon: Heart, color: "text-[#d97706]" },
+    { label: "New Matches", value: String(stats.newMatches), sub: `${stats.newCount} new this week`, Icon: Heart, color: "text-[#d97706]", href: "/matches" },
     {
       label: "Profile Views",
       value: String(stats.profileViews),
       sub: stats.profileViews === 0 ? "0 this week" : `↑ ${stats.profileViews} this week`,
       Icon: Eye,
       color: "text-cyan-600",
+      href: "/inbox?tab=received",
     },
-    { label: "Interests Sent", value: String(stats.interestsSent), sub: `${stats.interestsAccepted} accepted`, Icon: UserCheck, color: "text-emerald-600" },
-    { label: "Shortlisted", value: String(stats.shortlisted), sub: "Saved profiles", Icon: Sparkles, color: "text-amber-500" },
-  ];
+    { label: "Interests Sent", value: String(stats.interestsSent), sub: `${stats.interestsAccepted} accepted`, Icon: UserCheck, color: "text-emerald-600", href: "/inbox?tab=sent" },
+    { label: "Shortlisted", value: String(stats.shortlisted), sub: "Saved profiles", Icon: Sparkles, color: "text-amber-500", href: "/inbox?tab=shortlisted" },
+  ] as const;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -284,15 +285,15 @@ export default function DashboardPage() {
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {statCards.map(({ label, value, sub, Icon, color }) => (
-            <div key={label} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs text-left">
+          {statCards.map(({ label, value, sub, Icon, color, href }) => (
+            <Link key={label} href={href} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs text-left hover:shadow-md hover:border-amber-200 transition-all cursor-pointer block">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</span>
                 <Icon className={`w-5 h-5 ${color}`} />
               </div>
               <p className="text-2xl font-extrabold text-gray-900">{value}</p>
               <p className={`text-[11px] font-semibold mt-1 ${sub.startsWith("↑") ? "text-emerald-600" : "text-gray-400"}`}>{sub}</p>
-            </div>
+            </Link>
           ))}
         </div>
 
@@ -328,12 +329,18 @@ export default function DashboardPage() {
                   key={m.profile.id}
                   onClick={() => {
                     if (userId && m.profile.id && userId.toLowerCase() !== m.profile.id.toLowerCase()) {
-                      setStats((prev) => ({ ...prev, profileViews: prev.profileViews + 1 }));
                       fetch("/api/profile/view", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ viewerId: userId, viewedId: m.profile.id }),
-                      }).catch(() => {});
+                      })
+                        .then((r) => r.json())
+                        .then((data) => {
+                          if (data.success && typeof data.views === "number") {
+                            setStats((prev) => ({ ...prev, profileViews: data.views }));
+                          }
+                        })
+                        .catch(() => {});
                     }
                     router.push(`/profile/${encodeURIComponent(m.profile.id)}?back=/dashboard`);
                   }}

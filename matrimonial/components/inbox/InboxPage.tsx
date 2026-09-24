@@ -5,7 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { Check, X, Loader2, Inbox as InboxIcon, Send, UserCheck, MessageCircle, Bookmark, Ban } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMounted } from "@/hooks/useMounted";
 
 interface MatchProfile {
@@ -45,6 +45,7 @@ function timeAgo(iso?: string): string {
 export default function InboxPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const mounted = useMounted();
 
   const [received, setReceived] = useState<InboxInterest[]>([]);
@@ -52,10 +53,20 @@ export default function InboxPage() {
   const [shortlisted, setShortlisted] = useState<InboxInterest[]>([]);
   const [blocked, setBlocked] = useState<MatchProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<TabKey>("received");
+  const [tab, setTab] = useState<TabKey>(() => {
+    const t = (searchParams?.get("tab") as TabKey) || "received";
+    return ["received", "accepted", "sent", "shortlisted", "blocked"].includes(t) ? t : "received";
+  });
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
   const userId = user?.profileId || user?.mobileNumber || user?.email || "";
+
+  useEffect(() => {
+    const t = (searchParams?.get("tab") as TabKey) || null;
+    if (t && ["received", "accepted", "sent", "shortlisted", "blocked"].includes(t) && t !== tab) {
+      setTab(t);
+    }
+  }, [searchParams, tab]);
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
