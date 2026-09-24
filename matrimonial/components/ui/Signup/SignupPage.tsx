@@ -340,10 +340,12 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
         setError("Please enter your full display name.");
         return;
       }
-      if (!email.trim() || !/\S+@\S+\.\S+/.test(email.trim())) {
+      const effectiveEmailForStep = (email.trim() || otpEmail.trim()).toLowerCase();
+      if (!effectiveEmailForStep || !/\S+@\S+\.\S+/.test(effectiveEmailForStep)) {
         setError("Please enter a valid email address.");
         return;
       }
+      if (!email.trim() && otpEmail.trim()) setEmail(otpEmail.trim());
     }
 
     if (profileStep < 5) {
