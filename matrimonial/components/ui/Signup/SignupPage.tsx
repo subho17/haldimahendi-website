@@ -122,16 +122,16 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   const [manglik, setManglik] = useState("");
   const [gotra, setGotra] = useState("");
 
-  // Sub-step 4: Lifestyle & Family Details
-  const [diet, setDiet] = useState("");
-  const [smoking, setSmoking] = useState("");
-  const [drinking, setDrinking] = useState("");
-  const [disability, setDisability] = useState("");
+  // Sub-step 4: Lifestyle & Family Details — sensible defaults so cards never show "Not specified"
+  const [diet, setDiet] = useState("Vegetarian");
+  const [smoking, setSmoking] = useState("No");
+  const [drinking, setDrinking] = useState("No");
+  const [disability, setDisability] = useState("None");
   const [fatherOccupation, setFatherOccupation] = useState("");
   const [motherOccupation, setMotherOccupation] = useState("");
   const [siblings, setSiblings] = useState("");
-  const [familyType, setFamilyType] = useState("");
-  const [familyValues, setFamilyValues] = useState("");
+  const [familyType, setFamilyType] = useState("Nuclear Family");
+  const [familyValues, setFamilyValues] = useState("Moderate");
 
   // Sub-step 5: Bio & Password
   const [bio, setBio] = useState("");
@@ -407,14 +407,14 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
       nakshatra: nakshatra || "",
       manglik: manglik || "",
       gotra: gotra || "",
-      diet: diet || "Not specified",
-      smoking: smoking || "Not specified",
-      drinking: drinking || "Not specified",
+      diet: diet || "Vegetarian",
+      smoking: smoking || "No",
+      drinking: drinking || "No",
       disability: disability || "None",
       fatherOccupation: fatherOccupation || "Not specified",
       motherOccupation: motherOccupation || "Not specified",
       siblings: siblings || "Not specified",
-      familyType: familyType || "Nuclear",
+      familyType: familyType || "Nuclear Family",
       familyValues: familyValues || "Moderate",
       provider: "otp" as const,
     };
