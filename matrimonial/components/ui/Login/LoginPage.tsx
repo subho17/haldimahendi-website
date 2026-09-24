@@ -10,8 +10,6 @@ import {
   ArrowRight,
   AlertCircle,
   Sparkles,
-  Smartphone,
-  MessageSquare,
   Timer,
   RotateCcw,
 } from "lucide-react";
@@ -27,8 +25,8 @@ interface LoginPageProps {
 
 type LoginMode = "otp" | "password";
 
-// Temporarily disable OTP login — set to true to re-enable
-const OTP_ENABLED = false;
+// Email OTP login (replaces mobile OTP)
+const OTP_ENABLED = true;
 
 export default function LoginPage({
   onOpenForgotPassword,
@@ -45,8 +43,8 @@ export default function LoginPage({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // OTP mode fields
-  const [otpMobile, setOtpMobile] = useState("");
+  // Email OTP mode fields
+  const [otpEmail, setOtpEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
@@ -80,8 +78,6 @@ export default function LoginPage({
       cooldownTimerRef.current = null;
     };
   }, [cooldown]);
-
-  const cleanMobile = (value: string) => value.replace(/\D/g, "").slice(-10);
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,18 +129,18 @@ export default function LoginPage({
 
   const handleSendOtp = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    const clean = cleanMobile(otpMobile);
-    if (clean.length < 10) {
-      setError("Please enter a valid 10-digit mobile number.");
+    const cleanEmail = otpEmail.trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError("Please enter a valid email address.");
       return;
     }
     setError("");
     setOtpSending(true);
     try {
-      const res = await fetch("/api/otp/send", {
+      const res = await fetch("/api/otp/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobileNumber: clean }),
+        body: JSON.stringify({ email: cleanEmail }),
       });
       const data = await res.json();
       if (data.success) {
@@ -164,9 +160,9 @@ export default function LoginPage({
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = cleanMobile(otpMobile);
-    if (clean.length < 10) {
-      setError("Please enter a valid 10-digit mobile number.");
+    const cleanEmail = otpEmail.trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError("Please enter a valid email address.");
       return;
     }
     if (!otp.trim()) {
@@ -176,10 +172,10 @@ export default function LoginPage({
     setError("");
     setOtpVerifying(true);
     try {
-      const res = await fetch("/api/otp/verify", {
+      const res = await fetch("/api/otp/verify-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobileNumber: clean, otp: otp.trim() }),
+        body: JSON.stringify({ email: cleanEmail, otp: otp.trim() }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -187,7 +183,6 @@ export default function LoginPage({
         return;
       }
 
-      // Load the member's saved profile so they land back in their account.
       let profile: {
         id?: string;
         name?: string;
@@ -197,7 +192,7 @@ export default function LoginPage({
         city?: string | null;
       } | null = null;
       try {
-        const pRes = await fetch(`/api/profile?id=${encodeURIComponent(clean)}`);
+        const pRes = await fetch(`/api/profile?id=${encodeURIComponent(cleanEmail)}`);
         const pData = await pRes.json();
         if (pData.success) profile = pData.profile;
       } catch (err) {
@@ -206,7 +201,8 @@ export default function LoginPage({
 
       login({
         profileId: profile?.id || undefined,
-        mobileNumber: clean,
+        email: cleanEmail,
+        mobileNumber: (profile as unknown as { mobileNumber?: string; mobile?: string })?.mobileNumber || (profile as unknown as { mobile?: string })?.mobile || "",
         name: profile?.name || "Member",
         display_name: profile?.name || undefined,
         avatarUrl: profile?.avatarUrl || "/images/default-avatar.png",
@@ -244,11 +240,11 @@ export default function LoginPage({
             Member Login 👋
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm font-normal">
-            Welcome back! Sign in with your password to access your profile.
+            Welcome back! Sign in with Email OTP or password to access your profile.
           </p>
         </div>
 
-        {/* Mode Toggle — OTP temporarily disabled */}
+        {/* Mode Toggle — Email OTP + Password */}
         {OTP_ENABLED && (
           <div className="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl mb-5">
             <button
@@ -263,8 +259,8 @@ export default function LoginPage({
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              <Smartphone className="w-4 h-4" />
-              Login with OTP
+              <Mail className="w-4 h-4" />
+              Login with Email
             </button>
             <button
               type="button"
@@ -295,37 +291,36 @@ export default function LoginPage({
         {OTP_ENABLED && mode === "otp" ? (
           <>
             {!isOtpSent ? (
-              /* Step 1: Enter mobile & send OTP */
+              /* Step 1: Enter email & send OTP */
               <form onSubmit={handleSendOtp} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-700 block uppercase tracking-wider">
-                    Mobile Number <span className="text-[#d97706]">*</span>
+                    Email Address <span className="text-[#d97706]">*</span>
                   </label>
                   <div className="relative">
-                    <Smartphone className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
-                      type="tel"
-                      inputMode="numeric"
-                      maxLength={10}
-                      value={otpMobile}
-                      onChange={(e) => setOtpMobile(e.target.value.replace(/\D/g, ""))}
-                      placeholder="Enter 10-digit mobile number"
+                      type="email"
+                      value={otpEmail}
+                      onChange={(e) => setOtpEmail(e.target.value)}
+                      placeholder="you@example.com"
                       required
                       className="w-full pl-10 pr-4 py-3 bg-gray-50/70 border border-gray-200 rounded-xl text-gray-900 text-sm font-medium focus:bg-white focus:border-[#d97706] focus:ring-4 focus:ring-red-500/10 outline-hidden transition placeholder:text-gray-400"
                     />
                   </div>
+                  <p className="text-[11px] text-gray-400">OTP will be sent to your email (check spam).</p>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={otpSending || cleanMobile(otpMobile).length < 10}
+                  disabled={otpSending || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(otpEmail.trim())}
                   className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.99] transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
                 >
                   {otpSending ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <MessageSquare className="w-4 h-4" />
+                      <Mail className="w-4 h-4" />
                       <span>Send OTP</span>
                     </>
                   )}
@@ -352,7 +347,7 @@ export default function LoginPage({
                     />
                   </div>
                   <p className="text-[11px] text-gray-400 font-medium">
-                    OTP sent to +91 {cleanMobile(otpMobile)}
+                    OTP sent to {otpEmail.trim().toLowerCase()}
                   </p>
                 </div>
 
