@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -13,19 +13,7 @@ interface ProfileCompletionPopupProps {
 export default function ProfileCompletionPopup({ autoDismiss = true }: ProfileCompletionPopupProps) {
   const { user } = useAuth();
   const router = useRouter();
-  const [showPopup, setShowPopup] = useState(false);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    // Show popup when component mounts and user exists
-    if (user && mountedRef.current) {
-      setShowPopup(true);
-    }
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [user]);
+  const [showPopup, setShowPopup] = useState(true);
 
   const handleClose = () => {
     setShowPopup(false);
@@ -36,7 +24,7 @@ export default function ProfileCompletionPopup({ autoDismiss = true }: ProfileCo
     router.push("/profile");
   };
 
-  if (!showPopup) return null;
+  if (!user || !showPopup) return null;
 
   return createPortal(
     <div
