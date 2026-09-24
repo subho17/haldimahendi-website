@@ -37,7 +37,7 @@ import {
 import { uploadImageToSupabase } from "@/lib/supabaseClient";
 import { useMounted } from "@/hooks/useMounted";
 import VerificationCard from "@/components/profile/VerificationCard";
-import { RASHIS, NAKSHATRAS } from "@/lib/kundli";
+import { RASHIS, SUN_RASHIS, NAKSHATRAS } from "@/lib/kundli";
 import {
   MOTHER_TONGUES,
   EDUCATION_OPTIONS,
@@ -106,6 +106,7 @@ export default function ProfilePage() {
   const [birthTime, setBirthTime] = useState(() => user?.birthTime || "");
   const [birthPlace, setBirthPlace] = useState(() => user?.birthPlace || "");
   const [rashi, setRashi] = useState(() => user?.rashi || "");
+  const [sunRashi, setSunRashi] = useState(() => (user as { sunRashi?: string; sun_rashi?: string })?.sunRashi || (user as { sun_rashi?: string })?.sun_rashi || "");
   const [nakshatra, setNakshatra] = useState(() => user?.nakshatra || "");
   const [manglik, setManglik] = useState(() => user?.manglik || "");
   const [gotra, setGotra] = useState(() => user?.gotra || "");
@@ -187,6 +188,7 @@ export default function ProfilePage() {
           if (p.birthTime) setBirthTime(p.birthTime);
           if (p.birthPlace) setBirthPlace(p.birthPlace);
           if (p.rashi) setRashi(p.rashi);
+          if ((p as { sunRashi?: string; sun_rashi?: string }).sunRashi || (p as { sun_rashi?: string }).sun_rashi) setSunRashi((p as { sunRashi?: string; sun_rashi?: string }).sunRashi || (p as { sun_rashi?: string }).sun_rashi || "");
           if (p.nakshatra) setNakshatra(p.nakshatra);
           if (p.manglik) setManglik(p.manglik);
           if (p.gotra) setGotra(p.gotra);
@@ -297,6 +299,7 @@ export default function ProfilePage() {
       birthTime,
       birthPlace,
       rashi,
+      sunRashi,
       nakshatra,
       manglik,
       gotra,
@@ -346,6 +349,7 @@ export default function ProfilePage() {
     city,
     bio,
     rashi,
+    sunRashi,
     nakshatra,
     diet,
     smoking,
@@ -861,6 +865,21 @@ export default function ProfilePage() {
                       >
                         <option value="">Select Rashi</option>
                         {RASHIS.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Sun Rashi */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 block">Sun Rashi (Sun Sign)</label>
+                      <select
+                        value={sunRashi}
+                        onChange={(e) => setSunRashi(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select Sun Rashi</option>
+                        {SUN_RASHIS.map((r) => (
                           <option key={r} value={r}>{r}</option>
                         ))}
                       </select>

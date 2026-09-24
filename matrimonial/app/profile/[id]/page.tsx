@@ -60,6 +60,7 @@ interface PublicProfile {
   birthTime?: string | null;
   birthPlace?: string | null;
   rashi?: string | null;
+  sunRashi?: string | null;
   nakshatra?: string | null;
   manglik?: string | null;
   gotra?: string | null;
@@ -333,6 +334,7 @@ export default function PublicProfilePage() {
     { Icon: GraduationCap, label: "Education", value: profile.education || "—" },
     { Icon: Briefcase, label: "Profession", value: formattedProfession || "—" },
     { Icon: Sparkles, label: "Rashi", value: profile.rashi || "—" },
+    { Icon: Sparkles, label: "Sun Rashi", value: (profile as { sunRashi?: string; sun_rashi?: string }).sunRashi || (profile as { sun_rashi?: string }).sun_rashi || "—" },
     { Icon: Sparkles, label: "Nakshatra", value: profile.nakshatra || "—" },
     { Icon: Users, label: "Manglik", value: profile.manglik || "—" },
     { Icon: Heart, label: "Diet", value: profile.diet || "—" },
