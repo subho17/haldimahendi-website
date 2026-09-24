@@ -18,6 +18,7 @@ interface SearchProfile {
   motherTongue?: string;
   education: string;
   profession: string;
+  income?: string;
   city: string;
   country?: string;
   maritalStatus: string;
@@ -27,6 +28,15 @@ interface SearchProfile {
   premium?: boolean;
   tier?: string;
   bio?: string;
+  diet?: string;
+  smoking?: string;
+  drinking?: string;
+  familyType?: string;
+  familyValues?: string;
+  hobbies?: string;
+  rashi?: string;
+  nakshatra?: string;
+  manglik?: string;
   isSuspended?: boolean;
 }
 
@@ -53,12 +63,22 @@ interface UserRecord {
   motherTongue?: string;
   education?: string;
   profession?: string;
+  income?: string;
   city?: string;
   maritalStatus?: string;
   gender?: string;
   avatarUrl?: string;
   avatar_url?: string;
   bio?: string;
+  diet?: string;
+  smoking?: string;
+  drinking?: string;
+  familyType?: string;
+  familyValues?: string;
+  hobbies?: string;
+  rashi?: string;
+  nakshatra?: string;
+  manglik?: string;
   verificationStatus?: string;
   membershipTier?: string;
   membershipExpiresAt?: string;
@@ -80,6 +100,7 @@ function toSearchProfile(u: UserRecord): SearchProfile {
     motherTongue: u.motherTongue || 'Hindi',
     education: u.education || 'Graduate',
     profession: u.profession || 'Professional',
+    income: u.income || '',
     city: u.city || 'Mumbai',
     country: 'India',
     maritalStatus: u.maritalStatus || 'Never Married',
@@ -89,6 +110,15 @@ function toSearchProfile(u: UserRecord): SearchProfile {
     premium: false,
     tier: 'free',
     bio: u.bio || 'Registered Member.',
+    diet: u.diet || '',
+    smoking: u.smoking || '',
+    drinking: u.drinking || '',
+    familyType: u.familyType || '',
+    familyValues: u.familyValues || '',
+    hobbies: u.hobbies || u.bio || '',
+    rashi: u.rashi || '',
+    nakshatra: u.nakshatra || '',
+    manglik: u.manglik || '',
     isSuspended: !!u.isSuspended,
   };
 }
@@ -180,7 +210,7 @@ export async function GET(req: Request) {
       try {
         await ensureProfilesTable();
         const { rows } = await pool!.query(`
-          SELECT id, user_id, display_name, mobile_number, email, avatar_url, gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, verification_status, membership_tier, membership_expires_at, is_suspended
+          SELECT id, user_id, display_name, mobile_number, email, avatar_url, gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio, diet, smoking, drinking, family_type, family_values, rashi, nakshatra, manglik, verification_status, membership_tier, membership_expires_at, is_suspended
           FROM profiles
           WHERE is_suspended IS NOT TRUE
           ${genderCondition}
@@ -200,6 +230,15 @@ export async function GET(req: Request) {
           maritalStatus: r.marital_status,
           gender: r.gender,
           avatar_url: r.avatar_url,
+          bio: r.bio,
+          diet: r.diet,
+          smoking: r.smoking,
+          drinking: r.drinking,
+          familyType: r.family_type,
+          familyValues: r.family_values,
+          rashi: r.rashi,
+          nakshatra: r.nakshatra,
+          manglik: r.manglik,
           verificationStatus: r.verification_status,
           membershipTier: r.membership_tier,
           membershipExpiresAt: r.membership_expires_at,
@@ -233,7 +272,7 @@ export async function GET(req: Request) {
       uniqueProfiles.push(p);
     }
 
-    // Convert to MatchCandidate for matching engine
+    // Convert to MatchCandidate for matching engine — now includes all structured fields
     const candidates: MatchCandidate[] = uniqueProfiles.map((p) => ({
       id: p.id,
       name: p.name,
@@ -243,19 +282,24 @@ export async function GET(req: Request) {
       motherTongue: p.motherTongue,
       education: p.education,
       profession: p.profession,
+      income: (p as unknown as { income?: string }).income || '',
       city: p.city,
       maritalStatus: p.maritalStatus,
       gender: p.gender,
       avatarUrl: p.avatarUrl,
+      bio: p.bio,
+      hobbies: p.hobbies,
+      diet: p.diet,
+      smoking: p.smoking,
+      drinking: p.drinking,
+      familyType: p.familyType,
+      familyValues: p.familyValues,
+      rashi: p.rashi,
+      nakshatra: p.nakshatra,
+      manglik: p.manglik,
       createdAt: new Date().toISOString(),
       premium: p.premium,
       tier: p.tier,
-      rashi: '',
-      nakshatra: '',
-      manglik: '',
-      diet: '',
-      smoking: '',
-      drinking: '',
     }));
 
     // 6. Run matching algorithm with preferences and full viewer context

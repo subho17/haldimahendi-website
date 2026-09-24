@@ -112,3 +112,16 @@ export const MOTHER_OCCUPATION_OPTIONS = [
   "Passed Away",
   "Other",
 ] as const;
+
+export const INCOME_OPTIONS = [
+  "No Income",
+  "Under ₹3 Lakh",
+  "₹3-5 Lakh",
+  "₹5-8 Lakh",
+  "₹8-12 Lakh",
+  "₹12-20 Lakh",
+  "₹20-35 Lakh",
+  "₹35-50 Lakh",
+  "Above ₹50 Lakh",
+  "Prefer not to say",
+] as const;

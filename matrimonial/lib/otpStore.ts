@@ -264,6 +264,7 @@ export type ProfileData = {
   education?: string;
   profession?: string;
   city?: string;
+  income?: string;
   bio?: string;
   passwordHash?: string;
   passwordSalt?: string;
@@ -298,12 +299,12 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
     await pool!.query(`
       INSERT INTO profiles (
         user_id, display_name, mobile_number, email, avatar_url, provider, provider_id,
-        gender, age, height, marital_status, religion, mother_tongue, education, profession, city, bio,
+        gender, age, height, marital_status, religion, mother_tongue, education, profession, income, city, bio,
         password_hash, password_salt, dob, birth_time, birth_place, rashi, sun_rashi, nakshatra, manglik, gotra,
         father_occupation, mother_occupation, siblings, family_type, family_values, diet, smoking, drinking, disability,
         created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, now())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, now())
       ON CONFLICT (user_id) DO UPDATE
       SET display_name   = EXCLUDED.display_name,
           email          = EXCLUDED.email,
@@ -316,6 +317,7 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
           mother_tongue  = EXCLUDED.mother_tongue,
           education      = EXCLUDED.education,
           profession     = EXCLUDED.profession,
+          income         = EXCLUDED.income,
           city           = EXCLUDED.city,
           bio            = EXCLUDED.bio,
           password_hash  = COALESCE(EXCLUDED.password_hash, profiles.password_hash),
@@ -354,6 +356,7 @@ export async function saveProfile(profileData: ProfileData): Promise<void> {
       profileData.motherTongue || null,
       profileData.education || null,
       profileData.profession || null,
+      (profileData as unknown as { income?: string }).income || null,
       profileData.city || null,
       profileData.bio || null,
       profileData.passwordHash || null,

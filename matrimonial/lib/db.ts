@@ -196,6 +196,7 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_place TEXT;
        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS rashi TEXT;
        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS sun_rashi TEXT;
+       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS income TEXT;
        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS nakshatra TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS manglik TEXT;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gotra TEXT;
@@ -220,6 +221,7 @@ export function ensureProfilesTable(): Promise<void> {
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS featured_profile BOOLEAN DEFAULT FALSE;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS featured_profile_until TIMESTAMPTZ;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS contact_credits INT DEFAULT 0;
+      ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profile_views INT DEFAULT 0;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_phone BOOLEAN DEFAULT FALSE;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_email BOOLEAN DEFAULT FALSE;
       ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_surname BOOLEAN DEFAULT FALSE;
@@ -253,6 +255,17 @@ export function ensureProfilesTable(): Promise<void> {
         purchased_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         is_active BOOLEAN DEFAULT TRUE
       );
+
+      -- Profile views tracking table (who viewed whom, timestamps)
+      CREATE TABLE IF NOT EXISTS profile_views (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        viewer_id TEXT NOT NULL,
+        viewed_profile_id TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT now()
+      );
+      CREATE INDEX IF NOT EXISTS idx_profile_views_viewed ON profile_views(viewed_profile_id);
+      CREATE INDEX IF NOT EXISTS idx_profile_views_viewer ON profile_views(viewer_id);
+      CREATE INDEX IF NOT EXISTS idx_profile_views_created ON profile_views(created_at);
 
       CREATE INDEX IF NOT EXISTS idx_profile_boosts_user ON profile_boosts (user_id, is_active);
       CREATE INDEX IF NOT EXISTS idx_profile_boosts_expires ON profile_boosts (expires_at);

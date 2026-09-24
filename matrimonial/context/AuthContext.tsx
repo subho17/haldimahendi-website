@@ -24,6 +24,7 @@ export interface UserProfile {
   education?: string;
   profession?: string;
   city?: string;
+  income?: string;
   country?: string;
   bio?: string;
   verificationStatus?: string;
@@ -123,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         education: userData.education ?? prev?.education,
         profession: userData.profession ?? prev?.profession,
         city: userData.city ?? prev?.city,
+        income: (userData as unknown as { income?: string }).income ?? (prev as unknown as { income?: string })?.income,
         country: userData.country ?? prev?.country ?? "India",
         bio: userData.bio ?? prev?.bio,
         verificationStatus: userData.verificationStatus ?? (userData as { verification_status?: string })?.verification_status ?? prev?.verificationStatus,
@@ -132,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         birthTime: userData.birthTime ?? prev?.birthTime,
         birthPlace: userData.birthPlace ?? prev?.birthPlace,
         rashi: userData.rashi ?? prev?.rashi,
+        sunRashi: (userData as unknown as { sunRashi?: string }).sunRashi ?? (prev as unknown as { sunRashi?: string })?.sunRashi,
         nakshatra: userData.nakshatra ?? prev?.nakshatra,
         manglik: userData.manglik ?? prev?.manglik,
         gotra: userData.gotra ?? prev?.gotra,

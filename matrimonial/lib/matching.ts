@@ -24,6 +24,14 @@ export interface MatchPreferences {
   maritalStatus?: string | null; // e.g. 'Never Married'
   city?: string | null;
   education?: string | null;
+  incomeMin?: string | null;
+  incomeMax?: string | null;
+  diet?: string | null;
+  smoking?: string | null;
+  drinking?: string | null;
+  familyType?: string | null;
+  familyValues?: string | null;
+  hobbies?: string | null; // comma-separated
 }
 
 export interface MatchCandidate {
@@ -35,11 +43,15 @@ export interface MatchCandidate {
   motherTongue?: string | null;
   education?: string | null;
   profession?: string | null;
+  income?: string | null;
   city?: string | null;
   country?: string | null;
   maritalStatus?: string | null;
   gender?: string | null;
   avatarUrl?: string | null;
+  photos?: string[] | null;
+  bio?: string | null;
+  hobbies?: string | null;
   createdAt?: string | number | Date | null;
   premium?: boolean;
   tier?: string;
@@ -49,6 +61,8 @@ export interface MatchCandidate {
   diet?: string | null;
   smoking?: string | null;
   drinking?: string | null;
+  familyType?: string | null;
+  familyValues?: string | null;
   mobileNumber?: string;
   email?: string;
 }
@@ -63,17 +77,27 @@ export interface MatchResult {
 
 // ------------------------------------------------------------------
 // Dimension weights (total = 100). Tunable per business rules.
+// Now covers all structured profile fields collected during signup.
 // ------------------------------------------------------------------
 const WEIGHTS = {
-  religion: 20,
-  motherTongue: 15,
-  maritalStatus: 10,
-  age: 13,
-  height: 13,
-  city: 9,
-  education: 10,
+  religion: 10,
+  motherTongue: 8,
+  maritalStatus: 6,
+  age: 10,
+  height: 6,
+  city: 6,
+  education: 7,
   profession: 5,
-  kundli: 5,
+  income: 7,
+  diet: 4,
+  smoking: 3,
+  drinking: 3,
+  familyType: 3,
+  familyValues: 4,
+  hobbies: 4,
+  bio: 2,
+  photos: 2,
+  kundli: 2,
 } as const;
 
 // ------------------------------------------------------------------
@@ -288,6 +312,82 @@ function scoreProfession(_p: MatchPreferences, c: MatchCandidate): number {
   return c.profession && c.profession.trim().length > 0 ? 1 : 0.5;
 }
 
+function parseIncomeToLakh(s?: string | null): number | null {
+  if (!s) return null;
+  const t = s.toLowerCase().replace(/,/g, '').trim();
+  const lakhMatch = t.match(/(\d+(\.\d+)?)\s*lakh/);
+  if (lakhMatch) return parseFloat(lakhMatch[1]);
+  const num = parseFloat(t.replace(/[^0-9.]/g, ''));
+  if (isNaN(num)) return null;
+  if (num > 1000) return num / 100000; // assume rupees
+  return num;
+}
+
+function scoreIncome(p: MatchPreferences, c: MatchCandidate): number {
+  const wantMin = parseIncomeToLakh(p.incomeMin);
+  const wantMax = parseIncomeToLakh(p.incomeMax);
+  if (wantMin === null && wantMax === null) return c.income ? 1 : 0.5;
+  const got = parseIncomeToLakh(c.income);
+  if (got === null) return 0.3;
+  if (wantMin !== null && wantMax !== null) return got >= wantMin && got <= wantMax ? 1 : got >= wantMin - 2 && got <= wantMax + 5 ? 0.5 : 0;
+  if (wantMin !== null) return got >= wantMin ? 1 : got >= wantMin - 2 ? 0.5 : 0;
+  if (wantMax !== null) return got <= wantMax ? 1 : got <= wantMax + 3 ? 0.5 : 0;
+  return 1;
+}
+
+function scoreDiet(p: MatchPreferences, c: MatchCandidate): number {
+  if (isUnset(p.diet) || !c.diet) return isUnset(p.diet) ? 1 : 0.5;
+  return toLower(c.diet) === toLower(p.diet) ? 1 : toLower(c.diet).includes('vegetarian') && toLower(p.diet!).includes('vegetarian') ? 0.6 : 0;
+}
+
+function scoreSmoking(p: MatchPreferences, c: MatchCandidate): number {
+  if (isUnset(p.smoking) || !c.smoking) return isUnset(p.smoking) ? 1 : 0.7;
+  return toLower(c.smoking) === toLower(p.smoking) ? 1 : 0;
+}
+
+function scoreDrinking(p: MatchPreferences, c: MatchCandidate): number {
+  if (isUnset(p.drinking) || !c.drinking) return isUnset(p.drinking) ? 1 : 0.7;
+  return toLower(c.drinking) === toLower(p.drinking) ? 1 : 0;
+}
+
+function scoreFamilyType(p: MatchPreferences, c: MatchCandidate): number {
+  if (isUnset(p.familyType) || !c.familyType) return isUnset(p.familyType) ? 1 : 0.6;
+  return toLower(c.familyType) === toLower(p.familyType) ? 1 : 0.4;
+}
+
+function scoreFamilyValues(p: MatchPreferences, c: MatchCandidate): number {
+  if (isUnset(p.familyValues) || !c.familyValues) return isUnset(p.familyValues) ? 1 : 0.6;
+  return toLower(c.familyValues) === toLower(p.familyValues) ? 1 : 0.4;
+}
+
+function scoreHobbies(p: MatchPreferences, c: MatchCandidate): number {
+  if (isUnset(p.hobbies) || !c.hobbies) return isUnset(p.hobbies) ? (c.hobbies ? 1 : 0.6) : 0.5;
+  const want = p.hobbies!.split(',').map((s) => toLower(s)).filter(Boolean);
+  const got = c.hobbies!.split(',').map((s) => toLower(s)).filter(Boolean);
+  if (want.length === 0 || got.length === 0) return 0.5;
+  const overlap = got.filter((g) => want.some((w) => g.includes(w) || w.includes(g))).length;
+  return overlap === 0 ? 0.2 : Math.min(1, overlap / Math.min(want.length, got.length));
+}
+
+function scoreBio(_p: MatchPreferences, c: MatchCandidate): number {
+  const bio = (c.bio || '').trim();
+  if (!bio) return 0.2;
+  const words = bio.split(/\s+/).length;
+  if (words >= 30) return 1;
+  if (words >= 15) return 0.8;
+  if (words >= 8) return 0.6;
+  return 0.4;
+}
+
+function scorePhotos(_p: MatchPreferences, c: MatchCandidate): number {
+  const hasAvatar = !!(c.avatarUrl && c.avatarUrl !== '/images/default-avatar.png' && c.avatarUrl.trim().length > 0);
+  const count = Array.isArray(c.photos) ? c.photos.length : hasAvatar ? 1 : 0;
+  if (count >= 3) return 1;
+  if (count === 2) return 0.8;
+  if (count === 1) return 0.6;
+  return 0.2;
+}
+
 function scoreKundli(
   viewer: { nakshatra?: string | null; manglik?: string | boolean | null },
   c: MatchCandidate
@@ -321,6 +421,15 @@ function scoreMatchInternal(p: MatchPreferences, c: MatchCandidate, viewer?: Vie
   apply('city', scoreCity(p, c));
   apply('education', scoreEducation(p, c));
   apply('profession', scoreProfession(p, c));
+  apply('income', scoreIncome(p, c));
+  apply('diet', scoreDiet(p, c));
+  apply('smoking', scoreSmoking(p, c));
+  apply('drinking', scoreDrinking(p, c));
+  apply('familyType', scoreFamilyType(p, c));
+  apply('familyValues', scoreFamilyValues(p, c));
+  apply('hobbies', scoreHobbies(p, c));
+  apply('bio', scoreBio(p, c));
+  apply('photos', scorePhotos(p, c));
   apply('kundli', scoreKundli(viewer || {}, c));
 
   return { score: Math.round(score), breakdown };

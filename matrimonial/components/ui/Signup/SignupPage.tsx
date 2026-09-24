@@ -37,6 +37,7 @@ import {
   OCCUPATION_OPTIONS,
   FATHER_OCCUPATION_OPTIONS,
   MOTHER_OCCUPATION_OPTIONS,
+  INCOME_OPTIONS,
 } from "@/lib/profileOptions";
 import AiBioModal from "@/components/profile/AiBioModal";
 
@@ -109,6 +110,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   const [profession, setProfession] = useState("");
   const [customProfession, setCustomProfession] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [income, setIncome] = useState("");
 
   // Sub-step 3: Astrology & Horoscope (Kundli)
   const [dob, setDob] = useState("");
@@ -384,6 +386,7 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
       motherTongue: motherTongue || "Hindi",
       education: education || "Graduate",
       profession: (profession === "Other" && customProfession.trim() ? customProfession.trim() : profession) || "Professional",
+      income: income || "",
       companyName: companyName.trim() || "",
       city: city || "Mumbai",
       bio: bio || "Registered Member.",
@@ -1128,6 +1131,20 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
                           />
                         </div>
                       )}
+                    </div>
+                    {/* Annual Income */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700 block">Annual Income</label>
+                      <select
+                        value={income}
+                        onChange={(e) => setIncome(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-[#d97706] outline-hidden transition-all cursor-pointer"
+                      >
+                        <option value="">Select Income Range</option>
+                        {INCOME_OPTIONS.map((inc) => (
+                          <option key={inc} value={inc}>{inc}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
