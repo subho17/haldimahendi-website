@@ -350,14 +350,14 @@ export default function MatchesPage() {
       {limitPopup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setLimitPopup(false)}>
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setLimitPopup(false)} className="absolute -top-3 -right-3 bg-white rounded-full p-1.5 shadow-lg border border-gray-100 text-gray-600 hover:text-gray-900 cursor-pointer"><X className="w-5 h-5" /></button>
+            <button type="button" aria-label="Close popup" onClick={() => setLimitPopup(false)} className="absolute -top-3 -right-3 bg-white rounded-full p-1.5 shadow-lg border border-gray-100 text-gray-600 hover:text-gray-900 cursor-pointer"><X className="w-5 h-5" /></button>
             <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4"><Lock className="w-7 h-7 text-amber-600" /></div>
             <h3 className="text-lg font-extrabold text-slate-900">Free limit reached</h3>
             <p className="text-xs text-slate-500 mt-2">You have reached your free limit. Wait for 24 hours to view more profiles.</p>
             <p className="text-[11px] text-slate-400 mt-1">You can still revisit profiles you have already viewed.</p>
             <div className="flex gap-3 mt-6">
               <a href="/membership" className="flex-1 py-3 rounded-xl bg-[#d97706] text-white font-bold text-xs text-center hover:bg-[#b45309]">Upgrade Plan</a>
-              <button onClick={() => setLimitPopup(false)} className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-xs hover:bg-slate-50">Close</button>
+              <button type="button" onClick={() => setLimitPopup(false)} className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-xs hover:bg-slate-50 cursor-pointer">Close</button>
             </div>
           </div>
         </div>
