@@ -648,18 +648,24 @@ export default function ProfilePage() {
                       />
                     </div>
 
-                    {/* Gender / Profile Role */}
+                    {/* Looking For — syncs with Profile Gender */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 block">Profile Gender / Role *</label>
+                      <label className="text-xs font-bold text-slate-700 block">Looking For *</label>
                       <select
-                        value={gender}
-                        onChange={(e) => setGender(e.target.value)}
+                        value={gender === "Groom" ? "Bride" : gender === "Bride" ? "Groom" : ""}
+                        onChange={(e) => {
+                          const lf = e.target.value;
+                          if (lf === "Bride") setGender("Groom");
+                          else if (lf === "Groom") setGender("Bride");
+                          else setGender("");
+                        }}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-hidden transition-all cursor-pointer"
                       >
-                        <option value="">Select Gender / Role</option>
-                        <option value="Groom">Groom (Male)</option>
+                        <option value="">Select Looking For</option>
                         <option value="Bride">Bride (Female)</option>
+                        <option value="Groom">Groom (Male)</option>
                       </select>
+                      <p className="text-[10px] text-slate-400">Your profile gender will be set to {gender === "Groom" ? "Groom" : gender === "Bride" ? "Bride" : "—"} (opposite of selection).</p>
                     </div>
 
                     {/* Age */}
