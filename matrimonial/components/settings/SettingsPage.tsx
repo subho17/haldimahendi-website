@@ -1,11 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Footer } from "@/components/Global";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Settings, LogOut } from "lucide-react";
+import { Settings, LogOut, Trash2, AlertTriangle } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 
 export default function SettingsPage() {
@@ -25,9 +25,34 @@ export default function SettingsPage() {
     );
   }
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
   const handleLogout = () => {
     logout();
     router.push("/");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== "DELETE") return;
+    const uid = user?.profileId || user?.mobileNumber || user?.email || "";
+    if (!uid) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/auth/delete?userId=${encodeURIComponent(uid)}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        logout();
+        router.push("/");
+      } else {
+        alert(data.message || "Failed to delete account");
+      }
+    } catch {
+      alert("Failed to delete account");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -70,6 +95,21 @@ export default function SettingsPage() {
               </select>
             </div>
 
+            <div className="pt-6 border-t border-gray-100">
+              <div className="p-5 bg-red-50 rounded-2xl border border-red-200">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-red-100 text-red-600"><AlertTriangle className="w-5 h-5" /></div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-red-900 text-sm">Danger Zone</h3>
+                    <p className="text-xs text-red-700 mt-1">Permanently delete your account and all profile data. This cannot be undone.</p>
+                    <button onClick={() => setShowDeleteModal(true)} className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer">
+                      <Trash2 className="w-4 h-4" /> Delete My Account
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="pt-4">
               <button
                 onClick={handleLogout}
@@ -84,6 +124,23 @@ export default function SettingsPage() {
         </div>
 
       </main>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowDeleteModal(false)}>
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4"><Trash2 className="w-6 h-6 text-red-600" /></div>
+            <h3 className="text-lg font-extrabold text-slate-900 text-center">Delete Account?</h3>
+            <p className="text-xs text-slate-500 text-center mt-2">This will permanently delete your profile, photos, and matches. Type <span className="font-mono font-bold text-red-600">DELETE</span> to confirm.</p>
+            <input type="text" value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} placeholder="Type DELETE" className="mt-4 w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-red-400 outline-none" />
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-xs hover:bg-slate-50 cursor-pointer">Cancel</button>
+              <button onClick={handleDeleteAccount} disabled={deleteConfirm !== "DELETE" || deleting} className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer">
+                {deleting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Trash2 className="w-4 h-4" /> Confirm Delete</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
