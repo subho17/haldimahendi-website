@@ -13,6 +13,16 @@ export default function SettingsPage() {
   const router = useRouter();
   const mounted = useMounted();
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteEmail, setDeleteEmail] = useState("");
+  const [deleteOtp, setDeleteOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+
   if (!mounted || isLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -24,16 +34,6 @@ export default function SettingsPage() {
       </div>
     );
   }
-
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState("");
-  const [deleting, setDeleting] = useState(false);
-  const [deleteEmail, setDeleteEmail] = useState("");
-  const [deleteOtp, setDeleteOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpVerifying, setOtpVerifying] = useState(false);
 
   const handleLogout = () => {
     logout();

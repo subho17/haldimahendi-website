@@ -6,6 +6,33 @@ export default function PWA() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
+    // In development mode, NEVER register service workers and unregister any existing ones
+    // to prevent caching stale Turbopack / Next.js chunks.
+    const isDev =
+      process.env.NODE_ENV !== "production" ||
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname.startsWith("192.168.");
+
+    if (isDev) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const reg of registrations) {
+          reg.unregister().then(() => {
+            console.log("Unregistered development service worker:", reg);
+          });
+        }
+      });
+
+      if ("caches" in window) {
+        caches.keys().then((keys) => {
+          for (const key of keys) {
+            caches.delete(key);
+          }
+        });
+      }
+      return;
+    }
+
     let registration: ServiceWorkerRegistration | null = null;
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -14,7 +41,6 @@ export default function PWA() {
         .register("/sw.js")
         .then((reg) => {
           registration = reg;
-          console.log("SW registered: ", registration);
 
           // Check for updates periodically
           intervalId = setInterval(() => {
@@ -59,3 +85,4 @@ export default function PWA() {
 
   return null;
 }
+
