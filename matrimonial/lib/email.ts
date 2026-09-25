@@ -52,10 +52,10 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<{ succ
   const transporter = getTransporter();
   if (!transporter || !to) return { success: false, error: 'Email not configured or missing' };
   const from = `${SMTP_FROM_NAME} <${SMTP_FROM}>`;
-  const firstName = (name || 'Member').split(' ')[0];
+  const displayName = (name || 'Member').trim();
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:28px;border:1px solid #fde68a;border-radius:16px;background:#fffbeb">
-      <h2 style="color:#d97706;margin:0 0 8px">Welcome to HaldiMehendi, ${firstName}! 🎉</h2>
+      <h2 style="color:#d97706;margin:0 0 8px">Welcome to HaldiMehendi, ${displayName}! 🎉</h2>
       <p style="color:#444;font-size:14px;line-height:1.6">Your matrimonial profile is now live. Verified members are already discovering you — complete your photos and preferences to get 3x more matches.</p>
       <div style="margin:20px 0;padding:16px;background:#fff;border:1px solid #fde68a;border-radius:12px">
         <p style="margin:0;color:#92400e;font-size:13px;font-weight:700">Next steps:</p>
@@ -71,7 +71,7 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<{ succ
     </div>
   `;
   try {
-    await transporter.sendMail({ from, to, subject: `Welcome to HaldiMehendi, ${firstName}!`, text: `Welcome ${firstName}! Your HaldiMehendi profile is live. Visit https://haldimehendi.com/dashboard`, html });
+    await transporter.sendMail({ from, to, subject: `Welcome to HaldiMehendi, ${displayName}!`, text: `Welcome ${displayName}! Your HaldiMehendi profile is live. Visit https://haldimehendi.com/dashboard`, html });
     console.log(`[Welcome Email] Sent to ${to}`);
     return { success: true };
   } catch (e: unknown) {
@@ -85,11 +85,11 @@ export async function sendPremiumEmail(to: string, name: string, planName: strin
   const transporter = getTransporter();
   if (!transporter || !to) return { success: false, error: 'Email not configured or missing' };
   const from = `${SMTP_FROM_NAME} <${SMTP_FROM}>`;
-  const firstName = (name || 'Member').split(' ')[0];
+  const displayName = (name || 'Member').trim();
   const expiryText = expiresAt ? `Valid till ${new Date(expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}` : '';
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:28px;border:1px solid #fde68a;border-radius:16px;background:#fffbeb">
-      <h2 style="color:#d97706;margin:0 0 8px">You're Premium now, ${firstName}! ⭐</h2>
+      <h2 style="color:#d97706;margin:0 0 8px">You're Premium now, ${displayName}! ⭐</h2>
       <p style="color:#444;font-size:14px;line-height:1.6">Your <b>${planName}</b> membership is active. You now unlock unlimited chats, contact views, and priority matching.</p>
       <div style="margin:18px 0;padding:14px;background:#fff;border:1px dashed #d97706;border-radius:12px;text-align:center">
         <div style="font-size:18px;font-weight:800;color:#d97706">${planName}</div>
@@ -101,7 +101,7 @@ export async function sendPremiumEmail(to: string, name: string, planName: strin
     </div>
   `;
   try {
-    await transporter.sendMail({ from, to, subject: `Your ${planName} is active!`, text: `Hi ${firstName}, your ${planName} membership is active. ${expiryText}`, html });
+    await transporter.sendMail({ from, to, subject: `Your ${planName} is active!`, text: `Hi ${displayName}, your ${planName} membership is active. ${expiryText}`, html });
     console.log(`[Premium Email] ${planName} sent to ${to}`);
     return { success: true };
   } catch (e: unknown) {
