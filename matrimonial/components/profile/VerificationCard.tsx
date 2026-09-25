@@ -231,10 +231,14 @@ export default function VerificationCard({ userId, onStatusChange }: Verificatio
             </div>
           </div>
 
+          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+            <span className="font-bold">Note:</span> Take a clear, well-lit selfie facing the camera while holding your government-issued ID flat next to your face, making sure your fingers do not cover any text, numbers, or the edges of the document.
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="space-y-1.5 cursor-pointer">
               <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5 text-[#d97706]" /> Clear Selfie *
+                <Camera className="w-3.5 h-3.5 text-[#d97706]" /> Clear Selfie (holding ID) *
               </span>
               <input
                 type="file"
