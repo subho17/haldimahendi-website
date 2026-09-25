@@ -461,13 +461,7 @@ export default function MembershipPage() {
                   </div>
                 </div>
                 {status.isPremium && (
-                  <button
-                    type="button"
-                    onClick={switchToFree}
-                    className="text-xs font-bold text-gray-500 hover:text-[#d97706] underline underline-offset-2 cursor-pointer"
-                  >
-                    Switch to Free
-                  </button>
+                  <span className="text-xs font-bold text-amber-600">Kindly upgrade to higher plan</span>
                 )}
               </div>
             )}
@@ -516,22 +510,22 @@ export default function MembershipPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (plan.tier === "free") return switchToFree();
+                        if (plan.tier === "free") return;
                         openCheckout(plan);
                       }}
-                      disabled={isCurrent || !isAuthenticated}
+                      disabled={isCurrent || !isAuthenticated || plan.tier === "free"}
                       className={`w-full py-3 rounded-xl text-sm font-bold transition-colors cursor-pointer disabled:opacity-60 ${
                         plan.highlight
                           ? "bg-[#d97706] text-white shadow-md hover:bg-[#b45309]"
                           : plan.tier === "free"
-                          ? "bg-gray-100 text-gray-600"
+                          ? isCurrent ? "bg-gray-100 text-gray-600" : "bg-gray-100 text-gray-500"
                           : "border border-gray-200 text-gray-800 hover:bg-gray-50"
                       }`}
                     >
                       {isCurrent
                         ? "Current Plan"
                         : plan.tier === "free"
-                        ? "Switch to Free"
+                        ? status.isPremium ? "Kindly Upgrade" : "Free Plan"
                         : `Upgrade to ${plan.name}`}
                     </button>
                   </div>
