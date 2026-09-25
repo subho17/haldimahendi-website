@@ -162,3 +162,132 @@ export function profileViewedEmail(viewerName: string): { subject: string; html:
     `),
   };
 }
+
+// --- MVP 15 Templates ---
+
+export function welcomeEmail(name: string): { subject: string; html: string } {
+  return {
+    subject: `Welcome to HaldiMeHendi, ${name}!`,
+    html: baseTemplate(`
+      <h2>Welcome, ${name}!</h2>
+      <p>Your HaldiMeHendi account has been created. We’re excited to help you find your perfect match.</p>
+      <p>Complete your profile, add photos, and set partner preferences to get 3× more interests.</p>
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com'}/profile" class="btn">Complete Profile</a>
+    `),
+  };
+}
+
+export function emailOtpEmail(otp: string): { subject: string; html: string } {
+  return {
+    subject: `Your HaldiMeHendi OTP is ${otp}`,
+    html: baseTemplate(`
+      <h2>Email Verification</h2>
+      <p>Your OTP to verify your email is <strong style="font-size:22px;letter-spacing:4px">${otp}</strong></p>
+      <p>This code expires in 10 minutes. Do not share it with anyone.</p>
+    `),
+  };
+}
+
+export function forgotPasswordOtpEmail(otp: string): { subject: string; html: string } {
+  return {
+    subject: `Reset your password — OTP ${otp}`,
+    html: baseTemplate(`
+      <h2>Password Reset</h2>
+      <p>Your OTP to reset your password is <strong style="font-size:22px;letter-spacing:4px">${otp}</strong></p>
+      <p>Expires in 10 minutes. If you didn’t request this, ignore this email.</p>
+    `),
+  };
+}
+
+export function passwordChangedEmail(): { subject: string; html: string } {
+  return {
+    subject: `Your password was changed`,
+    html: baseTemplate(`
+      <h2>Password Changed</h2>
+      <p>Your HaldiMeHendi password was changed successfully.</p>
+      <p>If this wasn’t you, reset your password immediately and contact support.</p>
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com'}/auth/login" class="btn">Secure Account</a>
+    `),
+  };
+}
+
+export function newLoginAlertEmail(city?: string): { subject: string; html: string } {
+  return {
+    subject: `New login to your account`,
+    html: baseTemplate(`
+      <h2>New Login Alert</h2>
+      <p>We detected a new login to your HaldiMeHendi account${city ? ` from <strong>${city}</strong>` : ''}.</p>
+      <p>If this was you, ignore this email. If not, change your password now.</p>
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com'}/settings" class="btn">Review Security</a>
+    `),
+  };
+}
+
+export function profileApprovedEmail(): { subject: string; html: string } {
+  return {
+    subject: `Your profile is now live!`,
+    html: baseTemplate(`
+      <h2>Profile Approved</h2>
+      <p>Great news! Your HaldiMeHendi profile has been approved and is now visible to matches.</p>
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com'}/matches" class="btn">View Matches</a>
+    `),
+  };
+}
+
+export function profileRejectedEmail(reason?: string): { subject: string; html: string } {
+  return {
+    subject: `Action needed on your profile`,
+    html: baseTemplate(`
+      <h2>Profile Needs Changes</h2>
+      <p>Your profile was not approved${reason ? `: <strong>${reason}</strong>` : ''}.</p>
+      <p>Please update your profile and resubmit for verification.</p>
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com'}/profile" class="btn">Update Profile</a>
+    `),
+  };
+}
+
+export function newMatchEmail(count: number): { subject: string; html: string } {
+  return {
+    subject: `You have ${count} new match${count > 1 ? 'es' : ''} today`,
+    html: baseTemplate(`
+      <h2>New Matches</h2>
+      <p>We found <strong>${count} new match${count > 1 ? 'es' : ''}</strong> for you today based on your preferences.</p>
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com'}/matches" class="btn">View Matches</a>
+    `),
+  };
+}
+
+export function paymentSuccessEmail(planName: string, amount: string): { subject: string; html: string } {
+  return {
+    subject: `Payment successful — ${planName} ${amount}`,
+    html: baseTemplate(`
+      <h2>Payment Successful</h2>
+      <p>Your <strong>${planName}</strong> subscription for <strong>${amount}</strong> is confirmed.</p>
+      <p>Enjoy premium features: unlimited chats, contact views, and priority matching.</p>
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com'}/membership" class="btn">Manage Membership</a>
+    `),
+  };
+}
+
+export function subscriptionExpiryEmail(planName: string, daysLeft: number): { subject: string; html: string } {
+  return {
+    subject: `Your ${planName} expires in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`,
+    html: baseTemplate(`
+      <h2>Subscription Expiring Soon</h2>
+      <p>Your <strong>${planName}</strong> plan expires in <strong>${daysLeft} day${daysLeft > 1 ? 's' : ''}</strong>.</p>
+      <p>Renew now to keep chatting, viewing contacts, and staying boosted.</p>
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://haldimehendi.com'}/membership" class="btn">Renew Now</a>
+    `),
+  };
+}
+
+export function accountDeactivatedEmail(): { subject: string; html: string } {
+  return {
+    subject: `Your account has been deactivated`,
+    html: baseTemplate(`
+      <h2>Account Deactivated</h2>
+      <p>Your HaldiMeHendi account has been deactivated as requested.</p>
+      <p>You can reactivate within 30 days by logging in again. Contact support if this was a mistake.</p>
+    `),
+  };
+}

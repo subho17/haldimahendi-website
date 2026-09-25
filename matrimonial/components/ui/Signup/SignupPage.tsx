@@ -70,7 +70,8 @@ export default function SignupPage({ onOpenLogin, onSuccess, onClose, isModal = 
   const [profileStep, setProfileStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
-  const otpMethod: "email" = "email";
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [otpMethod, setOtpMethod] = useState<"mobile" | "email">("email");
   const [otpEmail, setOtpEmail] = useState("");
 
   // Sub-step 1: Basic & Contact details

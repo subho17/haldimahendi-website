@@ -55,7 +55,7 @@ export async function POST(req: Request) {
            FROM profiles
            WHERE ($1 <> '' AND mobile_number = $1)
               OR (length($2) > 0 AND user_id = $2)
-              OR (length($3) > 0 AND user_id = $3)
+              OR (length($3) > 0 AND lower(email) = lower($3))
            LIMIT 1`,
           [identifierMobile, identifierProfile, identifierEmail]
         );
@@ -136,6 +136,14 @@ export async function POST(req: Request) {
         { success: false, message: 'Incorrect password. Please try again.' },
         { status: 401 }
       );
+    }
+
+    // New login alert (fire-and-forget)
+    if (profile.email) {
+      import('@/lib/emailService').then(({ sendEmail, newLoginAlertEmail }) => {
+        const tpl = newLoginAlertEmail();
+        sendEmail({ to: profile!.email!, subject: tpl.subject, html: tpl.html }).catch(() => {});
+      }).catch(() => {});
     }
 
     return NextResponse.json({ success: true, profile });

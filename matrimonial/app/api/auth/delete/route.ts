@@ -10,6 +10,15 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ success: false, message: "Missing userId" }, { status: 400 });
     }
 
+    // Fetch email for deactivation notice before delete
+    let deactivationEmail: string | null = null;
+    if (hasPool) {
+      try {
+        const { rows } = await pool!.query(`SELECT email FROM profiles WHERE user_id = $1 LIMIT 1`, [userId]);
+        if (rows[0]?.email) deactivationEmail = rows[0].email;
+      } catch {}
+    }
+
     // 1. Delete the profile row from Postgres (if DB is configured)
     if (hasPool) {
       try {
@@ -21,6 +30,13 @@ export async function DELETE(req: Request) {
         console.warn('[AuthDelete] Failed to delete profile:', e);
         // continue even if profile delete fails
       }
+    }
+
+    if (deactivationEmail) {
+      import('@/lib/emailService').then(({ sendEmail, accountDeactivatedEmail }) => {
+        const tpl = accountDeactivatedEmail();
+        sendEmail({ to: deactivationEmail!, subject: tpl.subject, html: tpl.html }).catch(() => {});
+      }).catch(() => {});
     }
 
     // 2. Sign out the user from Supabase Auth (client-side session clear)

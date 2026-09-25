@@ -37,6 +37,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Submission not found' }, { status: 404 });
     }
 
+    // Send profile approved/rejected email (fire-and-forget)
+    (async () => {
+      try {
+        const { pool, hasPool } = await import('@/lib/db');
+        const { sendEmail, profileApprovedEmail, profileRejectedEmail } = await import('@/lib/emailService');
+        if (hasPool && pool) {
+          const { rows } = await pool.query(`SELECT email FROM profiles WHERE user_id = $1 LIMIT 1`, [updated.userId]);
+          const email = rows[0]?.email;
+          if (email) {
+            const tpl = action === 'approve' ? profileApprovedEmail() : profileRejectedEmail();
+            sendEmail({ to: email, subject: tpl.subject, html: tpl.html }).catch(() => {});
+          }
+        }
+      } catch {}
+    })();
+
     return NextResponse.json({ success: true, submission: updated });
   } catch (e) {
     console.error('Error reviewing verification:', e);

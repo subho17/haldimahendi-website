@@ -87,6 +87,20 @@ export async function POST(req: Request) {
       );
     }
 
+    // Send password changed email (fire-and-forget)
+    try {
+      const { sendEmail, passwordChangedEmail } = await import('@/lib/emailService');
+      let email: string | null = null;
+      if (hasPool) {
+        const { rows } = await pool!.query(`SELECT email FROM profiles WHERE mobile_number = $1 OR user_id = $1 LIMIT 1`, [cleanMobile]);
+        if (rows[0]?.email) email = rows[0].email;
+      }
+      if (email) {
+        const tpl = passwordChangedEmail();
+        sendEmail({ to: email, subject: tpl.subject, html: tpl.html }).catch(() => {});
+      }
+    } catch {}
+
     return NextResponse.json({
       success: true,
       message: 'Password reset successfully. You can now log in with your new password.',
